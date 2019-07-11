@@ -12,8 +12,8 @@ namespace event_visualisation {
 
 class DataSource : public TQObject {
 public:
-    virtual int gotoEvent(Int_t event) {};
-    virtual void nextEvent() {};
+    virtual Bool_t GotoEvent(Int_t event) {};
+    virtual void NextEvent() {};
 
     DataSource() = default;
 

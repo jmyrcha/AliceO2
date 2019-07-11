@@ -53,7 +53,7 @@ EventManager::EventManager() : TEveEventManager("Event", ""), mCurrentDataSource
 int EventManager::gotoEvent(Int_t event) {
     std::cout << "EventManager::gotoEvent(" <<event << ")" << std::endl;
     DataSource *dataSource = getDataSource();
-    return dataSource->gotoEvent(event);
+    return dataSource->GotoEvent(event);
 }
 
 void EventManager::Open() {

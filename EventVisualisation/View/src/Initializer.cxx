@@ -22,7 +22,7 @@
 #include "EventVisualisationBase/VisualisationConstants.h"
 #include "EventVisualisationView/EventManagerFrame.h"
 #include "EventVisualisationBase/DataSourceOffline.h"
-#include "EventVisualisationBase/DataSourceOfflineVSD.h"
+#include "EventVisualisationDetectors/DataSourceOfflineVSD.h"
 
 #include <TGTab.h>
 #include <TEnv.h>
@@ -56,15 +56,14 @@ Initializer::Initializer(EventManager::EDataSource defaultDataSource)
   eventManager.setDataSourceType(defaultDataSource);
   eventManager.setCdbPath(ocdbStorage);
 
-  TFile*  fFile = TFile::Open("AliESDs.root");
+  //TFile*  fFile = TFile::Open("AliESDs.root");
   //TFile*  fFile = TFile::Open("AliVSD.root");
 
   DataSourceOffline *ds = new DataSourceOfflineVSD();
 //DataSourceOffline *ds = new DataSourceOffline();
-  ds->open("AliVSD.root");
+  ds->Open("AliVSD.root");
   eventManager.setDataSource(ds);
 
-  
   //gEve->AddEvent(&eventManager);
   
   setupGeometry();

@@ -16,8 +16,8 @@
 
 #include "EventVisualisationBase/ConfigurationManager.h"
 #include "EventVisualisationBase/Track.h"
-
 #include "EventVisualisationDataConverter/MinimalisticEvent.h"
+#include "EventVisualisationDetectors/DataSourceOfflineITS.h"
 
 #include <TEveManager.h>
 #include <TEveTrackPropagator.h>
@@ -35,6 +35,28 @@ DataInterpreterITS::DataInterpreterITS() = default;
 DataInterpreterITS::~DataInterpreterITS() = default;
 
 TEveElement* DataInterpreterITS::interpretDataForType(EDataType type) {
+  // Assuming offline - where online vs offline should be recognized?
+  DataSourceOfflineITS dataSource;
+
+  switch(type) {
+    case EDataType::Raw:
+      dataSource.OpenRawFile();
+      break;
+    case EDataType::Hits:
+      break;
+    case EDataType::Digits:
+      break;
+    case EDataType::Clusters:
+      break;
+    case EDataType::ESD:
+      break;
+    case EDataType::AOD:
+      break;
+    case EDataType::NoData:
+    default:
+      break;
+  }
+
     int multiplicity = 500*((double)rand()/RAND_MAX)+100;
     MinimalisticEvent *minEvent = new MinimalisticEvent(
             15,             // event number

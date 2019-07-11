@@ -120,7 +120,7 @@ DataSourceOfflineVSD::~DataSourceOfflineVSD()  {
         gEve->AddElement(fTrackList);
     }
 
-    void DataSourceOfflineVSD::open(TString ESDFileName)  {
+    void DataSourceOfflineVSD::Open(TString ESDFileName)  {
         fMaxEv = -1;
         fCurEv = -1;
         fFile = TFile::Open(ESDFileName);

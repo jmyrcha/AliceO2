@@ -9,7 +9,7 @@
 #include <EventVisualisationView/EventManagerFrame.h>
 #include <EventVisualisationView/MultiView.h>
 #include <EventVisualisationBase/DataSourceOffline.h>
-#include <EventVisualisationBase/DataSourceOfflineVSD.h>
+#include <EventVisualisationDetectors/DataSourceOfflineVSD.h>
 #include <Rtypes.h>
 #include <iostream>
 

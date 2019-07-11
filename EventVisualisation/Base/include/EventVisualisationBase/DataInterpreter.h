@@ -17,6 +17,7 @@
 
 #include "EventVisualisationBase/EventManager.h"
 #include "EventVisualisationBase/VisualisationConstants.h"
+#include "EventVisualisationBase/DataSource.h"
 
 #include <TEveElement.h>
 
