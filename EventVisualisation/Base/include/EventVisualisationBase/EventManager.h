@@ -55,6 +55,7 @@ public:
     {
       o2::ccdb::Manager::Instance()->setDefaultStorage(path.c_str());
     }
+
     int gotoEvent(Int_t event) ;
     DataSource *getDataSource() {return dataSource;}
     void setDataSource(DataSource *dataSource) {this->dataSource = dataSource;}
@@ -67,9 +68,9 @@ public:
 
     void AfterNewEventLoaded() override;
 
-    void AddNewEventCommand(const TString& cmd) override ;;
-    void RemoveNewEventCommand(const TString& cmd) override ;;
-    void ClearNewEventCommands() override ;;
+    void AddNewEventCommand(const TString& cmd) override ;
+    void RemoveNewEventCommand(const TString& cmd) override ;
+    void ClearNewEventCommands() override ;
 
 private:
     EDataSource mCurrentDataSourceType; ///< enum type of the current data source
@@ -81,7 +82,7 @@ private:
     ~EventManager() final;
     /// Deleted copy constructor
     EventManager(EventManager const&) = delete;
-    /// Deleted assignemt operator
+    /// Deleted assigment operator
     void operator=(EventManager const&) = delete;
 };
 

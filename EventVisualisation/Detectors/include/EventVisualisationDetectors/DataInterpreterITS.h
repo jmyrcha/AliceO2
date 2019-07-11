@@ -5,7 +5,7 @@
 #ifndef ALICE_O2_EVENTVISUALISATION_BASE_DATAINTERPRETERITS_H
 #define ALICE_O2_EVENTVISUALISATION_BASE_DATAINTERPRETERITS_H
 
-/// DataInterpreterVSD prepares random events
+/// DataInterpreterITS prepares random events
 ///
 /// This class overrides DataInterpreter and implements method
 /// returning visualisation objects representing data from ITS file
@@ -21,13 +21,13 @@ namespace event_visualisation {
 
 class DataInterpreterITS : public DataInterpreter {
 public:
-    // Default constructor
+    /// Default constructor
     DataInterpreterITS();
 
-    // Default destructor
+    /// Default destructor
     ~DataInterpreterITS() final;
 
-    // Returns a list of random tracks colored by PID
+    /// Returns a list of random tracks colored by PID
     TEveElement *interpretDataForType(EDataType type) final;
 };
 

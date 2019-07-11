@@ -2,9 +2,8 @@
 // Created by jmy on 26.02.19.
 //
 
+#include "EventVisualisationDetectors/DataSourceOfflineVSD.h"
 
-
-#include <EventVisualisationBase/DataSourceOfflineVSD.h>
 #include <TSystem.h>
 #include <TEveManager.h>
 #include <TFile.h>
@@ -12,13 +11,8 @@
 #include <TEveTrackPropagator.h>
 #include <TEveEventManager.h>
 
-
-
 namespace o2  {
 namespace event_visualisation {
-
-
-
 
     DataSourceOfflineVSD::DataSourceOfflineVSD()
             : DataSourceOffline(), fTrackList(0), fITSClusters(0), fTPCClusters(0), fTRDClusters(0), fTOFClusters(0),

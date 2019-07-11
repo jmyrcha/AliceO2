@@ -1,13 +1,9 @@
 //
 // Created by jmy on 09.07.19.
 //
+
 //#include "EventVisualisationView/MultiView.h"
-#include "EventVisualisationBase/DataSourceOfflineITS.h"
-
-
-//
-
-
+#include "EventVisualisationDetectors/DataSourceOfflineITS.h"
 #include "ITSMFTReconstruction/ChipMappingITS.h"
 #include "ITSMFTReconstruction/DigitPixelReader.h"
 #include "ITSMFTReconstruction/RawPixelReader.h"
@@ -19,12 +15,6 @@
 #include "DataFormatsITS/TrackITS.h"
 #include "DetectorsCommonDataFormats/DetID.h"
 #include "CommonDataFormat/InteractionRecord.h"
-#include "TGenericClassInfo.h"
-
-#include <TEveElement.h>
-
-
-
 
 #include <iostream>
 #include <array>
@@ -46,12 +36,10 @@
 #include <TEvePointSet.h>
 #include <TEveTrackPropagator.h>
 #include <TEveTrack.h>
+#include <TGenericClassInfo.h>
+#include <TEveElement.h>
 #include <Rtypes.h>
 #include <gsl/span>
-
-
-
-
 
 using namespace o2::itsmft;
 extern TEveManager* gEve;

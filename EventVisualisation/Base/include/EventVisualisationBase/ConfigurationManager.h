@@ -24,7 +24,7 @@ namespace event_visualisation {
 /// Configuration Manager allows an easy access to the config file.
 ///
 /// Configuration Manager is a singleton which assures an access to
-/// the correct configuration file, regardless wether it is located
+/// the correct configuration file, regardless whether it is located
 /// in the users home directory or in the O2 installation path.
 
 class ConfigurationManager

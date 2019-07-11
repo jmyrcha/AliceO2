@@ -5,7 +5,8 @@
 #ifndef ALICE_O2_EVENTVISUALISATION_BASE_DATASOURCEOFFLINE_H
 #define ALICE_O2_EVENTVISUALISATION_BASE_DATASOURCEOFFLINE_H
 
-#include <EventVisualisationBase/DataSource.h>
+#include "EventVisualisationBase/DataSource.h"
+
 #include <TString.h>
 
 namespace o2  {
@@ -13,7 +14,7 @@ namespace event_visualisation {
 
 class DataSourceOffline : public DataSource {
 protected:
-    TString fgESDFileName ;
+    TString fgESDFileName;
     bool isOpen = kFALSE;
 
 public:
@@ -22,15 +23,17 @@ public:
     };
     int gotoEvent(Int_t event) override {};
     void nextEvent() override {};
-    DataSourceOffline() {}
+
+    DataSourceOffline() {};
 
     ~DataSourceOffline() override {};
 
+    /// Deleted copy constructor
     DataSourceOffline(DataSourceOffline const&) = delete;
-    /// Deleted assignemt operator
+
+    /// Deleted assigment operator
     void operator=(DataSourceOffline const&) = delete;
 };
-
 
 }
 }

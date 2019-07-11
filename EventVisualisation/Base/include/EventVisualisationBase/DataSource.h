@@ -7,7 +7,6 @@
 
 #include <TQObject.h>
 
-
 namespace o2 {
 namespace event_visualisation {
 
@@ -16,15 +15,15 @@ public:
     virtual int gotoEvent(Int_t event) {};
     virtual void nextEvent() {};
 
-    DataSource(){};
+    DataSource() = default;
 
     /// Default destructor
-    virtual ~DataSource(){};
+    virtual ~DataSource() = default;
 
     /// Deleted copy constructor
     DataSource(DataSource const &) = delete;
 
-    /// Deleted assignemt operator
+    /// Deleted assigment operator
     void operator=(DataSource const &) = delete;
 };
 
