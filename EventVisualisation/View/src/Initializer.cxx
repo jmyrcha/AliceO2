@@ -22,7 +22,8 @@
 #include "EventVisualisationBase/VisualisationConstants.h"
 #include "EventVisualisationView/EventManagerFrame.h"
 #include "EventVisualisationBase/DataSourceOffline.h"
-#include "EventVisualisationDetectors/DataSourceOfflineVSD.h"
+#include "EventVisualisationDetectors/DataSourceOfflineITS.h"
+#include "EventVisualisationDetectors/DataInterpreterITS.h"
 
 #include <TGTab.h>
 #include <TEnv.h>
@@ -41,8 +42,6 @@ using namespace std;
 namespace o2  {
 namespace event_visualisation {
 
-
-
 Initializer::Initializer(EventManager::EDataSource defaultDataSource)
 {
   TEnv settings;
@@ -50,25 +49,24 @@ Initializer::Initializer(EventManager::EDataSource defaultDataSource)
   
   const bool fullscreen      = settings.GetValue("fullscreen.mode",false);       // hide left and bottom tabs
   const string ocdbStorage   = settings.GetValue("OCDB.default.path","local://$ALICE_ROOT/OCDB");// default path to OCDB
-  cout<<"Initializer -- OCDB path:"<<ocdbStorage<<endl;
+  cout << "Initializer -- OCDB path:" << ocdbStorage << endl;
   
   auto &eventManager = EventManager::getInstance();
   eventManager.setDataSourceType(defaultDataSource);
   eventManager.setCdbPath(ocdbStorage);
 
-  //TFile*  fFile = TFile::Open("AliESDs.root");
-  //TFile*  fFile = TFile::Open("AliVSD.root");
-
-  DataSourceOffline *ds = new DataSourceOfflineVSD();
+//  DataSourceOffline *ds = new DataSourceOfflineVSD();
 //DataSourceOffline *ds = new DataSourceOffline();
-  ds->Open("AliVSD.root");
+//  ds->Open("AliVSD.root");
+  DataSourceOffline *ds = new DataSourceOfflineITS();
+  //ds->Open("o2trac_its.root");
   eventManager.setDataSource(ds);
 
   //gEve->AddEvent(&eventManager);
   
   setupGeometry();
   gSystem->ProcessEvents();
-  gEve->Redraw3D(true);
+  gEve->Redraw3D(kTRUE);
   
   setupBackground();
   
@@ -95,8 +93,10 @@ Initializer::Initializer(EventManager::EDataSource defaultDataSource)
   // Later this will be triggered by button, and finally moved to configuration.
   //gEve->AddEvent(&EventManager::getInstance());
   //MultiView::getInstance()->drawRandomEvent();
-    gEve->AddEvent(&eventManager);
-  frame->DoFirstEvent();
+  gEve->AddEvent(&eventManager);
+  // AOD is dummy here, as there is no separate type for tracks
+  MultiView::getInstance()->drawITSEvent(EDataType::AOD);
+  //frame->DoFirstEvent();
 }
 
 Initializer::~Initializer() = default;

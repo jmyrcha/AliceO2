@@ -20,9 +20,25 @@ namespace o2 {
 namespace event_visualisation {
 
 DataSourceOffline::DataSourceOffline():
-  fgRawFileName("raw.root")
+  fgRawFileName("raw.root"),
+  fgClustersFileName("clusters.root"),
+  fgTracksFileName("tracks.root")
 {
 
+}
+
+void DataSourceOffline::Open(TString ESDFileName)
+{
+  if(fIsOpen)
+  {
+    std::cout << "Files already opened!" << std::endl;
+    return;
+  }
+
+  this->fgESDFileName = ESDFileName;
+  OpenRawFile();
+  OpenTracksFile();
+  fIsOpen = kTRUE;
 }
 
 

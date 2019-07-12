@@ -20,6 +20,7 @@
 #include "EventVisualisationBase/VisualisationConstants.h"
 
 #include "EventVisualisationDetectors/DataInterpreterRND.h"
+#include "EventVisualisationDetectors/DataInterpreterITS.h"
 
 #include <TBrowser.h>
 #include <TEnv.h>
@@ -208,6 +209,13 @@ void MultiView::drawRandomEvent()
     TEveElement *dataRND1 = dataInterpreterRND->interpretDataForType(NoData);
     registerEvent(dataRND1);
 
+}
+
+void MultiView::drawITSEvent(EDataType type)
+{
+  DataInterpreter *dataInterpreterITS = new DataInterpreterITS();
+  TEveElement *dataITS = dataInterpreterITS->interpretDataForType(type);
+  registerEvent(dataITS);
 }
   
 }

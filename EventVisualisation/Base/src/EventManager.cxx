@@ -64,7 +64,7 @@ void EventManager::Open() {
 void EventManager::GotoEvent(Int_t no) {
     std::cout << "EventManager::GotoEvent("<<no<<")" << std::endl;
     gotoEvent(no);
-    TEveEventManager::GotoEvent( no);
+    TEveEventManager::GotoEvent(no);
 }
 
 void EventManager::NextEvent() {

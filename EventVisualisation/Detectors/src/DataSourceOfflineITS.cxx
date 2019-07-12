@@ -2,8 +2,9 @@
 // Created by jmy on 09.07.19.
 //
 
-//#include "EventVisualisationView/MultiView.h"
 #include "EventVisualisationDetectors/DataSourceOfflineITS.h"
+
+//#include "EventVisualisationView/MultiView.h"
 //#include "ITSMFTReconstruction/ChipMappingITS.h"
 //#include "ITSMFTReconstruction/DigitPixelReader.h"
 //#include "ITSMFTReconstruction/RawPixelReader.h"
@@ -23,7 +24,7 @@
 
 //#include <TFile.h>
 //#include <TTree.h>
-//#include <TEveManager.h>
+#include <TEveManager.h>
 //#include <TEveBrowser.h>
 //#include <TGButton.h>
 //#include <TGNumberEntry.h>
@@ -41,6 +42,8 @@
 //#include <Rtypes.h>
 //#include <gsl/span>
 
+extern TEveManager* gEve;
+
 using namespace o2::itsmft;
 
 namespace o2 {
@@ -50,6 +53,8 @@ DataSourceOfflineITS::DataSourceOfflineITS():
 DataSourceOffline()
 {
   fgRawFileName = TString("itsdigits.root");
+  fgClustersFileName = TString("o2clus_its.root");
+  fgTracksFileName = TString("o2trac_its.root");
 }
 
 void DataSourceOfflineITS::OpenRawFile()
@@ -57,18 +62,68 @@ void DataSourceOfflineITS::OpenRawFile()
   // Here should be check and search in default raw file paths
   // AliRoot/EVE/EveBase/AliEveDataSourceOffline.cxx lines 342-369
 
-  TString digifile = fgRawFileName;
-  std::ifstream* rawfile = new std::ifstream(digifile.Data(), std::ifstream::binary);
+  std::ifstream* rawfile = new std::ifstream(fgRawFileName.Data(), std::ifstream::binary);
   if (rawfile->good()) {
     delete rawfile;
     std::cout << "Running with raw digits...\n";
     auto reader = new RawPixelReader<ChipMappingITS>();
-    reader->openInput(digifile.Data());
+    reader->openInput(fgRawFileName.Data());
     mPixelReader = reader;
     reader->getNextChipData(mChipData);
     mIR = mChipData.getInteractionRecord();
   } else
-    std::cerr << "\nERROR: Cannot open file: " << digifile << "\n\n";
+    std::cerr << "\nERROR: Cannot open file: " << fgRawFileName << "\n\n";
+}
+
+void DataSourceOfflineITS::OpenClustersFile()
+{
+  TFile* file = TFile::Open(fgClustersFileName.Data());
+  if (file && gFile->IsOpen())
+  {
+    TTree* tree = (TTree*)gFile->Get("o2sim");
+    if (tree == nullptr) {
+      std::cerr << "No tree for clusters !\n";
+      return;
+    }
+    tree->SetBranchAddress("ITSCluster", &mClusterBuffer);
+    mClusTree = tree;
+
+    TTree* roft = (TTree*)gFile->Get("ITSClustersROF");
+    if (roft != nullptr) {
+      std::vector<o2::itsmft::ROFRecord>* roFrames = &mClustersROF;
+      roft->SetBranchAddress("ITSClustersROF", &roFrames);
+      roft->GetEntry(0);
+    }
+  }
+  else
+    std::cerr << "ERROR: Cannot open file: " << fgClustersFileName << "\n\n";
+}
+
+void DataSourceOfflineITS::OpenTracksFile()
+{
+  // Here should be check and search in default tracks file paths
+
+  TFile* file = TFile::Open(fgTracksFileName.Data());
+  if (file && gFile->IsOpen())
+  {
+    TTree* tree = (TTree*)gFile->Get("o2sim");
+    if (tree == nullptr) {
+      std::cerr << "No tree for tracks !\n";
+      return;
+    }
+    tree->SetBranchAddress("ITSTrack", &mTrackBuffer);
+    tree->SetBranchAddress("ITSTrackClusIdx", &mClIdxBuffer);
+    mTracTree = tree;
+
+    TTree* roft = (TTree*)gFile->Get("ITSTracksROF");
+    if (roft != nullptr) {
+      std::vector<o2::itsmft::ROFRecord>* roFrames = &mTracksROF;
+      roft->SetBranchAddress("ITSTracksROF", &roFrames);
+      roft->GetEntry(0);
+    }
+  }
+  else
+    std::cerr << "\nERROR: Cannot open file: " << fgTracksFileName << "\n\n";
 }
 
 void DataSourceOfflineITS::Open(TString fileName)
@@ -78,6 +133,9 @@ void DataSourceOfflineITS::Open(TString fileName)
 
 Bool_t DataSourceOfflineITS::GotoEvent(Int_t ev)
 {
+  //loadDigits(entry);
+  //loadClusters(entry);
+  //loadTracks(entry);
   return kTRUE;
 }
 

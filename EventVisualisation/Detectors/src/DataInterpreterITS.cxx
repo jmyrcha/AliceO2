@@ -47,28 +47,96 @@ TEveElement* DataInterpreterITS::interpretDataForType(EDataType type) {
     case EDataType::Digits:
       break;
     case EDataType::Clusters:
+      dataSource.OpenClustersFile();
       break;
     case EDataType::ESD:
       break;
     case EDataType::AOD:
+      dataSource.OpenClustersFile();
+      dataSource.OpenTracksFile();
       break;
     case EDataType::NoData:
     default:
       break;
   }
 
-    int multiplicity = 500*((double)rand()/RAND_MAX)+100;
-    MinimalisticEvent *minEvent = new MinimalisticEvent(
-            15,             // event number
-            123456,         // run number
-            7000,           // energy
-            multiplicity,   // multiplicity
-            "p-p",          // event system
-            12736563        // timestamp
-            );
-
-
+  if(!dataSource.GotoEvent(0))
+  {
+    std::cout << "Data source could not go to event 0" << std::endl;
     return nullptr;
+  }
+
+  TEveElement* event;
+  switch(type) {
+    case EDataType::Raw:
+      break;
+    case EDataType::Hits:
+      break;
+    case EDataType::Digits:
+      break;
+    case EDataType::Clusters:
+      break;
+    case EDataType::ESD:
+      break;
+    case EDataType::AOD:
+      event = loadTracks();
+      break;
+    case EDataType::NoData:
+    default:
+      break;
+  }
+
+  return event;
+}
+
+TEveElement* DataInterpreterITS::loadTracks()
+{
+  auto gman = o2::its::GeometryTGeo::Instance();
+
+  TEvePointSet* clusters = new TEvePointSet("clusters");
+  clusters->SetMarkerColor(kBlue);
+  for (const auto& c : mClusters) {
+    const auto& gloC = c.getXYZGloRot(*gman);
+    clusters->SetNextPoint(gloC.X(), gloC.Y(), gloC.Z());
+  }
+  std::cout << "Got eve clusters" << '\n';
+
+  TEveTrackList* tracks = new TEveTrackList("tracks");
+  auto prop = tracks->GetPropagator();
+  prop->SetMagField(0.5);
+  prop->SetMaxR(50.);
+  for (const auto& rec : mTracks) {
+    std::array<float, 3> p;
+    rec.getPxPyPzGlo(p);
+    TEveRecTrackD t;
+    t.fP = { p[0], p[1], p[2] };
+    t.fSign = (rec.getSign() < 0) ? -1 : 1;
+    TEveTrack* track = new TEveTrack(&t, prop);
+    track->SetLineColor(kMagenta);
+    tracks->AddElement(track);
+
+    if (mClusters.empty())
+      continue;
+    TEvePointSet* tpoints = new TEvePointSet("tclusters");
+    tpoints->SetMarkerColor(kGreen);
+    int nc = rec.getNumberOfClusters();
+    int idxRef = rec.getFirstClusterEntry();
+    while (nc--) {
+      Int_t idx = (*mClIdxBuffer)[idxRef + nc];
+      const Cluster& c = mClusters[idx];
+      const auto& gloC = c.getXYZGloRot(*gman);
+      tpoints->SetNextPoint(gloC.X(), gloC.Y(), gloC.Z());
+    }
+    track->AddElement(tpoints);
+  }
+  tracks->MakeTracks();
+  std::cout << "Got eve tracks" << '\n';
+
+  TEveElement* event = new TEveElement();
+  event->AddElement(clusters);
+  event->AddElement(tracks);
+  std::cout << "Added elements" << '\n';
+  return event;
 }
 
 }

@@ -21,6 +21,7 @@
 #include <TEveViewer.h>
 
 #include <vector>
+#include <EventVisualisationBase/VisualisationConstants.h>
 
 namespace o2  {
 namespace event_visualisation {
@@ -84,6 +85,7 @@ class MultiView
     void destroyAllEvents();
   
     void drawRandomEvent();
+    void drawITSEvent(EDataType type = EDataType::Raw);
   private:
     /// Default constructor
     MultiView();

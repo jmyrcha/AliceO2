@@ -7,7 +7,10 @@
 
 #include "EventVisualisationBase/DataSource.h"
 
+#include "ReconstructionDataFormats/Track.h"
+
 #include <TString.h>
+//#include <gsl/span>
 
 namespace o2  {
 namespace event_visualisation {
@@ -16,12 +19,17 @@ class DataSourceOffline : public DataSource {
 protected:
     TString fgESDFileName;
     TString  fgRawFileName;
-    bool isOpen = kFALSE;
+    TString  fgClustersFileName;
+    TString fgTracksFileName;
+
+    Bool_t fIsOpen = kFALSE;
+    Int_t mLastEvent = 0;
 public:
-    virtual void Open(TString ESDFileName) {
-        this->fgESDFileName = ESDFileName;
-    };
+    virtual void Open(TString ESDFileName);
     virtual void OpenRawFile() {};
+    virtual void OpenClustersFile() {};
+    virtual void OpenTracksFile() {};
+
     Bool_t GotoEvent(Int_t event) override {};
     void NextEvent() override {};
 
