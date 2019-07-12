@@ -36,31 +36,32 @@ DataInterpreterITS::~DataInterpreterITS() = default;
 
 TEveElement* DataInterpreterITS::interpretDataForType(EDataType type) {
   // Assuming offline - where online vs offline should be recognized?
-  DataSourceOfflineITS dataSource;
+  DataSourceOfflineITS* dataSource = new DataSourceOfflineITS();
 
-  switch(type) {
-    case EDataType::Raw:
-      dataSource.OpenRawFile();
-      break;
-    case EDataType::Hits:
-      break;
-    case EDataType::Digits:
-      break;
-    case EDataType::Clusters:
-      dataSource.OpenClustersFile();
-      break;
-    case EDataType::ESD:
-      break;
-    case EDataType::AOD:
-      dataSource.OpenClustersFile();
-      dataSource.OpenTracksFile();
-      break;
-    case EDataType::NoData:
-    default:
-      break;
-  }
+//  switch(type) {
+//    case EDataType::Raw:
+//      dataSource->OpenRawFile();
+//      break;
+//    case EDataType::Hits:
+//      break;
+//    case EDataType::Digits:
+//      dataSource->OpenDigitsFile();
+//      break;
+//    case EDataType::Clusters:
+//      dataSource->OpenClustersFile();
+//      break;
+//    case EDataType::ESD:
+//      break;
+//    case EDataType::AOD:
+//      dataSource->OpenClustersFile();
+//      dataSource->OpenTracksFile();
+//      break;
+//    case EDataType::NoData:
+//    default:
+//      break;
+//  }
 
-  if(!dataSource.GotoEvent(0))
+  if(!dataSource->GotoEvent(0))
   {
     std::cout << "Data source could not go to event 0" << std::endl;
     return nullptr;
@@ -79,7 +80,7 @@ TEveElement* DataInterpreterITS::interpretDataForType(EDataType type) {
     case EDataType::ESD:
       break;
     case EDataType::AOD:
-      event = loadTracks();
+      event = loadTracks(dataSource);
       break;
     case EDataType::NoData:
     default:
@@ -89,13 +90,14 @@ TEveElement* DataInterpreterITS::interpretDataForType(EDataType type) {
   return event;
 }
 
-TEveElement* DataInterpreterITS::loadTracks()
+TEveElement* DataInterpreterITS::loadTracks(DataSourceOfflineITS* source)
 {
   auto gman = o2::its::GeometryTGeo::Instance();
 
   TEvePointSet* clusters = new TEvePointSet("clusters");
   clusters->SetMarkerColor(kBlue);
-  for (const auto& c : mClusters) {
+  gsl::span<Cluster> sourceClusters = source->GetClusters();
+  for (const auto& c : sourceClusters) {
     const auto& gloC = c.getXYZGloRot(*gman);
     clusters->SetNextPoint(gloC.X(), gloC.Y(), gloC.Z());
   }
@@ -105,7 +107,8 @@ TEveElement* DataInterpreterITS::loadTracks()
   auto prop = tracks->GetPropagator();
   prop->SetMagField(0.5);
   prop->SetMaxR(50.);
-  for (const auto& rec : mTracks) {
+  gsl::span<its::TrackITS> sourceTracks = source->GetTracks();
+  for (const auto& rec : sourceTracks) {
     std::array<float, 3> p;
     rec.getPxPyPzGlo(p);
     TEveRecTrackD t;
@@ -115,15 +118,16 @@ TEveElement* DataInterpreterITS::loadTracks()
     track->SetLineColor(kMagenta);
     tracks->AddElement(track);
 
-    if (mClusters.empty())
+    if (sourceClusters.empty())
       continue;
     TEvePointSet* tpoints = new TEvePointSet("tclusters");
     tpoints->SetMarkerColor(kGreen);
     int nc = rec.getNumberOfClusters();
     int idxRef = rec.getFirstClusterEntry();
+    std::vector<Int_t>* sourceClIdxBuffer = source->GetClIdxBuffer();
     while (nc--) {
-      Int_t idx = (*mClIdxBuffer)[idxRef + nc];
-      const Cluster& c = mClusters[idx];
+      Int_t idx = (*sourceClIdxBuffer)[idxRef + nc];
+      const Cluster& c = sourceClusters[idx];
       const auto& gloC = c.getXYZGloRot(*gman);
       tpoints->SetNextPoint(gloC.X(), gloC.Y(), gloC.Z());
     }

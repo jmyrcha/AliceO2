@@ -19,18 +19,21 @@ class DataSourceOffline : public DataSource {
 protected:
     TString fgESDFileName;
     TString  fgRawFileName;
+    TString  fgDigitsFileName;
     TString  fgClustersFileName;
     TString fgTracksFileName;
 
     Bool_t fIsOpen = kFALSE;
     Int_t mLastEvent = 0;
+    Int_t fMaxEv, fCurEv;
 public:
-    virtual void Open(TString ESDFileName);
+    virtual void Open(TString ESDFileName) override;
     virtual void OpenRawFile() {};
+    virtual void OpenDigitsFile() {};
     virtual void OpenClustersFile() {};
     virtual void OpenTracksFile() {};
 
-    Bool_t GotoEvent(Int_t event) override {};
+    Int_t GotoEvent(Int_t event) override {};
     void NextEvent() override {};
 
     /// Default constructor

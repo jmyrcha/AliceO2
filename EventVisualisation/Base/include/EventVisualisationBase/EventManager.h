@@ -45,18 +45,19 @@ public:
     };
 
     /// Returns an instance of EventManager
-    static EventManager *instance;
     static EventManager& getInstance();
 
     /// Setter of the current data source
     inline void setDataSourceType(EDataSource source){mCurrentDataSourceType = source;}
+    /// Setter of the current data source path
+    inline void setDataSourcePath(const TString& path) { dataPath = path;}
     /// Sets the CDB path in CCDB Manager
-    inline void setCdbPath(std::string path)
+    inline void setCdbPath(const TString& path)
     {
-      o2::ccdb::Manager::Instance()->setDefaultStorage(path.c_str());
+      o2::ccdb::Manager::Instance()->setDefaultStorage(path.Data());
     }
 
-    int gotoEvent(Int_t event) ;
+    Int_t getCurrentEvent() {return currentEvent;}
     DataSource *getDataSource() {return dataSource;}
     void setDataSource(DataSource *dataSource) {this->dataSource = dataSource;}
 
@@ -72,9 +73,14 @@ public:
     void RemoveNewEventCommand(const TString& cmd) override ;
     void ClearNewEventCommands() override ;
 
+    void DropEvent() {DestroyElements();}
+
 private:
-    EDataSource mCurrentDataSourceType; ///< enum type of the current data source
+    static EventManager *instance;
+    EDataSource mCurrentDataSourceType = EDataSource::SourceOffline; ///< enum type of the current data source
     DataSource *dataSource = nullptr;
+    TString dataPath = "";
+    Int_t currentEvent = 0;
 
     /// Default constructor
     EventManager();

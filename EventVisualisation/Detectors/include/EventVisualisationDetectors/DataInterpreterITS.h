@@ -15,6 +15,8 @@
 #include "EventVisualisationBase/EventManager.h"
 #include "EventVisualisationBase/VisualisationConstants.h"
 
+#include "EventVisualisationDetectors/DataSourceOfflineITS.h"
+
 namespace o2 {
 namespace event_visualisation {
 
@@ -30,7 +32,7 @@ public:
     /// Returns a list of random tracks colored by PID
     TEveElement *interpretDataForType(EDataType type) final;
 
-    TEveElement* loadTracks();
+    TEveElement* loadTracks(DataSourceOfflineITS* source);
 };
 
 }

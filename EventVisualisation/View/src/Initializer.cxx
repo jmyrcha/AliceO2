@@ -52,15 +52,19 @@ Initializer::Initializer(EventManager::EDataSource defaultDataSource)
   cout << "Initializer -- OCDB path:" << ocdbStorage << endl;
   
   auto &eventManager = EventManager::getInstance();
-  eventManager.setDataSourceType(defaultDataSource);
+  //eventManager.setDataSourceType(defaultDataSource);
   eventManager.setCdbPath(ocdbStorage);
 
 //  DataSourceOffline *ds = new DataSourceOfflineVSD();
 //DataSourceOffline *ds = new DataSourceOffline();
 //  ds->Open("AliVSD.root");
-  DataSourceOffline *ds = new DataSourceOfflineITS();
+  //DataSourceOffline *ds = new DataSourceOfflineITS();
   //ds->Open("o2trac_its.root");
-  eventManager.setDataSource(ds);
+  //eventManager.setDataSource(ds);
+
+  eventManager.setDataSourceType(EventManager::EDataSource::SourceOffline);
+  eventManager.setDataSourcePath("o2trac_its.root");
+  eventManager.Open();
 
   //gEve->AddEvent(&eventManager);
   
@@ -91,45 +95,51 @@ Initializer::Initializer(EventManager::EDataSource defaultDataSource)
   // Temporary:
   // For the time being we draw single random event on startup.
   // Later this will be triggered by button, and finally moved to configuration.
-  //gEve->AddEvent(&EventManager::getInstance());
+  gEve->AddEvent(&EventManager::getInstance());
   //MultiView::getInstance()->drawRandomEvent();
-  gEve->AddEvent(&eventManager);
+  //gEve->AddEvent(&eventManager);
+
   // AOD is dummy here, as there is no separate type for tracks
   MultiView::getInstance()->drawITSEvent(EDataType::AOD);
-  //frame->DoFirstEvent();
+  frame->DoFirstEvent();
 }
 
 Initializer::~Initializer() = default;
 
 void Initializer::setupGeometry()
 {
-  // read path to geometry files from config file
-  TEnv settings;
-  ConfigurationManager::getInstance().getConfig(settings);
-  
-  // get geometry from Geometry Manager and register in multiview
-  auto multiView = MultiView::getInstance();
-  
-  for(int iDet=0;iDet<NvisualisationGroups;++iDet){
-    EVisualisationGroup det = static_cast<EVisualisationGroup>(iDet);
-    string detName = gVisualisationGroupName[det];
-    if(settings.GetValue((detName+".draw").c_str(), false))
-    {
-      if(   detName=="TPC" || detName=="MCH" || detName=="MTR"
-         || detName=="MID" || detName=="MFT" || detName=="AD0"
-         || detName=="FMD"){// don't load MUON+MFT and AD and standard TPC to R-Phi view
-        
-        multiView->drawGeometryForDetector(detName,true,false);
-      }
-      else if(detName=="RPH"){// special TPC geom from R-Phi view
-        
-        multiView->drawGeometryForDetector(detName,false,true,false);
-      }
-      else{// default
-        multiView->drawGeometryForDetector(detName);
-      }
-    }
-  }
+  o2::base::GeometryManager::loadGeometry("O2geometry.root", "FAIRGeom");
+  auto gman = o2::its::GeometryTGeo::Instance();
+  gman->fillMatrixCache(o2::utils::bit2Mask(o2::TransformType::T2L, o2::TransformType::T2GRot,
+                                            o2::TransformType::L2G));
+
+//  // read path to geometry files from config file
+//  TEnv settings;
+//  ConfigurationManager::getInstance().getConfig(settings);
+//
+//  // get geometry from Geometry Manager and register in multiview
+//  auto multiView = MultiView::getInstance();
+//
+//  for(int iDet=0;iDet<NvisualisationGroups;++iDet){
+//    EVisualisationGroup det = static_cast<EVisualisationGroup>(iDet);
+//    string detName = gVisualisationGroupName[det];
+//    if(settings.GetValue((detName+".draw").c_str(), false))
+//    {
+//      if(   detName=="TPC" || detName=="MCH" || detName=="MTR"
+//         || detName=="MID" || detName=="MFT" || detName=="AD0"
+//         || detName=="FMD"){// don't load MUON+MFT and AD and standard TPC to R-Phi view
+//
+//        multiView->drawGeometryForDetector(detName,true,false);
+//      }
+//      else if(detName=="RPH"){// special TPC geom from R-Phi view
+//
+//        multiView->drawGeometryForDetector(detName,false,true,false);
+//      }
+//      else{// default
+//        multiView->drawGeometryForDetector(detName);
+//      }
+//    }
+//  }
 }
  
 void Initializer::setupCamera()

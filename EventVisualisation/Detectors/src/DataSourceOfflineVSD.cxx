@@ -4,6 +4,8 @@
 
 #include "EventVisualisationDetectors/DataSourceOfflineVSD.h"
 
+#include <EventVisualisationView/MultiView.h>
+
 #include <TSystem.h>
 #include <TEveManager.h>
 #include <TFile.h>
@@ -117,7 +119,8 @@ DataSourceOfflineVSD::~DataSourceOfflineVSD()  {
 
         fTrackList->MakeTracks();
 
-        gEve->AddElement(fTrackList);
+       gEve->AddElement(fTrackList);
+       MultiView::getInstance()->registerEvent(fTrackList);
     }
 
     void DataSourceOfflineVSD::Open(TString ESDFileName)  {
@@ -149,7 +152,7 @@ DataSourceOfflineVSD::~DataSourceOfflineVSD()  {
         fVSD = new TEveVSD;
     }
 
-    Bool_t DataSourceOfflineVSD::GotoEvent(Int_t ev) {
+    Int_t DataSourceOfflineVSD::GotoEvent(Int_t ev) {
         if (ev < 0 || ev >= this->fMaxEv) {
             Warning("GotoEvent", "Invalid event id %d.", ev);
             return kFALSE;

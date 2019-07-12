@@ -25,7 +25,6 @@ public:
 
     TFile *fFile;
     TObjArray *fEvDirKeys;
-    Int_t fMaxEv, fCurEv;
 
     // ----------------------------------------------------------
     // Event visualization structures
@@ -53,7 +52,8 @@ public:
 
     void Open(TString ESDFileName) override;
 
-    Bool_t GotoEvent(Int_t ev);
+    Int_t GotoEvent(Int_t ev);
+    Int_t GetEventCount() override { return fEvDirKeys->GetEntriesFast(); };
 };
 
 

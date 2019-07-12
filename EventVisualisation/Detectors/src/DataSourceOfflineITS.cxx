@@ -53,6 +53,7 @@ DataSourceOfflineITS::DataSourceOfflineITS():
 DataSourceOffline()
 {
   fgRawFileName = TString("itsdigits.root");
+  fgDigitsFileName = TString("itsdigits.root");
   fgClustersFileName = TString("o2clus_its.root");
   fgTracksFileName = TString("o2trac_its.root");
 }
@@ -75,8 +76,29 @@ void DataSourceOfflineITS::OpenRawFile()
     std::cerr << "\nERROR: Cannot open file: " << fgRawFileName << "\n\n";
 }
 
+void DataSourceOfflineITS::OpenDigitsFile()
+{
+  // Here should be check and search in default digits file paths
+
+  TFile* file = TFile::Open(fgDigitsFileName.Data());
+  if (file && gFile->IsOpen()) {
+    file->Close();
+    std::cout << "Running with MC digits...\n";
+    auto reader = new DigitPixelReader();
+    reader->openInput(fgDigitsFileName.Data(), o2::detectors::DetID("ITS"));
+    reader->init();
+    reader->readNextEntry();
+    mPixelReader = reader;
+    mPixelReader->getNextChipData(mChipData);
+    mIR = mChipData.getInteractionRecord();
+  } else
+    std::cerr << "\nERROR: Cannot open file: " << fgDigitsFileName << "\n\n";
+}
+
 void DataSourceOfflineITS::OpenClustersFile()
 {
+  // Here should be check and search in default clusters file paths
+
   TFile* file = TFile::Open(fgClustersFileName.Data());
   if (file && gFile->IsOpen())
   {
@@ -112,6 +134,7 @@ void DataSourceOfflineITS::OpenTracksFile()
       return;
     }
     tree->SetBranchAddress("ITSTrack", &mTrackBuffer);
+    Info("OpenTracksFile", "Setting branch address for track clusters...");
     tree->SetBranchAddress("ITSTrackClusIdx", &mClIdxBuffer);
     mTracTree = tree;
 
@@ -129,14 +152,137 @@ void DataSourceOfflineITS::OpenTracksFile()
 void DataSourceOfflineITS::Open(TString fileName)
 {
   DataSourceOffline::Open(fileName);
+  std::cout << "DataSourceOfflineITS::Open()" << std::endl;
 }
 
-Bool_t DataSourceOfflineITS::GotoEvent(Int_t ev)
+Int_t DataSourceOfflineITS::GotoEvent(Int_t ev)
 {
-  //loadDigits(entry);
-  //loadClusters(entry);
-  //loadTracks(entry);
+  Warning("GotoEvent", "GOTOEVENT");
+  if (ev < 0 || ev >= this->GetEventCount()) {
+    Warning("GotoEvent", "Invalid event id %d.", ev);
+    return kFALSE;
+  }
+
+  LoadDigits(ev);
+  LoadClusters(ev);
+  LoadTracks(ev);
   return kTRUE;
+}
+
+void DataSourceOfflineITS::LoadDigits(Int_t ev)
+{
+  if (mPixelReader == nullptr)
+    return;
+
+  for (; mLastEvent < ev; mLastEvent++) {
+    auto ir = mChipData.getInteractionRecord();
+    do {
+      if (!mPixelReader->getNextChipData(mChipData))
+        return;
+      ir = mChipData.getInteractionRecord();
+    } while (mIR == ir);
+    mIR = ir;
+  }
+  mLastEvent++;
+  LoadDigits();
+}
+
+void DataSourceOfflineITS::LoadDigits()
+{
+  auto ir = mChipData.getInteractionRecord();
+  std::cout << "orbit/crossing: " << ' ' << ir.orbit << '/' << ir.bc << '\n';
+
+  mDigits.clear();
+
+  do {
+    auto chipID = mChipData.getChipID();
+    auto pixels = mChipData.getData();
+    for (auto& pixel : pixels) {
+      auto col = pixel.getCol();
+      auto row = pixel.getRow();
+      mDigits.emplace_back(chipID, 0, row, col);
+    }
+    if (!mPixelReader->getNextChipData(mChipData))
+      return;
+    ir = mChipData.getInteractionRecord();
+  } while (mIR == ir);
+  mIR = ir;
+
+  std::cout << "Number of ITSDigits: " << mDigits.size() << '\n';
+}
+
+void DataSourceOfflineITS::LoadClusters(Int_t ev)
+{
+  static int lastLoaded = -1;
+
+  if (mClusTree == nullptr)
+    return;
+
+  auto event = ev; // If no RO frame informaton available, assume one entry per a RO frame.
+  if (!mClustersROF.empty()) {
+    if ((event < 0) || (event >= (int)mClustersROF.size())) {
+      std::cerr << "Clusters: Out of event range ! " << event << '\n';
+      return;
+    }
+    auto rof = mClustersROF[ev];
+    event = rof.getROFEntry().getEvent();
+  }
+  if ((event < 0) || (event >= mClusTree->GetEntries())) {
+    std::cerr << "Clusters: Out of event range ! " << event << '\n';
+    return;
+  }
+  if (event != lastLoaded) {
+    mClusterBuffer->clear();
+    mClusTree->GetEntry(event);
+    lastLoaded = event;
+  }
+
+  int first = 0, last = mClusterBuffer->size();
+  if (!mClustersROF.empty()) {
+    auto rof = mClustersROF[ev];
+    first = rof.getROFEntry().getIndex();
+    last = first + rof.getNROFEntries();
+  }
+  mClusters = gsl::make_span(&(*mClusterBuffer)[first], last - first);
+
+  std::cout << "Number of ITSClusters: " << mClusters.size() << '\n';
+}
+
+void DataSourceOfflineITS::LoadTracks(Int_t ev)
+{
+  static int lastLoaded = -1;
+
+  if (mTracTree == nullptr)
+    return;
+
+  auto event = ev; // If no RO frame informaton available, assume one entry per a RO frame.
+  if (!mTracksROF.empty()) {
+    if ((event < 0) || (event >= (int)mTracksROF.size())) {
+      std::cerr << "Clusters: Out of event range ! " << event << '\n';
+      return;
+    }
+    auto rof = mTracksROF[ev];
+    event = rof.getROFEntry().getEvent();
+  }
+  if ((event < 0) || (event >= mTracTree->GetEntries())) {
+    std::cerr << "Tracks: Out of event range ! " << event << '\n';
+    return;
+  }
+  if (event != lastLoaded) {
+    mTrackBuffer->clear();
+    mTracTree->GetEntry(event);
+    lastLoaded = event;
+  }
+
+  int first = 0, last = mTrackBuffer->size();
+  if (!mTracksROF.empty()) {
+    auto rof = mTracksROF[ev];
+    first = rof.getROFEntry().getIndex();
+    last = first + rof.getNROFEntries();
+  }
+  mTracks = gsl::make_span(&(*mTrackBuffer)[first], last - first);
+
+  std::cout << "Number of ITSTracks: " << mTracks.size() << '\n';
 }
 
 }

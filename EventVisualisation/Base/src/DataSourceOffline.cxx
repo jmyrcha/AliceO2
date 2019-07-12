@@ -21,6 +21,7 @@ namespace event_visualisation {
 
 DataSourceOffline::DataSourceOffline():
   fgRawFileName("raw.root"),
+  fgDigitsFileName("digits.root"),
   fgClustersFileName("clusters.root"),
   fgTracksFileName("tracks.root")
 {
@@ -36,7 +37,9 @@ void DataSourceOffline::Open(TString ESDFileName)
   }
 
   this->fgESDFileName = ESDFileName;
-  OpenRawFile();
+  //OpenRawFile();
+  OpenDigitsFile();
+  OpenClustersFile();
   OpenTracksFile();
   fIsOpen = kTRUE;
 }

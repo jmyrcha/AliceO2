@@ -20,6 +20,7 @@
 #include "EventVisualisationBase/Track.h"
 #include "EventVisualisationBase/ConfigurationManager.h"
 #include "EventVisualisationBase/DataSource.h"
+#include "EventVisualisationDetectors/DataSourceOfflineITS.h"
 
 #include <TEveManager.h>
 #include <TEveProjectionManager.h>
@@ -50,36 +51,52 @@ EventManager::EventManager() : TEveEventManager("Event", ""), mCurrentDataSource
     std::cout << "EventManager::EventManager()" << std::endl;
 }
 
-int EventManager::gotoEvent(Int_t event) {
-    std::cout << "EventManager::gotoEvent(" <<event << ")" << std::endl;
-    DataSource *dataSource = getDataSource();
-    return dataSource->GotoEvent(event);
-}
-
 void EventManager::Open() {
     std::cout << "EventManager::Open()" << std::endl;
-    TEveEventManager::Open();
+    DataSource* source;
+    switch(mCurrentDataSourceType)
+    {
+      case SourceOnline:
+        break;
+      case SourceOffline:
+        source = new DataSourceOfflineITS();
+        source->Open(this->dataPath);
+        setDataSource(source);
+        break;
+      case SourceHLT:
+        break;
+    }
+    //TEveEventManager::Open();
 }
 
 void EventManager::GotoEvent(Int_t no) {
-    std::cout << "EventManager::GotoEvent("<<no<<")" << std::endl;
-    gotoEvent(no);
-    TEveEventManager::GotoEvent(no);
+  std::cout << "EventManager::GotoEvent("<<no<<")" << std::endl;
+  //-1 means last event
+  if(no == -1) {
+    no = getDataSource()->GetEventCount();
+  }
+  this->currentEvent = no;
+  getDataSource()->GotoEvent(no);
+  //TEveEventManager::GotoEvent( no);
 }
 
 void EventManager::NextEvent() {
-    std::cout << "EventManager::EventManager()" << std::endl;
-    TEveEventManager::NextEvent();
+  std::cout << "EventManager::NextEvent()" << std::endl;
+  Int_t event = (this->currentEvent + 1) % getDataSource()->GetEventCount();
+  GotoEvent(event);
+  //TEveEventManager::NextEvent();
 }
 
 void EventManager::PrevEvent() {
-    std::cout << "EventManager::PrevEvent()" << std::endl;
-    TEveEventManager::PrevEvent();
+  std::cout << "EventManager::PrevEvent()" << std::endl;
+  GotoEvent(this->currentEvent - 1);
+  //TEveEventManager::PrevEvent();
 }
-
 void EventManager::Close() {
-    std::cout << "EventManager::Close()" << std::endl;
-    TEveEventManager::Close();
+  std::cout << "EventManager::Close()" << std::endl;
+  this->dataSource->Close();
+  delete this->dataSource;
+  //TEveEventManager::Close();
 }
 
 void EventManager::AfterNewEventLoaded() {

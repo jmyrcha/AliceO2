@@ -36,10 +36,21 @@ public:
     void Open(TString fileName) override;
 
     void OpenRawFile() override;
+    void OpenDigitsFile() override;
     void OpenClustersFile() override;
     void OpenTracksFile() override;
 
-    Bool_t GotoEvent(Int_t ev);
+    Int_t GotoEvent(Int_t ev) override;
+    Int_t GetEventCount() override { return 10; } // dummy value for now
+
+    void LoadDigits(Int_t ev);
+    void LoadDigits();
+    void LoadClusters(Int_t ev);
+    void LoadTracks(Int_t ev);
+
+    gsl::span<Cluster> GetClusters() { return mClusters; }
+    std::vector<Int_t>* GetClIdxBuffer() { return mClIdxBuffer; }
+    gsl::span<its::TrackITS> GetTracks() { return mTracks; }
 
  private:
   PixelReader* mPixelReader = nullptr;
