@@ -20,7 +20,7 @@
 #include "EventVisualisationBase/Track.h"
 #include "EventVisualisationBase/ConfigurationManager.h"
 #include "EventVisualisationBase/DataSource.h"
-#include "EventVisualisationDetectors/DataSourceOfflineITS.h"
+//#include "EventVisualisationDetectors/DataSourceOfflineITS.h"
 
 #include <TEveManager.h>
 #include <TEveProjectionManager.h>
@@ -53,15 +53,16 @@ EventManager::EventManager() : TEveEventManager("Event", ""), mCurrentDataSource
 
 void EventManager::Open() {
     std::cout << "EventManager::Open()" << std::endl;
-    DataSource* source;
+    //DataSource* source;
     switch(mCurrentDataSourceType)
     {
       case SourceOnline:
         break;
       case SourceOffline:
-        source = new DataSourceOfflineITS();
-        source->Open(this->dataPath);
-        setDataSource(source);
+        dataInterpreter->Open(mCurrentDataType);
+        //source = new DataSourceOfflineITS();
+        //source->Open(this->dataPath);
+        //setDataSource(source);
         break;
       case SourceHLT:
         break;
@@ -73,16 +74,17 @@ void EventManager::GotoEvent(Int_t no) {
   std::cout << "EventManager::GotoEvent("<<no<<")" << std::endl;
   //-1 means last event
   if(no == -1) {
-    no = getDataSource()->GetEventCount();
+    no = getDataInterpreter()->GetEventCount();
   }
   this->currentEvent = no;
-  getDataSource()->GotoEvent(no);
+  getDataInterpreter()->GotoEvent(no);
+  getDataInterpreter()->interpretDataForType(mCurrentDataType);
   //TEveEventManager::GotoEvent( no);
 }
 
 void EventManager::NextEvent() {
   std::cout << "EventManager::NextEvent()" << std::endl;
-  Int_t event = (this->currentEvent + 1) % getDataSource()->GetEventCount();
+  Int_t event = (this->currentEvent + 1) % getDataInterpreter()->GetEventCount();
   GotoEvent(event);
   //TEveEventManager::NextEvent();
 }
@@ -94,8 +96,8 @@ void EventManager::PrevEvent() {
 }
 void EventManager::Close() {
   std::cout << "EventManager::Close()" << std::endl;
-  this->dataSource->Close();
-  delete this->dataSource;
+  this->dataInterpreter->Close();
+  delete this->dataInterpreter;
   //TEveEventManager::Close();
 }
 

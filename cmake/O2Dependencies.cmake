@@ -2073,11 +2073,13 @@ o2_define_bucket(
     RGL
     Gui
     O2CCDB
+    O2ITSMFTReconstruction
 
     INCLUDE_DIRECTORIES
     ${CMAKE_SOURCE_DIR}/EventVisualisation/Base/include
     ${CMAKE_SOURCE_DIR}/EventVisualisation/DataConverter/include
-	${CMAKE_SOURCE_DIR}/EventVisualisation/View/include
+    ${CMAKE_SOURCE_DIR}/EventVisualisation/View/include
+    ${CMAKE_SOURCE_DIR}/Detectors/ITSMFT/common/reconstruction/include
     SYSTEMINCLUDE_DIRECTORIES
     ${ROOT_INCLUDE_DIR}
 )

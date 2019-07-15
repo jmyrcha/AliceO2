@@ -25,6 +25,7 @@ public:
 
     TFile *fFile;
     TObjArray *fEvDirKeys;
+    Int_t fMaxEv, fCurEv;
 
     // ----------------------------------------------------------
     // Event visualization structures

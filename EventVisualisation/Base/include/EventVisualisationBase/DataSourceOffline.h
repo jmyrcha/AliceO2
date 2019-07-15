@@ -25,7 +25,6 @@ protected:
 
     Bool_t fIsOpen = kFALSE;
     Int_t mLastEvent = 0;
-    Int_t fMaxEv, fCurEv;
 public:
     virtual void Open(TString ESDFileName) override;
     virtual void OpenRawFile() {};

@@ -58,11 +58,11 @@ Initializer::Initializer(EventManager::EDataSource defaultDataSource)
 //  DataSourceOffline *ds = new DataSourceOfflineVSD();
 //DataSourceOffline *ds = new DataSourceOffline();
 //  ds->Open("AliVSD.root");
-  //DataSourceOffline *ds = new DataSourceOfflineITS();
-  //ds->Open("o2trac_its.root");
-  //eventManager.setDataSource(ds);
+  DataInterpreterITS *di = new DataInterpreterITS();
+  eventManager.setDataInterpreter(di);
 
-  eventManager.setDataSourceType(EventManager::EDataSource::SourceOffline);
+  eventManager.setDataSourceType(EDataType::AOD);
+  eventManager.setDataSourceType(defaultDataSource);
   eventManager.setDataSourcePath("o2trac_its.root");
   eventManager.Open();
 
@@ -100,7 +100,7 @@ Initializer::Initializer(EventManager::EDataSource defaultDataSource)
   //gEve->AddEvent(&eventManager);
 
   // AOD is dummy here, as there is no separate type for tracks
-  MultiView::getInstance()->drawITSEvent(EDataType::AOD);
+  //MultiView::getInstance()->drawITSEvent(EDataType::AOD);
   frame->DoFirstEvent();
 }
 

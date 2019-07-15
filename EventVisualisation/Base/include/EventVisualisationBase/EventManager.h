@@ -16,6 +16,9 @@
 #define ALICE_O2_EVENTVISUALISATION_BASE_EVENTMANAGER_H
 
 #include "CCDB/Manager.h"
+#include "EventVisualisationBase/DataSource.h"
+#include "EventVisualisationBase/DataInterpreter.h"
+#include "EventVisualisationBase/VisualisationConstants.h"
 
 #include <TEveElement.h>
 #include <TEveEventManager.h>
@@ -34,6 +37,7 @@ namespace event_visualisation {
 /// for drawing in the MultiView.
 
 class DataSource;
+class DataInterpreter;
 
 class EventManager : public TEveEventManager, public TQObject
 {
@@ -47,8 +51,10 @@ public:
     /// Returns an instance of EventManager
     static EventManager& getInstance();
 
+    /// Setter of the current data type
+    inline void setDataSourceType(EDataType type){ mCurrentDataType = type; }
     /// Setter of the current data source
-    inline void setDataSourceType(EDataSource source){mCurrentDataSourceType = source;}
+    inline void setDataSourceType(EDataSource source){ mCurrentDataSourceType = source; }
     /// Setter of the current data source path
     inline void setDataSourcePath(const TString& path) { dataPath = path;}
     /// Sets the CDB path in CCDB Manager
@@ -57,9 +63,9 @@ public:
       o2::ccdb::Manager::Instance()->setDefaultStorage(path.Data());
     }
 
-    Int_t getCurrentEvent() {return currentEvent;}
-    DataSource *getDataSource() {return dataSource;}
-    void setDataSource(DataSource *dataSource) {this->dataSource = dataSource;}
+    Int_t getCurrentEvent() { return currentEvent; }
+    DataInterpreter *getDataInterpreter() { return dataInterpreter; }
+    void setDataInterpreter(DataInterpreter *dataInterpreter) { this->dataInterpreter = dataInterpreter; }
 
     void Open() override ;
     void GotoEvent(Int_t /*event*/) override ;
@@ -78,7 +84,8 @@ public:
 private:
     static EventManager *instance;
     EDataSource mCurrentDataSourceType = EDataSource::SourceOffline; ///< enum type of the current data source
-    DataSource *dataSource = nullptr;
+    EDataType mCurrentDataType = EDataType::AOD;
+    DataInterpreter *dataInterpreter = nullptr;
     TString dataPath = "";
     Int_t currentEvent = 0;
 

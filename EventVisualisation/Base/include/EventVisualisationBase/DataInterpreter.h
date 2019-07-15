@@ -37,6 +37,13 @@ public:
   DataInterpreter();
   // Virtual destructor
   virtual ~DataInterpreter();
+
+  virtual void Open(EDataType type) {};
+  virtual void Close() {};
+
+  virtual Int_t GotoEvent(Int_t event) {};
+
+  virtual Int_t GetEventCount() { return 0; };
   
   // Should return visualisation objects for required data type
   virtual TEveElement* interpretDataForType(EDataType type);

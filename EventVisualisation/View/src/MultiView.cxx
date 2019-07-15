@@ -211,13 +211,13 @@ void MultiView::drawRandomEvent()
 
 }
 
-void MultiView::drawITSEvent(EDataType type)
-{
-  DataInterpreter *dataInterpreterITS = new DataInterpreterITS();
-  TEveElement *dataITS = dataInterpreterITS->interpretDataForType(type);
-  //gEve->AddElement(dataITS); // Needed?
-  registerEvent(dataITS);
-}
+//void MultiView::drawITSEvent(EDataType type)
+//{
+//  DataInterpreter *dataInterpreterITS = new DataInterpreterITS();
+//  TEveElement *dataITS = dataInterpreterITS->interpretDataForType(type);
+//  //gEve->AddElement(dataITS); // Needed?
+//  registerEvent(dataITS);
+//}
   
 }
 }

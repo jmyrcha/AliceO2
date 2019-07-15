@@ -29,10 +29,22 @@ public:
     /// Default destructor
     ~DataInterpreterITS() final;
 
+    void Open(EDataType type) override;
+    void Close() override { dataSource->Close(); }
+
+    Int_t GetEventCount() override { return dataSource->GetEventCount(); };
+    Int_t GotoEvent(Int_t ev) override;
+
     /// Returns a list of random tracks colored by PID
     TEveElement *interpretDataForType(EDataType type) final;
 
-    TEveElement* loadTracks(DataSourceOfflineITS* source);
+    TEveElement* loadTracks();
+
+    DataSourceOfflineITS *getDataSource() { return dataSource; }
+    void setDataSource(DataSourceOfflineITS *dataSource) { this->dataSource = dataSource; }
+
+ protected:
+    DataSourceOfflineITS *dataSource = nullptr;
 };
 
 }

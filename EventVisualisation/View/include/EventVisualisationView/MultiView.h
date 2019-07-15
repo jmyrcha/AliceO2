@@ -85,7 +85,7 @@ class MultiView
     void destroyAllEvents();
   
     void drawRandomEvent();
-    void drawITSEvent(EDataType type = EDataType::Raw);
+    //void drawITSEvent(EDataType type = EDataType::Raw);
   private:
     /// Default constructor
     MultiView();

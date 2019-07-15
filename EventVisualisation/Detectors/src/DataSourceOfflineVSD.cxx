@@ -120,7 +120,7 @@ DataSourceOfflineVSD::~DataSourceOfflineVSD()  {
         fTrackList->MakeTracks();
 
        gEve->AddElement(fTrackList);
-       MultiView::getInstance()->registerEvent(fTrackList);
+       //MultiView::getInstance()->registerEvent(fTrackList);
     }
 
     void DataSourceOfflineVSD::Open(TString ESDFileName)  {
