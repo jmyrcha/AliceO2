@@ -50,20 +50,20 @@ void DataSourceOfflineVSD::open(TString ESDFileName)  {
     }
 
     fEvDirKeys = new TObjArray;
-    TPMERegexp name_re("Event\\d+");
+    //TPMERegexp name_re("Event\\d+");
     TObjLink *lnk = fFile->GetListOfKeys()->FirstLink();
     while (lnk) {
-        if (name_re.Match(lnk->GetObject()->GetName())) {
+        //if (name_re.Match(lnk->GetObject()->GetName())) {
             fEvDirKeys->Add(lnk->GetObject());
-        }
+        //}
         lnk = lnk->Next();
     }
-
+//
     fMaxEv = fEvDirKeys->GetEntriesFast();
-    if (fMaxEv == 0) {
-        Error("VSD_Reader", "No events to show ... terminating.");
-        gSystem->Exit(1);
-    }
+//    if (fMaxEv == 0) {
+//        Error("VSD_Reader", "No events to show ... terminating.");
+//        gSystem->Exit(1);
+//    }
 }
 
 
@@ -74,8 +74,9 @@ TObject *DataSourceOfflineVSD::getEventData(int ev) {
     Warning("GotoEvent", "Invalid event id %d.", ev);
     return nullptr;
   }
-  this->fCurEv = ev;
-  return ((TKey *) this->fEvDirKeys->At(this->fCurEv))->ReadObj();
+//  this->fCurEv = ev;
+//  return ((TKey *) this->fEvDirKeys->At(this->fCurEv))->ReadObj();
+  return this->fFile;
 }
 
 }

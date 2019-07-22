@@ -82,7 +82,7 @@ class MultiView:public EventRegistration
     /// Registers an element to be drawn
     void registerElement(TEveElement* event) override;
     /// Removes all shapes representing current event
-    void destroyAllEvents() override;
+    void destroyCurrentEvent() override;
   
     void drawRandomEvent();
   private:

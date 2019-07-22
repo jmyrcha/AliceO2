@@ -213,7 +213,7 @@ void MultiView::registerElement(TEveElement* event)
   gEve->Redraw3D();
 }
 
-void MultiView::destroyAllEvents()
+void MultiView::destroyCurrentEvent()
 {
   gEve->GetCurrentEvent()->RemoveElements();
   getScene(SceneRphiEvent)->DestroyElements();

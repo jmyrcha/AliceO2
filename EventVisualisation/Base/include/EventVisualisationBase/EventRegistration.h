@@ -18,7 +18,7 @@ public:
     virtual void registerElement(TEveElement *event) = 0;
 
     /// Removes all shapes representing current event
-    virtual void destroyAllEvents() = 0;
+    virtual void destroyCurrentEvent() = 0;
 
     static EventRegistration* getInstance() { return instance;}
     static void setInstance(EventRegistration* instance) { EventRegistration::instance = instance;}

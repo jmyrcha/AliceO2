@@ -73,6 +73,7 @@ void EventManager::Open() {
 
 void EventManager::GotoEvent(Int_t no) {
     std::cout << "EventManager::GotoEvent("<<no<<")" << std::endl;
+    EventRegistration::getInstance()->destroyCurrentEvent();
     //-1 means last event
     if(no == -1) {
         no = getDataSource()->GetEventCount();
