@@ -58,13 +58,14 @@ TEveGeoShape* GeometryManager::getGeometryForDetector(string detectorName)
 
   // load ROOT file with geometry
   TFile *f = TFile::Open(Form("%s/simple_geom_%s.root",geomPath.c_str(),detectorName.c_str()));
+  cout << "GeometryManager::GetSimpleGeom opening geometry for: " << detectorName << endl;
   if(!f){
     cout<<"GeometryManager::GetSimpleGeom -- no file with geometry found for: "<<detectorName<<"!"<<endl;
     return nullptr;
   }
   
-  TEveGeoShapeExtract *geomShapreExtract = static_cast<TEveGeoShapeExtract*>(f->Get(detectorName.c_str()));
-  TEveGeoShape *geomShape = TEveGeoShape::ImportShapeExtract(geomShapreExtract);
+  TEveGeoShapeExtract *geomShapeExtract = static_cast<TEveGeoShapeExtract*>(f->Get(detectorName.c_str()));
+  TEveGeoShape *geomShape = TEveGeoShape::ImportShapeExtract(geomShapeExtract);
   f->Close();
   
   // tricks for different R-Phi geom of TPC:

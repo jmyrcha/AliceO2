@@ -35,6 +35,7 @@ enum EVisualisationGroup{
   TPC,
   TRD,
   RND,
+  ITS,
   NvisualisationGroups
 };
   
@@ -51,10 +52,11 @@ const std::string gVisualisationGroupName[NvisualisationGroups] = {
   "TOF",
   "TPC",
   "TRD",
-  "RND"
+  "RND",
+  "ITS"
 };
   
-enum EDataType{
+enum EventDataType{
   Raw,      ///< Raw data
   Hits,     ///< Hits
   Digits,   ///< Digits

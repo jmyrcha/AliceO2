@@ -38,7 +38,7 @@ public:
   virtual ~DataInterpreter();
   
   // Should return visualisation objects for required data type
-  virtual TEveElement* interpretDataForType(EDataType type);
+  virtual TEveElement* interpretDataForType(EventDataType type);
 };
   
 }

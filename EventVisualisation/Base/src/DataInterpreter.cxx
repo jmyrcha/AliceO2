@@ -28,9 +28,9 @@ DataInterpreter::~DataInterpreter()
   cout<<"Virtual destructor of the DataInterpreter -- should be implemented in deriving class!!"<<endl;
 }
   
-TEveElement* DataInterpreter::interpretDataForType(EDataType type)
+TEveElement* DataInterpreter::interpretDataForType(EventDataType type)
 {
-  cout<<"Virtual method interpretDataForType(EventManager::EDataType type) -- should be implemented in deriving class!!"<<endl;
+  cout<<"Virtual method interpretDataForType(EventManager::EventDataType type) -- should be implemented in deriving class!!"<<endl;
   
   return nullptr;
 }

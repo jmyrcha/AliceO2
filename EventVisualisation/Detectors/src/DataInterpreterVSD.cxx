@@ -34,7 +34,7 @@ DataInterpreterVSD::DataInterpreterVSD() = default;
 
 DataInterpreterVSD::~DataInterpreterVSD() = default;
 
-TEveElement* DataInterpreterVSD::interpretDataForType(EDataType type) {
+TEveElement* DataInterpreterVSD::interpretDataForType(EventDataType type) {
     int multiplicity = 500*((double)rand()/RAND_MAX)+100;
     MinimalisticEvent *minEvent = new MinimalisticEvent(
             15,             // event number
