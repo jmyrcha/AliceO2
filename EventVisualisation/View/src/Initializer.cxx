@@ -22,7 +22,10 @@
 #include "EventVisualisationBase/VisualisationConstants.h"
 #include "EventVisualisationView/EventManagerFrame.h"
 #include "EventVisualisationBase/DataSourceOffline.h"
-#include "EventVisualisationBase/DataSourceOfflineVSD.h"
+#include "EventVisualisationBase/DataReaderVSD.h"
+#include "EventVisualisationBase/EventRegistration.h"
+#include "EventVisualisationDetectors/DataInterpreterVSD.h"
+#include "EventVisualisationDetectors/DataInterpreterRND.h"
 
 #include <TGTab.h>
 #include <TEnv.h>
@@ -43,7 +46,7 @@ namespace event_visualisation {
 
 
 
-Initializer::Initializer(EventManager::EDataSource defaultDataSource)
+Initializer::Initializer(const Options options, EventManager::EDataSource defaultDataSource)
 {
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);
@@ -56,16 +59,16 @@ Initializer::Initializer(EventManager::EDataSource defaultDataSource)
   eventManager.setDataSourceType(defaultDataSource);
   eventManager.setCdbPath(ocdbStorage);
 
-  TFile*  fFile = TFile::Open("AliESDs.root");
-  //TFile*  fFile = TFile::Open("AliVSD.root");
+  EventRegistration::setInstance(MultiView::getInstance());
+  if(options.randomTracks)
+    DataInterpreter::setInstance(new DataInterpreterRND(), EVisualisationGroup::RND);
+  if(options.vsd)
+    DataInterpreter::setInstance(new DataInterpreterVSD(), EVisualisationGroup::VSD);
 
-  DataSourceOffline *ds = new DataSourceOfflineVSD();
-//DataSourceOffline *ds = new DataSourceOffline();
-  ds->open("AliVSD.root");
-  eventManager.setDataSource(ds);
+  eventManager.setDataSourceType(EventManager::EDataSource::SourceOffline);
+  eventManager.Open();
 
-  
-  //gEve->AddEvent(&eventManager);
+  gEve->AddEvent(&eventManager);
   
   setupGeometry();
   gSystem->ProcessEvents();
@@ -94,9 +97,8 @@ Initializer::Initializer(EventManager::EDataSource defaultDataSource)
   // Temporary:
   // For the time being we draw single random event on startup.
   // Later this will be triggered by button, and finally moved to configuration.
-  //gEve->AddEvent(&EventManager::getInstance());
-  //MultiView::getInstance()->drawRandomEvent();
-    gEve->AddEvent(&eventManager);
+  gEve->AddEvent(&EventManager::getInstance());
+//  MultiView::getInstance()->drawRandomEvent();
   frame->DoFirstEvent();
 }
 

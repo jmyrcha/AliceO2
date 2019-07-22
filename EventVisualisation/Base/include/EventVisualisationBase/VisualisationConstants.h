@@ -21,7 +21,7 @@
 namespace o2  {
 namespace event_visualisation {
 
-enum EVisualisationGroup{
+enum EVisualisationGroup {
   ACO,
   EMC,
   HMP,
@@ -36,6 +36,7 @@ enum EVisualisationGroup{
   TRD,
   RND,
   ITS,
+  VSD,
   NvisualisationGroups
 };
   
@@ -53,7 +54,8 @@ const std::string gVisualisationGroupName[NvisualisationGroups] = {
   "TPC",
   "TRD",
   "RND",
-  "ITS"
+  "ITS",
+  "VSD"
 };
   
 enum EventDataType{

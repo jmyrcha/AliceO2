@@ -20,6 +20,8 @@
 #include "EventVisualisationBase/Track.h"
 #include "EventVisualisationBase/ConfigurationManager.h"
 #include "EventVisualisationBase/DataSource.h"
+#include "EventVisualisationBase/DataInterpreter.h"
+#include "EventVisualisationBase/EventRegistration.h"
 
 #include <TEveManager.h>
 #include <TEveProjectionManager.h>
@@ -30,6 +32,8 @@
 #include <TGListTree.h>
 #include <TEveTrack.h>
 #include <iostream>
+#include <EventVisualisationBase/DataSourceOffline.h>
+#include <EventVisualisationBase/DataReaderVSD.h>
 
 
 using namespace std;
@@ -46,40 +50,69 @@ EventManager& EventManager::getInstance()
   return *instance;
 }
 
-EventManager::EventManager() : TEveEventManager("Event", ""), mCurrentDataSourceType(SourceOffline) {
+EventManager::EventManager() : TEveEventManager("Event", "") {
     std::cout << "EventManager::EventManager()" << std::endl;
-}
-
-int EventManager::gotoEvent(Int_t event) {
-    std::cout << "EventManager::gotoEvent(" <<event << ")" << std::endl;
-    DataSource *dataSource = getDataSource();
-    return dataSource->gotoEvent(event);
 }
 
 void EventManager::Open() {
     std::cout << "EventManager::Open()" << std::endl;
-    TEveEventManager::Open();
+
+    switch(mCurrentDataSourceType)
+    {
+        case SourceOnline:
+            break;
+        case SourceOffline: {
+              DataSourceOffline *source = new DataSourceOffline();
+              if(DataInterpreter::getInstance(EVisualisationGroup::VSD)) {
+                DataReader *vsd = new DataReaderVSD();
+                vsd->open();
+                source->registerReader(vsd, EVisualisationGroup::VSD);
+              }
+              if(DataInterpreter::getInstance(EVisualisationGroup::RND)) {
+                source->registerReader(nullptr, EVisualisationGroup::RND);  // no need to read
+              }
+              setDataSource(source);
+            }
+            break;
+        case SourceHLT:
+            break;
+    }
+    //TEveEventManager::Open();
 }
 
 void EventManager::GotoEvent(Int_t no) {
     std::cout << "EventManager::GotoEvent("<<no<<")" << std::endl;
-    gotoEvent(no);
-    TEveEventManager::GotoEvent( no);
+    //-1 means last event
+    if(no == -1) {
+        no = getDataSource()->GetEventCount()-1;
+    }
+    this->currentEvent = no;
+    EventRegistration::getInstance()->destroyAllEvents();
+    for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; i++) {
+      DataInterpreter* interpreter = DataInterpreter::getInstance((EVisualisationGroup)i);
+      if(interpreter) {
+        TObject *data = getDataSource()->getEventData(no, (EVisualisationGroup)i);
+        TEveElement *eveElement = interpreter->interpretDataForType(data, NoData);
+        EventRegistration::getInstance()->registerElement(eveElement);
+      }
+    }
 }
 
 void EventManager::NextEvent() {
-    std::cout << "EventManager::EventManager()" << std::endl;
-    TEveEventManager::NextEvent();
+    std::cout << "EventManager::NextEvent()" << std::endl;
+    Int_t event = (this->currentEvent + 1) % getDataSource()->GetEventCount();
+    GotoEvent(event);
 }
 
 void EventManager::PrevEvent() {
     std::cout << "EventManager::PrevEvent()" << std::endl;
-    TEveEventManager::PrevEvent();
+    GotoEvent(this->currentEvent - 1);
 }
 
 void EventManager::Close() {
     std::cout << "EventManager::Close()" << std::endl;
-    TEveEventManager::Close();
+    this->dataSource->close();
+    delete this->dataSource;
 }
 
 void EventManager::AfterNewEventLoaded() {

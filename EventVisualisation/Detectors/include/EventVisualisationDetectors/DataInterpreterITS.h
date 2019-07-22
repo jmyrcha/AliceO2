@@ -28,7 +28,7 @@ public:
     ~DataInterpreterITS() final;
 
     // Returns a list of random tracks colored by PID
-    TEveElement *interpretDataForType(EventDataType type) final;
+    TEveElement *interpretDataForType(TObject* data, EventDataType type) final;
 };
 
 }
