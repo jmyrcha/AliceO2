@@ -1,10 +1,20 @@
+// Copyright CERN and copyright holders of ALICE O2. This software is
+// distributed under the terms of the GNU General Public License v3 (GPL
+// Version 3), copied verbatim in the file "COPYING".
 //
-// Created by jmy on 26.02.19.
+// See http://alice-o2.web.cern.ch/license for full licensing information.
 //
+// In applying this license CERN does not waive the privileges and immunities
+// granted to it by virtue of its status as an Intergovernmental Organization
+// or submit itself to any jurisdiction.
+
+/// \file DataReaderVSD.cxx
+/// \brief VSD specific reading from file(s) (Visualisation Summary Data)
+/// \author julian.myrcha@cern.ch
+/// \author p.nowakowski@cern.ch
 
 
-
-#include <EventVisualisationBase/DataSourceOfflineVSD.h>
+#include <EventVisualisationBase/DataReaderVSD.h>
 #include <TSystem.h>
 #include <TEveManager.h>
 #include <TFile.h>
@@ -18,14 +28,14 @@
 namespace o2  {
 namespace event_visualisation {
 
-DataSourceOfflineVSD::DataSourceOfflineVSD()
-        : DataSourceOffline(),
+DataReaderVSD::DataReaderVSD()
+        : DataReader(),
           fFile(0), fEvDirKeys(0),
           fMaxEv(-1), fCurEv(-1) {
 }
 
 
-DataSourceOfflineVSD::~DataSourceOfflineVSD()  {
+DataReaderVSD::~DataReaderVSD()  {
   if (fEvDirKeys) {
     //dynamic_cast<DataInterpreterVSD*>(this->dataInterpreter)->DropEvent();
     delete fEvDirKeys;
@@ -38,7 +48,8 @@ DataSourceOfflineVSD::~DataSourceOfflineVSD()  {
 }
 
 
-void DataSourceOfflineVSD::open(TString ESDFileName)  {
+void DataReaderVSD::open()  {
+    TString ESDFileName = "events_0.root";
     Warning("GotoEvent", "OPEN");
     fMaxEv = -1;
     fCurEv = -1;
@@ -68,7 +79,7 @@ void DataSourceOfflineVSD::open(TString ESDFileName)  {
 
 
 
-TObject *DataSourceOfflineVSD::getEventData(int ev) {
+TObject *DataReaderVSD::getEventData(int ev) {
   Warning("GotoEvent", "GOTOEVENT");
   if (ev < 0 || ev >= this->fMaxEv) {
     Warning("GotoEvent", "Invalid event id %d.", ev);

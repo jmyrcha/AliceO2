@@ -1,13 +1,20 @@
+// Copyright CERN and copyright holders of ALICE O2. This software is
+// distributed under the terms of the GNU General Public License v3 (GPL
+// Version 3), copied verbatim in the file "COPYING".
 //
-// Created by jmy on 09.07.19.
+// See http://alice-o2.web.cern.ch/license for full licensing information.
 //
-//#include "EventVisualisationView/MultiView.h"
+// In applying this license CERN does not waive the privileges and immunities
+// granted to it by virtue of its status as an Intergovernmental Organization
+// or submit itself to any jurisdiction.
+
+///
+/// \file   DataReaderITS.cxx
+/// \brief  ITS Detector-specific reading from file(s)
+/// \author julian.myrcha@cern.ch
+/// \author p.nowakowski@cern.ch
+
 #include "EventVisualisationBase/DataReaderITS.h"
-
-
-//
-
-
 #include "ITSMFTReconstruction/ChipMappingITS.h"
 #include "ITSMFTReconstruction/DigitPixelReader.h"
 #include "ITSMFTReconstruction/RawPixelReader.h"
@@ -20,17 +27,11 @@
 #include "DetectorsCommonDataFormats/DetID.h"
 #include "CommonDataFormat/InteractionRecord.h"
 #include "TGenericClassInfo.h"
-
 #include <TEveElement.h>
-
-
-
-
 #include <iostream>
 #include <array>
 #include <algorithm>
 #include <fstream>
-
 #include <TFile.h>
 #include <TTree.h>
 #include <TEveManager.h>
@@ -48,9 +49,6 @@
 #include <TEveTrack.h>
 #include <Rtypes.h>
 #include <gsl/span>
-
-
-
 
 
 using namespace o2::itsmft;
@@ -118,10 +116,6 @@ private:
     TEveElement* getEveClusters();
     TEveElement* getEveTracks();
 } its_data;
-
-
-
-
 
 void ITSData::loadDigits()
 {
@@ -513,52 +507,15 @@ void ITSDisplayEvents()
 }
 
 
-namespace o2 {
-    namespace event_visualisation {
 
-        void DataReaderITS::open() {
-            TString ESDFileName = "events_0.root";
-            Warning("GotoEvent", "OPEN");
-            fMaxEv = -1;
-            fCurEv = -1;
-            fFile = TFile::Open(ESDFileName);
-            if (!fFile) {
-                Error("VSD_Reader", "Can not open file '%s' ... terminating.",
-                      ESDFileName.Data());
-                gSystem->Exit(1);
-            }
+o2::event_visualisation::DataReaderITS::DataReaderITS() {
 
-            fEvDirKeys = new TObjArray;
-            TPMERegexp name_re("Event\\d+");
-            TObjLink *lnk = fFile->GetListOfKeys()->FirstLink();
-            while (lnk) {
-                if (name_re.Match(lnk->GetObject()->GetName())) {
-                    fEvDirKeys->Add(lnk->GetObject());
-                }
-                lnk = lnk->Next();
-            }
+}
 
-            fMaxEv = fEvDirKeys->GetEntriesFast();
-            if (fMaxEv == 0) {
-                Error("VSD_Reader", "No events to show ... terminating.");
-                gSystem->Exit(1);
-            }
-        }
+void o2::event_visualisation::DataReaderITS::open() {
 
-        Bool_t DataReaderITS::GotoEvent(Int_t ev) {
-            return 0;
-        }
+}
 
-        DataReaderITS::DataReaderITS() {
-
-        }
-
-        Int_t DataReaderITS::GetEventCount() {
-            return 0;
-        }
-
-        TObject *DataReaderITS::getEventData(int no) {
-            return nullptr;
-        }
-    }
+Bool_t o2::event_visualisation::DataReaderITS::GotoEvent(Int_t ev) {
+    return 0;
 }

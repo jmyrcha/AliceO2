@@ -8,17 +8,29 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-///
-/// \file   EventRegistration.cxx
-/// \brief  breaking link dependency between EventVisualisation modules (here MultiView can register)
+/// \file DataReader.h
+/// \brief Abstract base class for Detector-specific reading from file(s)
 /// \author julian.myrcha@cern.ch
 
-#include <EventVisualisationBase/EventRegistration.h>
+#ifndef ALICE_O2_EVENTVISUALISATION_BASE_DATAREADER_H
+#define ALICE_O2_EVENTVISUALISATION_BASE_DATAREADER_H
+
+#include <TObject.h>
 
 namespace o2  {
 namespace event_visualisation {
 
-EventRegistration* EventRegistration::instance = nullptr;
+
+class DataReader {
+public:
+  virtual Int_t GetEventCount() = 0;
+  virtual ~DataReader() = default;
+  virtual void open() = 0;
+  virtual TObject* getEventData(int no) = 0;
+};
+
 
 }
 }
+
+#endif //ALICE_O2_EVENTVISUALISATION_BASE_DATAREADER_H

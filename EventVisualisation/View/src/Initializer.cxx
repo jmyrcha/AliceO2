@@ -11,6 +11,8 @@
 ///
 /// \file    Initializer.cxx
 /// \author  Jeremi Niedziela
+/// \author  julian.myrcha@cern.ch
+/// \author  p.nowakowski@cern.ch
 ///
 
 #include "EventVisualisationView/Initializer.h"
@@ -22,9 +24,10 @@
 #include "EventVisualisationBase/VisualisationConstants.h"
 #include "EventVisualisationView/EventManagerFrame.h"
 #include "EventVisualisationBase/DataSourceOffline.h"
-#include "EventVisualisationBase/DataSourceOfflineVSD.h"
+#include "EventVisualisationBase/DataReaderVSD.h"
 #include "EventVisualisationBase/EventRegistration.h"
 #include "EventVisualisationDetectors/DataInterpreterVSD.h"
+#include "EventVisualisationDetectors/DataInterpreterRND.h"
 
 #include <TGTab.h>
 #include <TEnv.h>
@@ -45,7 +48,7 @@ namespace event_visualisation {
 
 
 
-Initializer::Initializer(EventManager::EDataSource defaultDataSource)
+Initializer::Initializer(const Options options, EventManager::EDataSource defaultDataSource)
 {
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);
@@ -57,22 +60,17 @@ Initializer::Initializer(EventManager::EDataSource defaultDataSource)
   auto &eventManager = EventManager::getInstance();
   eventManager.setDataSourceType(defaultDataSource);
   eventManager.setCdbPath(ocdbStorage);
+
   EventRegistration::setInstance(MultiView::getInstance());
-  DataInterpreter::setInstance(new DataInterpreterVSD());
+  if(options.randomTracks)
+    DataInterpreter::setInstance(new DataInterpreterRND(), EVisualisationGroup::RND);
+  if(options.vsd)
+    DataInterpreter::setInstance(new DataInterpreterVSD(), EVisualisationGroup::VSD);
 
-  //TFile*  fFile = TFile::Open("AliESDs.root");
-  //TFile*  fFile = TFile::Open("AliVSD.root");
-
-//  DataSourceOffline *ds = new DataSourceOfflineVSD();
-////DataSourceOffline *ds = new DataSourceOffline();
-//  ds->open("AliVSD.root");
-//  eventManager.setDataSource(ds);
   eventManager.setDataSourceType(EventManager::EDataSource::SourceOffline);
-  eventManager.setDataSourcePath("events_0.root");
   eventManager.Open();
 
-  
-  //gEve->AddEvent(&eventManager);
+  gEve->AddEvent(&eventManager);
   
   setupGeometry();
   gSystem->ProcessEvents();

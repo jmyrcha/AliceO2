@@ -15,7 +15,6 @@
 
 
 #include "EventVisualisationBase/EventManager.h"
-
 #include "EventVisualisationDataConverter/MinimalisticEvent.h"
 #include "EventVisualisationBase/Track.h"
 #include "EventVisualisationBase/ConfigurationManager.h"
@@ -34,7 +33,6 @@
 #include <iostream>
 #include <EventVisualisationBase/DataSourceOffline.h>
 #include <EventVisualisationBase/DataReaderVSD.h>
-#include <EventVisualisationBase/DataReaderITS.h>
 
 
 using namespace std;
@@ -72,11 +70,6 @@ void EventManager::Open() {
               if(DataInterpreter::getInstance(EVisualisationGroup::RND)) {
                 source->registerReader(nullptr, EVisualisationGroup::RND);  // no need to read
               }
-            if(DataInterpreter::getInstance(EVisualisationGroup::ITS)) {
-                DataReader *vsd = new DataReaderITS();
-                vsd->open();
-                source->registerReader(vsd, EVisualisationGroup::ITS);
-            }
               setDataSource(source);
             }
             break;
@@ -145,6 +138,11 @@ EventManager::~EventManager() {
     std::cout << "EventManager::~EventManager()" << std::endl;
     instance = nullptr;
 }
+
+void EventManager::DropEvent() {
+  DestroyElements();
+}
+
 
 }
 }

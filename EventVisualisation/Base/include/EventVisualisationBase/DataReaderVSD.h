@@ -9,26 +9,36 @@
 // or submit itself to any jurisdiction.
 
 /// \file DataReaderITS.h
-/// \brief ITS Detector-specific reading from file(s)
+/// \brief VSD specific reading from file(s) (Visualisation Summary Data)
 /// \author julian.myrcha@cern.ch
 
-#ifndef O2EVE_DATAREADERITS_H
-#define O2EVE_DATAREADERITS_H
+#ifndef ALICE_O2_EVENTVISUALISATION_BASE_DATASOURCEOFFLINEVSD_H
+#define ALICE_O2_EVENTVISUALISATION_BASE_DATASOURCEOFFLINEVSD_H
 
 #include <EventVisualisationBase/DataReader.h>
+#include <EventVisualisationBase/VisualisationConstants.h>
+#include <TString.h>
+#include <TEveTrack.h>
+#include <TEveViewer.h>
+#include <TEveVSD.h>
 
-namespace o2 {
+namespace o2  {
 namespace event_visualisation {
 
+class DataReaderVSD : public DataReader {
+    TFile *fFile;
+    TObjArray *fEvDirKeys;
+    Int_t fMaxEv, fCurEv;
 
-class DataReaderITS : public DataReader {
 public:
-    DataReaderITS();
+    Int_t GetEventCount() override { return fEvDirKeys->GetEntriesFast(); };
+    DataReaderVSD();
+    ~DataReaderVSD() override;
     void open() override;
-    Bool_t GotoEvent(Int_t ev);
+    TObject* getEventData(int no) override;
 };
 
-}
-}
 
-#endif //O2EVE_DATAREADERITS_H
+}
+}
+#endif
