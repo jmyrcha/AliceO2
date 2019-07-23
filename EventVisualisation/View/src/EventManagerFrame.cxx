@@ -1,7 +1,17 @@
+// Copyright CERN and copyright holders of ALICE O2. This software is
+// distributed under the terms of the GNU General Public License v3 (GPL
+// Version 3), copied verbatim in the file "COPYING".
 //
-// Created by jmy on 23.02.19.
+// See http://alice-o2.web.cern.ch/license for full licensing information.
 //
+// In applying this license CERN does not waive the privileges and immunities
+// granted to it by virtue of its status as an Intergovernmental Organization
+// or submit itself to any jurisdiction.
 
+/// \file EventManagerFrame.cxx
+/// \brief GUI (bottom buttons) for visualisation
+/// \author julian.myrcha@cern.ch
+/// \author p.nowakowski@cern.ch
 
 #include <TGButton.h>
 #include <TGNumberEntry.h>
@@ -55,9 +65,7 @@ EventManagerFrame::EventManagerFrame(o2::event_visualisation::EventManager& even
         fNewGeom = b = EventManagerFrame::makeButton(f, "O2 geometry", 2 * width);
         b->Connect("Clicked()", cls, this, "DoNewGeometry()");
     }
-
     SetCleanup(kDeepCleanup);
-
     Layout();
     MapSubwindows();
     MapWindow();
@@ -92,19 +100,11 @@ void EventManagerFrame::DoFirstEvent() {
     std::cout << "DoFirstEvent: After fM Getting EventRegistration instance" << std::endl;
     eventReg = EventRegistration::getInstance();
     fEventId->SetIntNumber(fM->getCurrentEvent());
-//    DataReaderVSD* offline = dynamic_cast<DataReaderVSD*>(fM->getDataSource());
-//    std::cout << "DoFirstEvent" << std::endl;
-//    fEventId->SetIntNumber(0);
-//    offline->GotoEvent(0);
 }
 
 void EventManagerFrame::DoPrevEvent() {
     fM->PrevEvent();
     fEventId->SetIntNumber(fM->getCurrentEvent());
-//    std::cout << "DoPrevEvent" << std::endl;
-//    fEventId->SetIntNumber(fM->gotoEvent(fEventId->GetNumber()-1));
-//    DataReaderVSD* offline = dynamic_cast<DataReaderVSD*>(fM->getDataSource());
-//    offline->GotoEvent(fEventId->GetNumber());
 }
 
 void EventManagerFrame::DoNextEvent() {
@@ -114,26 +114,17 @@ void EventManagerFrame::DoNextEvent() {
   auto eventReg = EventRegistration::getInstance();
     fM->NextEvent();
     fEventId->SetIntNumber(fM->getCurrentEvent());
-//    std::cout << "DoNextEvent" << std::endl;
-//    fEventId->SetIntNumber(fM->gotoEvent(fEventId->GetNumber()+1));
-//    DataReaderVSD* offline = dynamic_cast<DataReaderVSD*>(fM->getDataSource());
-//    offline->GotoEvent(fEventId->GetNumber());
 }
 
 void EventManagerFrame::DoLastEvent() {
     fM->GotoEvent(-1);  /// -1 means last available
     fEventId->SetIntNumber(fM->getCurrentEvent());
-//    std::cout << "DoLastEvent" << std::endl;
-//    fEventId->SetIntNumber(fM->gotoEvent(-1));      // -1 means last available
-//    DataReaderVSD* offline = dynamic_cast<DataReaderVSD*>(fM->getDataSource());
-//    offline->GotoEvent(fEventId->GetNumber());
 }
 
 void EventManagerFrame::DoSetEvent() {
 }
 
 void EventManagerFrame::DoScreenshot() {
-
 }
 
 void EventManagerFrame::DoOldGeometry() {

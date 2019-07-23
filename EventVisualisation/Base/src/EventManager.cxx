@@ -15,7 +15,6 @@
 
 
 #include "EventVisualisationBase/EventManager.h"
-
 #include "EventVisualisationDataConverter/MinimalisticEvent.h"
 #include "EventVisualisationBase/Track.h"
 #include "EventVisualisationBase/ConfigurationManager.h"
@@ -142,6 +141,11 @@ EventManager::~EventManager() {
     std::cout << "EventManager::~EventManager()" << std::endl;
     instance = nullptr;
 }
+
+void EventManager::DropEvent() {
+  DestroyElements();
+}
+
 
 }
 }
