@@ -37,7 +37,7 @@ GeometryManager& GeometryManager::getInstance()
   return instance;
 }
 
-TEveGeoShape* GeometryManager::getGeometryForDetector(string detectorName)
+TEveGeoShape* GeometryManager::getGeometryForDetector(string detectorName, bool oldGeom)
 {
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);
@@ -56,8 +56,13 @@ TEveGeoShape* GeometryManager::getGeometryForDetector(string detectorName)
     geomPath.replace(o2pos,o2pos+o2basePathSpecifier.size(),o2basePath);
   }
 
+  string runPath = "/O2";
+  if(oldGeom) {
+    runPath = "/run2";
+  }
+
   // load ROOT file with geometry
-  TFile *f = TFile::Open(Form("%s/simple_geom_%s.root",geomPath.c_str(),detectorName.c_str()));
+  TFile *f = TFile::Open(Form("%s%s/simple_geom_%s.root", geomPath.c_str(), runPath.c_str(),detectorName.c_str()));
   cout << "GeometryManager::GetSimpleGeom opening geometry for: " << detectorName << endl;
   if(!f){
     cout<<"GeometryManager::GetSimpleGeom -- no file with geometry found for: "<<detectorName<<"!"<<endl;
@@ -67,6 +72,7 @@ TEveGeoShape* GeometryManager::getGeometryForDetector(string detectorName)
   TEveGeoShapeExtract *geomShapeExtract = static_cast<TEveGeoShapeExtract*>(f->Get(detectorName.c_str()));
   TEveGeoShape *geomShape = TEveGeoShape::ImportShapeExtract(geomShapeExtract);
   f->Close();
+  geomShape->SetName(detectorName.c_str());
   
   // tricks for different R-Phi geom of TPC:
   if(detectorName=="RPH"){  // use all other parameters of regular TPC geom

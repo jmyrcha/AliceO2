@@ -5,6 +5,8 @@
 #ifndef ALICE_O2_EVENTVISUALISATION_BASE_EVENTREGISTRATION_H
 #define ALICE_O2_EVENTVISUALISATION_BASE_EVENTREGISTRATION_H
 
+#include <iostream>
+
 #include <TEveElement.h>
 
 namespace o2 {
@@ -20,7 +22,13 @@ public:
     /// Removes all shapes representing current event
     virtual void destroyAllEvents() = 0;
 
-    static EventRegistration* getInstance() { return instance;}
+    static EventRegistration* getInstance() {
+      std::cout << "EventRegistration::getInstance: Getting EventRegistration instance" << std::endl;
+      if(!instance) {
+        std::cout << "No instance exists!" << std::endl;
+      }
+      return instance;
+    }
     static void setInstance(EventRegistration* instance) { EventRegistration::instance = instance;}
 };
 

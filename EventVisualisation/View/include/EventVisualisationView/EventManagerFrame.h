@@ -16,8 +16,6 @@ class TGLabel;
 namespace o2 {
 namespace event_visualisation {
 
-
-
 class EventManagerFrame : public TGMainFrame {
 private:
     static TGTextButton* makeButton(TGCompositeFrame* p, const char* txt, Int_t width=0,
@@ -29,14 +27,16 @@ protected:
     TGTextButton   *fPrevEvent;    // Go to prev event
     TGTextButton   *fNextEvent;    // Go to next event
     TGTextButton   *fLastEvent;    // Go to last event
-    TGTextButton         *fScreenshot;   // Save screenshot to file
+    TGTextButton   *fScreenshot;   // Save screenshot to file
+    TGTextButton   *fOldGeom;      // Draw old geometry (run 2)
+    TGTextButton   *fNewGeom;      // Draw new geometry (O2)
     TGNumberEntry        *fEventId;      // Display/edit current event id
     TGLabel              *fInfoLabel;    // Display last available event id
 public:
     EventManagerFrame(o2::event_visualisation::EventManager& eventManager);
     virtual ~EventManagerFrame();
-    ClassDef(EventManagerFrame, 0); // GUI window for AliEveEventManager.
-
+    ClassDef(EventManagerFrame, 0); // GUI window for AliEveEventManager
+    void setupGeometry(bool oldGeom);
 
 public: // slots
     void DoFirstEvent();
@@ -45,6 +45,8 @@ public: // slots
     void DoLastEvent();
     void DoSetEvent();
     void DoScreenshot();
+    void DoOldGeometry();
+    void DoNewGeometry();
 };
 
 

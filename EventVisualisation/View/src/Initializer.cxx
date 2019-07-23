@@ -38,13 +38,11 @@
 #include <TEveWindowManager.h>
 #include <iostream>
 #include <TFile.h>
-using namespace std;
 
+using namespace std;
 
 namespace o2  {
 namespace event_visualisation {
-
-
 
 Initializer::Initializer(const Options options, EventManager::EDataSource defaultDataSource)
 {
@@ -70,7 +68,7 @@ Initializer::Initializer(const Options options, EventManager::EDataSource defaul
 
   gEve->AddEvent(&eventManager);
   
-  setupGeometry();
+  //setupGeometry(options.oldGeom);
   gSystem->ProcessEvents();
   gEve->Redraw3D(true);
   
@@ -80,9 +78,8 @@ Initializer::Initializer(const Options options, EventManager::EDataSource defaul
   TEveBrowser *browser = gEve->GetBrowser();
   browser->GetTabRight()->SetTab(1);
   browser->MoveResize(0, 0, gClient->GetDisplayWidth(),gClient->GetDisplayHeight() - 32);
-
   browser->StartEmbedding(TRootBrowser::kBottom);
-  EventManagerFrame *frame =new EventManagerFrame(eventManager);
+  EventManagerFrame *frame = new EventManagerFrame(eventManager);
   browser->StopEmbedding("EventCtrl Balbinka");
 
   if(fullscreen){
@@ -97,21 +94,25 @@ Initializer::Initializer(const Options options, EventManager::EDataSource defaul
   // Temporary:
   // For the time being we draw single random event on startup.
   // Later this will be triggered by button, and finally moved to configuration.
-  gEve->AddEvent(&EventManager::getInstance());
+  //gEve->AddEvent(&eventManager);
 //  MultiView::getInstance()->drawRandomEvent();
+  frame->setupGeometry(options.oldGeom);
   frame->DoFirstEvent();
 }
 
 Initializer::~Initializer() = default;
 
-void Initializer::setupGeometry()
+void Initializer::setupGeometry(bool oldGeom)
 {
   // read path to geometry files from config file
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);
   
   // get geometry from Geometry Manager and register in multiview
+  std::cout << "setupGeometry getting Multiview instance" << std::endl;
   auto multiView = MultiView::getInstance();
+  std::cout << "setupGeometry getting EventRegistration instance" << std::endl;
+  auto eventReg = EventRegistration::getInstance();
   
   for(int iDet=0;iDet<NvisualisationGroups;++iDet){
     EVisualisationGroup det = static_cast<EVisualisationGroup>(iDet);
@@ -122,14 +123,14 @@ void Initializer::setupGeometry()
          || detName=="MID" || detName=="MFT" || detName=="AD0"
          || detName=="FMD"){// don't load MUON+MFT and AD and standard TPC to R-Phi view
         
-        multiView->drawGeometryForDetector(detName,true,false);
+        multiView->drawGeometryForDetector(detName, oldGeom, true,false);
       }
       else if(detName=="RPH"){// special TPC geom from R-Phi view
         
-        multiView->drawGeometryForDetector(detName,false,true,false);
+        multiView->drawGeometryForDetector(detName, oldGeom, false,true,false);
       }
       else{// default
-        multiView->drawGeometryForDetector(detName);
+        multiView->drawGeometryForDetector(detName, oldGeom);
       }
     }
   }
@@ -151,7 +152,10 @@ void Initializer::setupCamera()
   zoom[MultiView::ViewZrho] = settings.GetValue("camera.Rho-Z.zoom",1.0);
   
   // get necessary elements of the multiview and set camera position
+  std::cout << "setupCamera getting Multiview instance" << std::endl;
   auto multiView = MultiView::getInstance();
+  std::cout << "setupCamera getting EventRegistration instance" << std::endl;
+  auto eventReg = EventRegistration::getInstance();
   
   for(int viewIter=0;viewIter<MultiView::NumberOfViews;++viewIter){
     TGLViewer *glView = multiView->getView(static_cast<MultiView::EViews>(viewIter))->GetGLViewer();
@@ -170,6 +174,9 @@ void Initializer::setupBackground()
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);
   Color_t col = settings.GetValue("background.color", 1);
+
+  std::cout << "setupBackground getting EventRegistration instance" << std::endl;
+  auto eventReg = EventRegistration::getInstance();
 
   for(int viewIter=0; viewIter<MultiView::NumberOfViews;++viewIter){
     TEveViewer *view = MultiView::getInstance()->getView(static_cast<MultiView::EViews>(viewIter));

@@ -35,7 +35,7 @@ class GeometryManager
     static GeometryManager& getInstance();
   
     /// Returns ROOT shapes describing simplified geometry of given detector
-    TEveGeoShape* getGeometryForDetector(std::string detectorName);
+    TEveGeoShape* getGeometryForDetector(std::string detectorName, bool oldGeom = false);
   
   private:
     /// Goes through all children nodes of geometry shape and sets drawing options

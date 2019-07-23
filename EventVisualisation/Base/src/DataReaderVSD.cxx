@@ -40,7 +40,7 @@ DataReaderVSD::~DataReaderVSD()  {
 
 void DataReaderVSD::open()  {
     TString ESDFileName = "events_0.root";
-    Warning("GotoEvent", "OPEN");
+    //Warning("GotoEvent", "OPEN");
     fMaxEv = -1;
     fCurEv = -1;
     fFile = TFile::Open(ESDFileName);
@@ -70,7 +70,7 @@ void DataReaderVSD::open()  {
 
 
 TObject *DataReaderVSD::getEventData(int ev) {
-  Warning("GotoEvent", "GOTOEVENT");
+  //Warning("GotoEvent", "GOTOEVENT");
   if (ev < 0 || ev >= this->fMaxEv) {
     Warning("GotoEvent", "Invalid event id %d.", ev);
     return nullptr;

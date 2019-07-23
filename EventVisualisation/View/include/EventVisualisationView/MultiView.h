@@ -46,7 +46,7 @@ class MultiView:public EventRegistration
     enum EScenes{
       Scene3dGeom,    ///< 3D scene of geometry
       Scene3dEvent,   ///< 3D scene of event
-      SceneRPhiGeom,  ///< R-Phi scene of geometry
+      SceneRphiGeom,  ///< R-Phi scene of geometry
       SceneZrhoGeom , ///< Z-Pho scene of geometry
       SceneRphiEvent, ///< R-Phi scene of event
       SceneZrhoEvent ,///< Z-Rho scene of event
@@ -73,9 +73,9 @@ class MultiView:public EventRegistration
     /// \param threeD Should 3D view be drawn
     /// \param rPhi Should R-Phi projection be drawn
     /// \param zRho Should Z-Rho projection be drawn
-    void drawGeometryForDetector(std::string detectorName,bool threeD=true, bool rPhi=true, bool zRho=true);
+    void drawGeometryForDetector(std::string detectorName, bool oldGeom = false, bool threeD=true, bool rPhi=true, bool zRho=true);
     /// Registers geometry to be drawn in appropriate views
-    void registerGeometry(TEveGeoShape *geom,bool threeD=true, bool rPhi=true, bool zRho=true);
+    void registerGeometry(TEveGeoShape *geom, bool threeD=true, bool rPhi=true, bool zRho=true);
     /// Removes all geometries
     void destroyAllGeometries();
   
@@ -105,11 +105,11 @@ class MultiView:public EventRegistration
     /// Returns geometry scene for given projection manager
     EScenes getSceneOfProjection(EProjections projection);
   
-  /// Vector keeping all geometries
-  ///
-  /// This is used just to know what to remove
-  /// when destroying of all geometries is requested
-  std::vector<TEveGeoShape*> mGeomVector;
+    /// Vector keeping all geometries
+    ///
+    /// This is used just to know what to remove
+    /// when destroying of all geometries is requested
+    std::vector<TEveGeoShape*> mGeomVector;
 };
 
 }

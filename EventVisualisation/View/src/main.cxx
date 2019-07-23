@@ -61,6 +61,7 @@ std::string printOptions(Options*o) {
   res.append(std::string("randomTracks: ")+(o->randomTracks?"true":"false")+"\n");
   res.append(std::string("vds         : ")+(o->vsd?"true":"false")+"\n");
   res.append(std::string("itc         : ")+(o->itc?"true":"false")+"\n");
+  res.append(std::string("old geometry: ")+(o->oldGeom?"true":"false")+"\n");
   return res;
 }
 
@@ -71,7 +72,7 @@ Options *processCommandLine(int argc, char *argv[]) {
   // put ':' in the starting of the
   // string so that program can
   //distinguish between '?' and ':'
-  while((opt = getopt(argc, argv, ":if:rv")) != -1) {
+  while((opt = getopt(argc, argv, ":if:rvg")) != -1) {
     switch(opt) {
       case 'r':
         options.randomTracks = true;
@@ -84,6 +85,9 @@ Options *processCommandLine(int argc, char *argv[]) {
         break;
       case 'f':
         options.fileName = optarg;
+        break;
+      case 'g':
+        options.oldGeom = true;
         break;
       case ':':
         printf("option needs a value\n");

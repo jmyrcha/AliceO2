@@ -25,6 +25,7 @@ struct Options {
   bool randomTracks;    // -r
   bool vsd;             // -v
   bool itc;             // -i
+  bool oldGeom;         // -g
   std::string fileName; // -f 'data.root'
 } ;
 
@@ -45,7 +46,7 @@ class Initializer
   
   private:
     /// Loads geometry for all detectors
-    void setupGeometry();
+    void setupGeometry(bool oldGeom);
     /// Sets up background color
     void setupBackground();
     /// Sets up camera position

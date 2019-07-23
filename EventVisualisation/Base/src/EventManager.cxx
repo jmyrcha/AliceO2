@@ -35,7 +35,6 @@
 #include <EventVisualisationBase/DataSourceOffline.h>
 #include <EventVisualisationBase/DataReaderVSD.h>
 
-
 using namespace std;
 
 namespace o2  {
@@ -45,8 +44,11 @@ EventManager *EventManager::instance = nullptr;
 
 EventManager& EventManager::getInstance()
 {
-  if( instance == nullptr)
-      instance = new EventManager();
+  std::cout << "EventManager::getInstance: getting EventManager instance" << std::endl;
+  if( instance == nullptr) {
+    std::cout << "EventManager::getInstance: no instance, creating new EventManager" << std::endl;
+    instance = new EventManager();
+  }
   return *instance;
 }
 
@@ -93,6 +95,7 @@ void EventManager::GotoEvent(Int_t no) {
       if(interpreter) {
         TObject *data = getDataSource()->getEventData(no, (EVisualisationGroup)i);
         TEveElement *eveElement = interpreter->interpretDataForType(data, NoData);
+        std::cout << "EventManager::GoToEvent: Getting EventRegistration instance for " << gVisualisationGroupName[i] << std::endl;
         EventRegistration::getInstance()->registerElement(eveElement);
       }
     }
