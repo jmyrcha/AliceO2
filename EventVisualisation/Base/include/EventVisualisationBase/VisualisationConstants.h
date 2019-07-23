@@ -28,9 +28,7 @@ enum EVisualisationGroup{
   MCH,
   PHS,
   RPH,
-  SDD,
-  SPD,
-  SSD,
+  ITS,
   TOF,
   TPC,
   TRD,
@@ -45,13 +43,12 @@ const std::string gVisualisationGroupName[NvisualisationGroups] = {
   "MCH",
   "PHS",
   "RPH",
-  "SDD",
-  "SPD",
-  "SSD",
+  "ITS",
   "TOF",
   "TPC",
   "TRD",
-  "RND"
+  "RND",
+  "VSD",
 };
   
 enum EDataType{

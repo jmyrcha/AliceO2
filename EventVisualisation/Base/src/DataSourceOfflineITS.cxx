@@ -2,7 +2,7 @@
 // Created by jmy on 09.07.19.
 //
 //#include "EventVisualisationView/MultiView.h"
-#include "EventVisualisationBase/DataSourceOfflineITS.h"
+#include "EventVisualisationBase/DataReaderITS.h"
 
 
 //
@@ -433,9 +433,7 @@ TEveElementList* ITSData::displayData(int entry, int chip)
     mEvent = new TEveElementList(ename.c_str());
     mEvent->AddElement(clusters);
     mEvent->AddElement(tracks);
-
     return mEvent;
-
 }
 
 
@@ -515,15 +513,52 @@ void ITSDisplayEvents()
 }
 
 
+namespace o2 {
+    namespace event_visualisation {
 
-o2::event_visualisation::DataSourceOfflineITS::DataSourceOfflineITS() {
+        void DataReaderITS::open() {
+            TString ESDFileName = "events_0.root";
+            Warning("GotoEvent", "OPEN");
+            fMaxEv = -1;
+            fCurEv = -1;
+            fFile = TFile::Open(ESDFileName);
+            if (!fFile) {
+                Error("VSD_Reader", "Can not open file '%s' ... terminating.",
+                      ESDFileName.Data());
+                gSystem->Exit(1);
+            }
 
-}
+            fEvDirKeys = new TObjArray;
+            TPMERegexp name_re("Event\\d+");
+            TObjLink *lnk = fFile->GetListOfKeys()->FirstLink();
+            while (lnk) {
+                if (name_re.Match(lnk->GetObject()->GetName())) {
+                    fEvDirKeys->Add(lnk->GetObject());
+                }
+                lnk = lnk->Next();
+            }
 
-void o2::event_visualisation::DataSourceOfflineITS::open(TString fileName) {
-    DataSourceOffline::open(fileName);
-}
+            fMaxEv = fEvDirKeys->GetEntriesFast();
+            if (fMaxEv == 0) {
+                Error("VSD_Reader", "No events to show ... terminating.");
+                gSystem->Exit(1);
+            }
+        }
 
-Bool_t o2::event_visualisation::DataSourceOfflineITS::GotoEvent(Int_t ev) {
-    return 0;
+        Bool_t DataReaderITS::GotoEvent(Int_t ev) {
+            return 0;
+        }
+
+        DataReaderITS::DataReaderITS() {
+
+        }
+
+        Int_t DataReaderITS::GetEventCount() {
+            return 0;
+        }
+
+        TObject *DataReaderITS::getEventData(int no) {
+            return nullptr;
+        }
+    }
 }
