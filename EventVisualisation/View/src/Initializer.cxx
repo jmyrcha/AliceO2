@@ -67,29 +67,22 @@ Initializer::Initializer(const Options options, EventManager::EDataSource defaul
 
   eventManager.setDataSourceType(EventManager::EDataSource::SourceOffline);
   eventManager.Open();
-
-  gEve->AddEvent(&eventManager);
-  
-  //setupGeometry(options.oldGeom);
-  gSystem->ProcessEvents();
-  gEve->Redraw3D(true);
   
   setupBackground();
   
   // Setup windows size, fullscreen and focus
   TEveBrowser *browser = gEve->GetBrowser();
   browser->GetTabRight()->SetTab(1);
-  browser->MoveResize(0, 0, gClient->GetDisplayWidth(),gClient->GetDisplayHeight() - 32);
+  browser->MoveResize(0, 0, gClient->GetDisplayWidth(), gClient->GetDisplayHeight() - 32);
   browser->StartEmbedding(TRootBrowser::kBottom);
   EventManagerFrame *frame = new EventManagerFrame(eventManager);
-  browser->StopEmbedding("EventCtrl Balbinka");
+  browser->StopEmbedding("EventCtrl");
 
   if(fullscreen){
-    ((TGWindow*)gEve->GetBrowser()->GetTabLeft()->GetParent())->Resize(1,0);
-    ((TGWindow*)gEve->GetBrowser()->GetTabBottom()->GetParent())->Resize(0,1);
+    ((TGWindow*)browser->GetTabLeft()->GetParent())->Resize(1,0);
+    ((TGWindow*)browser->GetTabBottom()->GetParent())->Resize(0,1);
   }
-  gEve->GetBrowser()->Layout();
-  gSystem->ProcessEvents();
+  browser->Layout();
   
   setupCamera();
   
@@ -99,7 +92,16 @@ Initializer::Initializer(const Options options, EventManager::EDataSource defaul
   //gEve->AddEvent(&eventManager);
 //  MultiView::getInstance()->drawRandomEvent();
   frame->setupGeometry(options.oldGeom);
+
+  gEve->AddEvent(&eventManager);
   frame->DoFirstEvent();
+  gSystem->ProcessEvents();
+  gEve->Redraw3D(true);
+
+  std::cout << "Initializer constructor end getting Multiview instance" << std::endl;
+  auto multiView = MultiView::getInstance();
+  std::cout << "Initializer constructor end getting EventRegistration instance" << std::endl;
+  auto eventReg = EventRegistration::getInstance();
 }
 
 Initializer::~Initializer() = default;

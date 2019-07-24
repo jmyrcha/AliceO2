@@ -31,6 +31,7 @@ class EventManagerFrame : public TGMainFrame {
 private:
     static TGTextButton* makeButton(TGCompositeFrame* p, const char* txt, Int_t width=0,
                               Int_t lo=0, Int_t ro=0, Int_t to=0, Int_t bo=0);
+    ClassDef(EventManagerFrame, 0); // GUI window for EventManager
 protected:
     o2::event_visualisation::EventManager   *fM;            // Model object.
 
@@ -46,7 +47,6 @@ protected:
 public:
     EventManagerFrame(o2::event_visualisation::EventManager& eventManager);
     virtual ~EventManagerFrame();
-    ClassDef(EventManagerFrame, 0); // GUI window for AliEveEventManager
     void setupGeometry(bool oldGeom);
 
 public: // slots

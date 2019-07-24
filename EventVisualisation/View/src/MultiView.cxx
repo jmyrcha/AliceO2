@@ -40,6 +40,10 @@ MultiView *MultiView::sInstance = nullptr;
 
 MultiView::MultiView()
 {
+  if(sInstance) {
+    Error("Multiview", "Multiview already instantiated");
+  }
+
   cout << "Multiview constructor" << endl;
 
   // set scene names and descriptions
@@ -101,6 +105,7 @@ MultiView::MultiView()
 
 MultiView::~MultiView() {
   cout << "Multiview destructor" << endl;
+  destroyAllGeometries();
 //    for(int i=this->SceneRphiGeom;i<this->NumberOfScenes;++i) {
 //        delete this->mScenes[i];
 //    }

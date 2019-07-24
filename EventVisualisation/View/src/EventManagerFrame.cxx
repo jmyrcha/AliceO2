@@ -36,34 +36,34 @@ EventManagerFrame::EventManagerFrame(o2::event_visualisation::EventManager& even
     fM = &eventManager;
 
     const TString cls("o2::event_visualisation::EventManagerFrame");
-    TGTextButton *b = 0;
     TGHorizontalFrame *f = new TGHorizontalFrame(this);
     {
         Int_t width = 50;
         this->AddFrame(f, new TGLayoutHints(kLHintsExpandX, 0, 0, 2, 2));
 
-        fFirstEvent = b = EventManagerFrame::makeButton(f, "First", width);
-        b->Connect("Clicked()", cls, this, "DoFirstEvent()");
-        fPrevEvent = b = EventManagerFrame::makeButton(f, "Prev", width);
-        b->Connect("Clicked()", cls, this, "DoPrevEvent()");
+        fFirstEvent = EventManagerFrame::makeButton(f, "First", width);
+        fFirstEvent->Connect("Clicked()", cls, this, "DoFirstEvent()");
+        fPrevEvent = EventManagerFrame::makeButton(f, "Prev", width);
+        fPrevEvent->Connect("Clicked()", cls, this, "DoPrevEvent()");
 
-        fEventId = new TGNumberEntry(f, 0, 5, -1, TGNumberFormat::kNESInteger, TGNumberFormat::kNEANonNegative,
-                                     TGNumberFormat::kNELLimitMinMax, 0, 10000);
+        fEventId = new TGNumberEntry(f, 0, 5, -1, TGNumberFormat::kNESInteger,
+          TGNumberFormat::kNEANonNegative, TGNumberFormat::kNELLimitMinMax, 0, 10000);
         f->AddFrame(fEventId, new TGLayoutHints(kLHintsNormal, 10, 5, 0, 0));
         fEventId->Connect("ValueSet(Long_t)", cls, this, "DoSetEvent()");
         fInfoLabel = new TGLabel(f);
         f->AddFrame(fInfoLabel, new TGLayoutHints(kLHintsNormal, 5, 10, 4, 0));
 
-        fNextEvent = b = EventManagerFrame::makeButton(f, "Next", width);
-        b->Connect("Clicked()", cls, this, "DoNextEvent()");
-        fLastEvent = b = EventManagerFrame::makeButton(f, "Last", width);
-        b->Connect("Clicked()", cls, this, "DoLastEvent()");
-        fScreenshot = b = EventManagerFrame::makeButton(f, "Screenshot", 2 * width);
-        b->Connect("Clicked()", cls, this, "DoScreenshot()");
-        fOldGeom = b = EventManagerFrame::makeButton(f, "Run 2 geometry", 2 * width);
-        b->Connect("Clicked()", cls, this, "DoOldGeometry()");
-        fNewGeom = b = EventManagerFrame::makeButton(f, "O2 geometry", 2 * width);
-        b->Connect("Clicked()", cls, this, "DoNewGeometry()");
+        fNextEvent = EventManagerFrame::makeButton(f, "Next", width);
+        fNextEvent->Connect("Clicked()", cls, this, "DoNextEvent()");
+        fLastEvent = EventManagerFrame::makeButton(f, "Last", width);
+        fLastEvent->Connect("Clicked()", cls, this, "DoLastEvent()");
+
+        fScreenshot = EventManagerFrame::makeButton(f, "Screenshot", 2 * width);
+        fScreenshot->Connect("Clicked()", cls, this, "DoScreenshot()");
+        fOldGeom = EventManagerFrame::makeButton(f, "Run 2 geometry", 2 * width);
+        fOldGeom->Connect("Clicked()", cls, this, "DoOldGeometry()");
+        fNewGeom = EventManagerFrame::makeButton(f, "O2 geometry", 2 * width);
+        fNewGeom->Connect("Clicked()", cls, this, "DoNewGeometry()");
     }
     SetCleanup(kDeepCleanup);
     Layout();
@@ -100,6 +100,10 @@ void EventManagerFrame::DoFirstEvent() {
     std::cout << "DoFirstEvent: After fM Getting EventRegistration instance" << std::endl;
     eventReg = EventRegistration::getInstance();
     fEventId->SetIntNumber(fM->getCurrentEvent());
+    std::cout << "DoFirstEvent: After fEventId Getting instance of Multiview" << std::endl;
+    multiView = MultiView::getInstance();
+    std::cout << "DoFirstEvent: After fEventId Getting EventRegistration instance" << std::endl;
+    eventReg = EventRegistration::getInstance();
 }
 
 void EventManagerFrame::DoPrevEvent() {
