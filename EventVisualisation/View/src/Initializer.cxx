@@ -40,6 +40,8 @@
 #include <TEveWindowManager.h>
 #include <iostream>
 #include <TFile.h>
+#include <EventVisualisationDetectors/DataInterpreterITS.h>
+
 using namespace std;
 
 
@@ -66,11 +68,11 @@ Initializer::Initializer(const Options options, EventManager::EDataSource defaul
     DataInterpreter::setInstance(new DataInterpreterRND(), EVisualisationGroup::RND);
   if(options.vsd)
     DataInterpreter::setInstance(new DataInterpreterVSD(), EVisualisationGroup::VSD);
+  if(options.its)
+    DataInterpreter::setInstance(new DataInterpreterITS(), EVisualisationGroup::ITS);
 
   eventManager.setDataSourceType(EventManager::EDataSource::SourceOffline);
   eventManager.Open();
-
-  gEve->AddEvent(&eventManager);
   
   setupGeometry();
   gSystem->ProcessEvents();

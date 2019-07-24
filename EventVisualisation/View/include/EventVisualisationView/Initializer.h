@@ -24,7 +24,7 @@ namespace event_visualisation {
 struct Options {
   bool randomTracks;    // -r
   bool vsd;             // -v
-  bool itc;             // -i
+  bool its;             // -i
   std::string fileName; // -f 'data.root'
 } ;
 

@@ -33,7 +33,7 @@ std::string printOptions(Options*o) {
   std::string res;
   res.append(std::string("randomTracks: ")+(o->randomTracks?"true":"false")+"\n");
   res.append(std::string("vds         : ")+(o->vsd?"true":"false")+"\n");
-  res.append(std::string("itc         : ")+(o->itc?"true":"false")+"\n");
+  res.append(std::string("its         : ")+(o->its?"true":"false")+"\n");
   return res;
 }
 
@@ -50,7 +50,7 @@ Options *processCommandLine(int argc, char *argv[]) {
         options.randomTracks = true;
         break;
       case 'i':
-        options.itc = true;
+        options.its = true;
         break;
       case 'v':
         options.vsd = true;

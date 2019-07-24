@@ -15,6 +15,7 @@
 #ifndef O2EVE_DATAREADERITS_H
 #define O2EVE_DATAREADERITS_H
 
+#include <TFile.h>
 #include <EventVisualisationBase/DataReader.h>
 
 namespace o2 {
@@ -22,10 +23,15 @@ namespace event_visualisation {
 
 
 class DataReaderITS : public DataReader {
+private:
+    Int_t fMaxEv;
+    TFile *clusFile;
+    TFile *tracFile;
 public:
     DataReaderITS();
     void open() override;
-    Bool_t GotoEvent(Int_t ev);
+    Int_t GetEventCount() override { return fMaxEv; };
+    TObject* getEventData(int no) override;
 };
 
 }

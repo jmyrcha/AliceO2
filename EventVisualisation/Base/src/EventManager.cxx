@@ -33,6 +33,7 @@
 #include <iostream>
 #include <EventVisualisationBase/DataSourceOffline.h>
 #include <EventVisualisationBase/DataReaderVSD.h>
+#include <EventVisualisationBase/DataReaderITS.h>
 
 
 using namespace std;
@@ -70,6 +71,11 @@ void EventManager::Open() {
               if(DataInterpreter::getInstance(EVisualisationGroup::RND)) {
                 source->registerReader(nullptr, EVisualisationGroup::RND);  // no need to read
               }
+              if(DataInterpreter::getInstance(EVisualisationGroup::ITS)) {
+                DataReader *vsd = new DataReaderITS();
+                vsd->open();
+                source->registerReader(vsd, EVisualisationGroup::ITS);
+              }
               setDataSource(source);
             }
             break;
@@ -86,12 +92,12 @@ void EventManager::GotoEvent(Int_t no) {
         no = getDataSource()->GetEventCount()-1;
     }
     this->currentEvent = no;
-    EventRegistration::getInstance()->destroyAllEvents();
+    EventRegistration::getInstance()->destroyCurrentEvent();
     for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; i++) {
       DataInterpreter* interpreter = DataInterpreter::getInstance((EVisualisationGroup)i);
       if(interpreter) {
         TObject *data = getDataSource()->getEventData(no, (EVisualisationGroup)i);
-        TEveElement *eveElement = interpreter->interpretDataForType(data, NoData);
+        TEveElement *eveElement = interpreter->interpretDataForType(data, Clusters);
         EventRegistration::getInstance()->registerElement(eveElement);
       }
     }

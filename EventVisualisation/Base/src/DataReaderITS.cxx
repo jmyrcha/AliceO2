@@ -513,9 +513,47 @@ o2::event_visualisation::DataReaderITS::DataReaderITS() {
 }
 
 void o2::event_visualisation::DataReaderITS::open() {
+    TString clusterFile = "o2clus_its.root";
+    TString trackFile = "o2trac_its.root";
 
+    this->tracFile = TFile::Open(trackFile);
+    this->clusFile = TFile::Open(clusterFile);
+
+    TTree* roft = (TTree*)this->tracFile->Get("ITSTracksROF");
+    TTree* rofc = (TTree*)this->clusFile->Get("ITSClustersROF");
+
+    if(roft != nullptr && rofc != nullptr) {
+        TTree *tracks = (TTree*)this->tracFile->Get("o2sim");
+        TTree *tracksRof = (TTree*)this->tracFile->Get("ITSTracksROF");
+
+        TTree *clusters = (TTree*)this->clusFile->Get("o2sim");
+        TTree *clustersRof = (TTree*)this->clusFile->Get("ITSClustersROF");
+
+        //Read all track RO frames to a buffer
+        std::vector<o2::itsmft::ROFRecord> *trackROFrames = nullptr;
+        tracksRof->SetBranchAddress("ITSTracksROF", &trackROFrames);
+        tracksRof->GetEntry(0);
+
+        //Read all cluster RO frames to a buffer
+        std::vector<o2::itsmft::ROFRecord> *clusterROFrames = nullptr;
+        clustersRof->SetBranchAddress("ITSClustersROF", &clusterROFrames);
+        clustersRof->GetEntry(0);
+
+
+        if(trackROFrames->size() == clusterROFrames->size()) {
+            fMaxEv = trackROFrames->size();
+        } else {
+            Error("DataReaderITS", "Inconsistent number of readout frames in files");
+            exit(1);
+        }
+    }
 }
 
-Bool_t o2::event_visualisation::DataReaderITS::GotoEvent(Int_t ev) {
-    return 0;
+TObject* o2::event_visualisation::DataReaderITS::getEventData(int no) {
+    TList *list = new TList();
+    list->Add(this->tracFile);
+    list->Add(this->clusFile);
+    TVector2 *v = new TVector2(no, 0);
+    list->Add(v);
+    return list;
 }

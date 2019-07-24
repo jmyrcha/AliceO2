@@ -28,9 +28,11 @@
 
 #include "DataFormatsITS/TrackITS.h"
 #include "DataFormatsITSMFT/Cluster.h"
+#include "DataFormatsITSMFT/ROFRecord.h"
 #include "ITSBase/GeometryTGeo.h"
 
 #include <iostream>
+#include <gsl/span>
 
 using namespace std;
 
@@ -42,59 +44,114 @@ DataInterpreterITS::DataInterpreterITS() = default;
 DataInterpreterITS::~DataInterpreterITS() = default;
 
 TEveElement* DataInterpreterITS::interpretDataForType(TObject* data, EDataType type) {
-    auto *file = (TFile *) data;
-    TTree* tree = (TTree*)file->Get("o2sim");
+    TList *list = (TList*)data;
+    Int_t event = ((TVector2*)list->At(2))->X();
 
-    std::cerr << tree->GetName() << std::endl;
-
-    std::vector<its::TrackITS>* trkArr = nullptr;
-    tree->SetBranchAddress("ITSTrack", &trkArr);
-    tree->GetEntry(0);
-
-    auto *ff = TFile::Open("o2clus_its.root");
-
-    TTree* tree2 = (TTree*)ff->Get("o2sim");
-    std::cerr << tree2->GetName() << std::endl;
-
-    std::vector<itsmft::Cluster>* clusArr = nullptr;
-    tree2->SetBranchAddress("ITSCluster", &clusArr);
-
-    std::cerr << trkArr << " " << clusArr << std::endl;
-
-    TEveTrackList* tracks = new TEveTrackList("tracks");
-    auto prop = tracks->GetPropagator();
-    prop->SetMagField(0.5);
-    prop->SetMaxR(50.);
-
-    auto *points = new TEvePointSet("event_track");
-
-    o2::base::GeometryManager::loadGeometry("O2geometry.root", "FAIRGeom");
-    o2::its::GeometryTGeo* gman = its::GeometryTGeo::Instance();
+    //Prepare coordinate translator
+    base::GeometryManager::loadGeometry("O2geometry.root", "FAIRGeom");
+    its::GeometryTGeo* gman = its::GeometryTGeo::Instance();
     gman->fillMatrixCache(o2::utils::bit2Mask(o2::TransformType::T2GRot));
 
-    for (const auto& rec : *trkArr) {
-        std::array<float, 3> p;
-        rec.getPxPyPzGlo(p);
-        TEveRecTrackD t;
-        t.fP = { p[0], p[1], p[2] };
-        t.fSign = (rec.getSign() < 0) ? -1 : 1;
-        TEveTrack* track = new TEveTrack(&t, prop);
-        track->SetLineColor(kMagenta);
-        tracks->AddElement(track);
-        TEvePointSet* tpoints = new TEvePointSet("tclusters");
-        tpoints->SetMarkerColor(kGreen);
-        int nc = rec.getNumberOfClusters();
-        while (nc--) {
-            Int_t idx = rec.getClusterEntry(nc); //Is this the correct function??
-            itsmft::Cluster& c = (*clusArr)[idx];
-            const auto& gloC = c.getXYZGloRot(*gman);
-            tpoints->SetNextPoint(gloC.X(), gloC.Y(), gloC.Z());
-        }
-        track->AddElement(tpoints);
-    }
-    tracks->MakeTracks();
+    if(type == EDataType::Clusters) {
+        TFile *clustFile = (TFile*)list->At(1);
+        TTree *clusters = (TTree*)clustFile->Get("o2sim");
+        TTree *clustersRof = (TTree*)clustFile->Get("ITSClustersROF");
 
-    return tracks;
+        //Read all clusters to a buffer
+        std::vector<itsmft::Cluster>* clusArr = nullptr;
+        clusters->SetBranchAddress("ITSCluster", &clusArr);
+        clusters->GetEntry(0);
+
+        //Read all cluster RO frames to a buffer
+        std::vector<itsmft::ROFRecord> *clusterROFrames = nullptr;
+        clustersRof->SetBranchAddress("ITSClustersROF", &clusterROFrames);
+        clustersRof->GetEntry(0);
+
+        auto currentClusterROF = clusterROFrames->at(event);
+
+        int first, last;
+        first = currentClusterROF.getROFEntry().getIndex();
+        last = first + currentClusterROF.getNROFEntries();
+
+        gsl::span<itsmft::Cluster> mClusters = gsl::make_span(&(*clusArr)[first], last - first);
+
+        TEvePointSet *cPointSet = new TEvePointSet("clusters");
+        cPointSet->SetMarkerColor(kBlue);
+
+        for (const auto& c : mClusters) {
+            const auto& gloC = c.getXYZGloRot(*gman);
+            cPointSet->SetNextPoint(gloC.X(), gloC.Y(), gloC.Z());
+        }
+
+        return cPointSet;
+    }
+    else if(type == EDataType::ESD) {
+        TFile *trackFile = (TFile*)list->At(0);
+        TFile *clustFile = (TFile*)list->At(1);
+
+        TTree *tracks = (TTree*)trackFile->Get("o2sim");
+        TTree *tracksRof = (TTree*)trackFile->Get("ITSTracksROF");
+
+        TTree *clusters = (TTree*)clustFile->Get("o2sim");
+        TTree *clustersRof = (TTree*)clustFile->Get("ITSClustersROF");
+
+        //Read all tracks to a buffer
+        std::vector<its::TrackITS>* trkArr = nullptr;
+        tracks->SetBranchAddress("ITSTrack", &trkArr);
+        tracks->GetEntry(0);
+
+        //Read all track RO frames to a buffer
+        std::vector<itsmft::ROFRecord> *trackROFrames = nullptr;
+        tracksRof->SetBranchAddress("ITSTracksROF", &trackROFrames);
+        tracksRof->GetEntry(0);
+
+        //Read all clusters to a buffer
+        std::vector<itsmft::Cluster>* clusArr = nullptr;
+        clusters->SetBranchAddress("ITSCluster", &clusArr);
+        clusters->GetEntry(0);
+
+        //Read all cluster RO frames to a buffer
+        std::vector<itsmft::ROFRecord> *clusterROFrames = nullptr;
+        clustersRof->SetBranchAddress("ITSClustersROF", &clusterROFrames);
+        clustersRof->GetEntry(0);
+
+        TEveTrackList* trackList = new TEveTrackList("tracks");
+        auto prop = trackList->GetPropagator();
+        prop->SetMagField(0.5);
+        prop->SetMaxR(50.);
+
+        auto currentTrackROF = trackROFrames->at(event);
+
+        int first, last;
+        first = currentTrackROF.getROFEntry().getIndex();
+        last = first + currentTrackROF.getNROFEntries();
+
+        gsl::span<o2::its::TrackITS> mTracks = gsl::make_span(&(*trkArr)[first], last - first);
+
+        for (const auto& rec : mTracks) {
+            std::array<float, 3> p{0, 0, 0};
+            rec.getPxPyPzGlo(p);
+            TEveRecTrackD t;
+            t.fP = { p[0], p[1], p[2] };
+            t.fSign = (rec.getSign() < 0) ? -1 : 1;
+            TEveTrack* track = new TEveTrack(&t, prop);
+            track->SetLineColor(kMagenta);
+            trackList->AddElement(track);
+            TEvePointSet* tpoints = new TEvePointSet("tclusters");
+            tpoints->SetMarkerColor(kGreen);
+            int nc = rec.getNumberOfClusters();
+            while (nc--) {
+                Int_t idx = rec.getClusterEntry(nc);
+                itsmft::Cluster& c = (*clusArr)[idx];
+                const auto& gloC = c.getXYZGloRot(*gman);
+                tpoints->SetNextPoint(gloC.X(), gloC.Y(), gloC.Z());
+            }
+            track->AddElement(tpoints);
+        }
+        trackList->MakeTracks();
+
+        return trackList;
+    }
 }
 
 }
