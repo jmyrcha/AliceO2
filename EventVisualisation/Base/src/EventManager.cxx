@@ -43,21 +43,15 @@ EventManager *EventManager::instance = nullptr;
 
 EventManager& EventManager::getInstance()
 {
-  std::cout << "EventManager::getInstance: getting EventManager instance" << std::endl;
   if( instance == nullptr) {
-    std::cout << "EventManager::getInstance: no instance, creating new EventManager" << std::endl;
     instance = new EventManager();
   }
   return *instance;
 }
 
-EventManager::EventManager() : TEveEventManager("Event", "") {
-    std::cout << "EventManager::EventManager()" << std::endl;
-}
+EventManager::EventManager() : TEveEventManager("Event", "") {}
 
 void EventManager::Open() {
-    std::cout << "EventManager::Open()" << std::endl;
-
     switch(mCurrentDataSourceType)
     {
         case SourceOnline:
@@ -94,7 +88,6 @@ void EventManager::GotoEvent(Int_t no) {
       if(interpreter) {
         TObject *data = getDataSource()->getEventData(no, (EVisualisationGroup)i);
         TEveElement *eveElement = interpreter->interpretDataForType(data, NoData);
-        std::cout << "EventManager::GoToEvent: Getting EventRegistration instance for " << gVisualisationGroupName[i] << std::endl;
         EventRegistration::getInstance()->registerElement(eveElement);
       }
     }

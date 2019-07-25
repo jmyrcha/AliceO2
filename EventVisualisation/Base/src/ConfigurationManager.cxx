@@ -30,24 +30,40 @@ ConfigurationManager& ConfigurationManager::getInstance()
   return instance;
 }
 
-void ConfigurationManager::getConfig(TEnv &settings) const
+void ConfigurationManager::getConfig(TEnv &settings, bool run2) const
 {
+  const std::string configName = run2 ? "eve_config" : "o2eve_config";
+  const std::string methodName = "ConfigurationManager::getConfig";
   // TODO:
   // we need a way to point to the O2 installation directory
   //
-  if(settings.ReadFile(".o2eve_config", kEnvUser) < 0) {
-      if (settings.ReadFile(Form("%s/.o2eve_config", gSystem->Getenv("HOME")), kEnvUser) < 0) {
-          if (settings.ReadFile(Form("%s/o2eve_config", gSystem->Getenv("HOME")), kEnvUser) < 0) {
-              cout
-                      << "WARNING -- could not find eve_config in home directory! Trying default one in O2/EventVisualisation/Base/"
-                      << endl;
-              if (settings.ReadFile(Form("%s/EventVisualisation/o2eve_config", gSystem->Getenv("ALICEO2_INSTALL_PATH")),
-                                    kEnvUser) < 0) {
-                  cout << "ERROR -- could not find eve_config file!." << endl;
-                  exit(0);
-              }
+  if (settings.ReadFile(Form(".%s", configName.c_str()), kEnvUser) < 0) {
+    if (settings.ReadFile(Form("%s/.%s", gSystem->Getenv("HOME"), configName.c_str()), kEnvUser) < 0) {
+      if (settings.ReadFile(Form("%s/%s", gSystem->Getenv("HOME"), configName.c_str()), kEnvUser) < 0) {
+        Warning(methodName.c_str(), "Could not find eve_config in home directory!");
+        if (run2) {
+          Warning(methodName.c_str(), "Trying default one in $ALICE_ROOT/EVE/EveBase/");
+          if (settings.ReadFile(Form("%s/EVE/EveBase/eve_config",
+                                     gSystem->Getenv("ALICE_ROOT")), kEnvUser) < 0) {
+            Error(methodName.c_str(), "Could not find eve_config file!");
+            exit(0);
           }
+        } else {
+          Warning(methodName.c_str(), "Trying default one in O2/EventVisualisation/");
+          if (settings.ReadFile(Form("%s/EventVisualisation/o2eve_config",
+                                     gSystem->Getenv("ALICEO2_INSTALL_PATH")), kEnvUser) < 0) {
+            Error(methodName.c_str(), "Could not find o2eve_config file!");
+            exit(0);
+          }
+        }
+      } else {
+        Info(methodName.c_str(), Form("Using config at: %s/%s", gSystem->Getenv("HOME"), configName.c_str()));
       }
+    } else {
+      Info(methodName.c_str(), Form("Using config at: %s/.%s", gSystem->Getenv("HOME"), configName.c_str()));
+    }
+  } else {
+    Info(methodName.c_str(), Form("Using config at: .%s", configName.c_str()));
   }
 }
   

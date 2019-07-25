@@ -73,7 +73,7 @@ class MultiView:public EventRegistration
     /// \param threeD Should 3D view be drawn
     /// \param rPhi Should R-Phi projection be drawn
     /// \param zRho Should Z-Rho projection be drawn
-    void drawGeometryForDetector(std::string detectorName, bool oldGeom = false, bool threeD=true, bool rPhi=true, bool zRho=true);
+    void drawGeometryForDetector(std::string detectorName, bool run2 = false, bool threeD=true, bool rPhi=true, bool zRho=true);
     /// Registers geometry to be drawn in appropriate views
     void registerGeometry(TEveGeoShape *geom, bool threeD=true, bool rPhi=true, bool zRho=true);
     /// Removes all geometries

@@ -31,10 +31,11 @@ using namespace o2::event_visualisation;
 
 std::string printOptions(Options*o) {
   std::string res;
-  res.append(std::string("randomTracks: ")+(o->randomTracks?"true":"false")+"\n");
-  res.append(std::string("vds         : ")+(o->vsd?"true":"false")+"\n");
-  res.append(std::string("itc         : ")+(o->itc?"true":"false")+"\n");
-  res.append(std::string("old geometry: ")+(o->oldGeom?"true":"false")+"\n");
+  res.append(std::string("randomTracks : ")+(o->randomTracks?"true":"false")+"\n");
+  res.append(std::string("vds          : ")+(o->vsd?"true":"false")+"\n");
+  res.append(std::string("itc          : ")+(o->itc?"true":"false")+"\n");
+  res.append(std::string("run2 geometry: ")+(o->run2?"true":"false")+"\n");
+  //res.append(std::string("file        : ")+(!(o->fileName.empty())?o->fileName:"default: events_0.root")+"\n");
   return res;
 }
 
@@ -42,10 +43,8 @@ Options *processCommandLine(int argc, char *argv[]) {
   static Options options;
   int opt;
 
-  // put ':' in the starting of the
-  // string so that program can
-  //distinguish between '?' and ':'
-  while((opt = getopt(argc, argv, ":if:rvg")) != -1) {
+  // put ':' at the beginning of the string so that program can distinguish between '?' and ':'
+  while((opt = getopt(argc, argv, ":i:rvg")) != -1) {
     switch(opt) {
       case 'r':
         options.randomTracks = true;
@@ -56,11 +55,11 @@ Options *processCommandLine(int argc, char *argv[]) {
       case 'v':
         options.vsd = true;
         break;
-      case 'f':
-        options.fileName = optarg;
-        break;
+//      case 'f':
+//        options.fileName = optarg;
+//        break;
       case 'g':
-        options.oldGeom = true;
+        options.run2 = true;
         break;
       case ':':
         printf("option needs a value\n");

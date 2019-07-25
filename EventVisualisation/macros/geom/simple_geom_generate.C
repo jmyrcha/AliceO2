@@ -166,7 +166,7 @@ void simple_geom_generate(char *detectorName = "", int runNumber = 0, std::strin
         }
         else
         {
-            std::string fname("../../resources/geometry/simple_geom_");
+            std::string fname("../../resources/geometry/O2/simple_geom_");
             fname += currentDetector;
             fname += ".root";
             eve_tnode->SaveExtract(fname.c_str(), currentDetector, kTRUE);

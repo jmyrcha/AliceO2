@@ -31,8 +31,6 @@ namespace event_visualisation {
 
 EventManagerFrame::EventManagerFrame(o2::event_visualisation::EventManager& eventManager)
 :TGMainFrame(gClient->GetRoot(), 400, 100, kVerticalFrame) {
-    std::cout << "EventManagerFrame constructor" << std::endl;
-
     fM = &eventManager;
 
     const TString cls("o2::event_visualisation::EventManagerFrame");
@@ -71,9 +69,7 @@ EventManagerFrame::EventManagerFrame(o2::event_visualisation::EventManager& even
     MapWindow();
 }
 
-EventManagerFrame::~EventManagerFrame() {
-    std::cout << "EventManagerFrame::~EventManagerFrame()" << std::endl;
-}
+EventManagerFrame::~EventManagerFrame() {}
 
 TGTextButton* EventManagerFrame::makeButton(TGCompositeFrame *p, const char *txt,
         Int_t width, Int_t lo, Int_t ro, Int_t to, Int_t bo) {
@@ -90,20 +86,8 @@ TGTextButton* EventManagerFrame::makeButton(TGCompositeFrame *p, const char *txt
 }
 
 void EventManagerFrame::DoFirstEvent() {
-    std::cout << "DoFirstEvent: Getting instance of Multiview" << std::endl;
-    auto multiView = MultiView::getInstance();
-    std::cout << "DoFirstEvent: Getting EventRegistration instance" << std::endl;
-    auto eventReg = EventRegistration::getInstance();
     fM->GotoEvent(0);
-    std::cout << "DoFirstEvent: After fM Getting instance of Multiview" << std::endl;
-    multiView = MultiView::getInstance();
-    std::cout << "DoFirstEvent: After fM Getting EventRegistration instance" << std::endl;
-    eventReg = EventRegistration::getInstance();
     fEventId->SetIntNumber(fM->getCurrentEvent());
-    std::cout << "DoFirstEvent: After fEventId Getting instance of Multiview" << std::endl;
-    multiView = MultiView::getInstance();
-    std::cout << "DoFirstEvent: After fEventId Getting EventRegistration instance" << std::endl;
-    eventReg = EventRegistration::getInstance();
 }
 
 void EventManagerFrame::DoPrevEvent() {
@@ -112,10 +96,6 @@ void EventManagerFrame::DoPrevEvent() {
 }
 
 void EventManagerFrame::DoNextEvent() {
-  std::cout << "DoNextEvent: Getting instance of Multiview" << std::endl;
-  auto multiView = MultiView::getInstance();
-  std::cout << "DoNextEvent: Getting EventRegistration instance" << std::endl;
-  auto eventReg = EventRegistration::getInstance();
     fM->NextEvent();
     fEventId->SetIntNumber(fM->getCurrentEvent());
 }
@@ -132,31 +112,27 @@ void EventManagerFrame::DoScreenshot() {
 }
 
 void EventManagerFrame::DoOldGeometry() {
+  Info("EventManagerFrame::DoOldGeometry()", "Switching to Run 2 geometry...");
   auto multiView = MultiView::getInstance();
-  std::cout << "DoOldGeometry: Getting EventRegistration instance" << std::endl;
-  auto eventReg = EventRegistration::getInstance();
   multiView->destroyAllGeometries();
   setupGeometry(true);
 }
 
 void EventManagerFrame::DoNewGeometry() {
+  Info("EventManagerFrame::DoNewGeometry()", "Switching to O2 geometry...");
   auto multiView = MultiView::getInstance();
-  std::cout << "DoNewGeometry: Getting EventRegistration instance" << std::endl;
-  auto eventReg = EventRegistration::getInstance();
   multiView->destroyAllGeometries();
   setupGeometry(false);
 }
 
-void EventManagerFrame::setupGeometry(bool oldGeom)
+void EventManagerFrame::setupGeometry(bool run2)
 {
   // read path to geometry files from config file
   TEnv settings;
-  ConfigurationManager::getInstance().getConfig(settings);
+  ConfigurationManager::getInstance().getConfig(settings, run2);
 
   // get geometry from Geometry Manager and register in multiview
   auto multiView = MultiView::getInstance();
-  std::cout << "EventManagerFrame::setupGeometry: Getting EventRegistration instance" << std::endl;
-  auto eventReg = EventRegistration::getInstance();
 
   for(int iDet=0;iDet<NvisualisationGroups;++iDet){
     EVisualisationGroup det = static_cast<EVisualisationGroup>(iDet);
@@ -167,14 +143,14 @@ void EventManagerFrame::setupGeometry(bool oldGeom)
             || detName=="MID" || detName=="MFT" || detName=="AD0"
             || detName=="FMD"){// don't load MUON+MFT and AD and standard TPC to R-Phi view
 
-        multiView->drawGeometryForDetector(detName, oldGeom, true,false);
+        multiView->drawGeometryForDetector(detName, run2, true,false);
       }
       else if(detName=="RPH"){// special TPC geom from R-Phi view
 
-        multiView->drawGeometryForDetector(detName, oldGeom, false,true,false);
+        multiView->drawGeometryForDetector(detName, run2, false,true,false);
       }
       else{// default
-        multiView->drawGeometryForDetector(detName, oldGeom);
+        multiView->drawGeometryForDetector(detName, run2);
       }
     }
   }

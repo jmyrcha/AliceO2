@@ -33,14 +33,8 @@ public:
     /// Removes all shapes representing current event
     virtual void destroyAllEvents() = 0;
 
-    static EventRegistration* getInstance() {
-      std::cout << "EventRegistration::getInstance: Getting EventRegistration instance" << std::endl;
-      if(!instance) {
-        std::cout << "No instance exists!" << std::endl;
-      }
-      return instance;
-    }
-    static void setInstance(EventRegistration* instance) { EventRegistration::instance = instance;}
+    static EventRegistration* getInstance() { return instance; }
+    static void setInstance(EventRegistration* instance) { EventRegistration::instance = instance; }
 };
 
 }

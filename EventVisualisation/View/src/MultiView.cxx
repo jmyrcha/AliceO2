@@ -40,12 +40,6 @@ MultiView *MultiView::sInstance = nullptr;
 
 MultiView::MultiView()
 {
-  if(sInstance) {
-    Error("Multiview", "Multiview already instantiated");
-  }
-
-  cout << "Multiview constructor" << endl;
-
   // set scene names and descriptions
   mSceneNames[Scene3dGeom]    = "3D Geometry Scene";
   mSceneNames[SceneRphiGeom]  = "R-Phi Geometry Scene";
@@ -104,7 +98,6 @@ MultiView::MultiView()
 }
 
 MultiView::~MultiView() {
-  cout << "Multiview destructor" << endl;
   destroyAllGeometries();
 //    for(int i=this->SceneRphiGeom;i<this->NumberOfScenes;++i) {
 //        delete this->mScenes[i];
@@ -121,8 +114,8 @@ MultiView::~MultiView() {
 
 MultiView* MultiView::getInstance()
 {
-  if(!sInstance){cout << "No instance, creating new Multiview" << endl; new MultiView();}
-  else {cout << "Returning an existing Multiview instance" << endl;}
+  if(!sInstance)
+    new MultiView();
   return sInstance;
 }
 
@@ -169,10 +162,10 @@ MultiView::EScenes MultiView::getSceneOfProjection(EProjections projection)
   return NumberOfScenes;
 }
   
-void MultiView::drawGeometryForDetector(string detectorName, bool oldGeom, bool threeD, bool rPhi, bool zRho)
+void MultiView::drawGeometryForDetector(string detectorName, bool run2, bool threeD, bool rPhi, bool zRho)
 {
   auto &geometryManager = GeometryManager::getInstance();
-  TEveGeoShape *shape = geometryManager.getGeometryForDetector(detectorName, oldGeom);
+  TEveGeoShape *shape = geometryManager.getGeometryForDetector(detectorName, run2);
   registerGeometry(shape, threeD, rPhi, zRho);
 }
 
@@ -215,28 +208,15 @@ void MultiView::destroyAllGeometries()
   getScene(Scene3dGeom)->DestroyElements();
   getScene(SceneRphiGeom)->DestroyElements();
   getScene(SceneZrhoGeom)->DestroyElements();
-  std::cout << "Geometries destroyed" << std::endl;
 }
   
 void MultiView::registerElement(TEveElement* event)
 {
-  if(sInstance) {
-    std::cout << "Multiview::registerElement instance exists" << std::endl;
-  }
-  else {
-    std::cout << "Multiview::registerElement - no instance!" << std::endl;
-  }
   gEve->GetCurrentEvent()->AddElement(event);
   getProjection(ProjectionRphi)->ImportElements(event,getScene(SceneRphiEvent));
   getProjection(ProjectionZrho)->ImportElements(event,getScene(SceneZrhoEvent));
   
   gEve->Redraw3D();
-  if(sInstance) {
-    std::cout << "Multiview::registerElement after redraw instance exists" << std::endl;
-  }
-  else {
-    std::cout << "Multiview::registerElement after redraw - no instance!" << std::endl;
-  }
 }
 
 void MultiView::destroyAllEvents()

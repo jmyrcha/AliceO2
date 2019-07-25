@@ -47,7 +47,7 @@ protected:
 public:
     EventManagerFrame(o2::event_visualisation::EventManager& eventManager);
     virtual ~EventManagerFrame();
-    void setupGeometry(bool oldGeom);
+    void setupGeometry(bool run2);
 
 public: // slots
     void DoFirstEvent();

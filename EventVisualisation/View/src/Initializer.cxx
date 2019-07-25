@@ -65,7 +65,6 @@ Initializer::Initializer(const Options options, EventManager::EDataSource defaul
   if(options.vsd)
     DataInterpreter::setInstance(new DataInterpreterVSD(), EVisualisationGroup::VSD);
 
-  eventManager.setDataSourceType(EventManager::EDataSource::SourceOffline);
   eventManager.Open();
   
   setupBackground();
@@ -91,32 +90,24 @@ Initializer::Initializer(const Options options, EventManager::EDataSource defaul
   // Later this will be triggered by button, and finally moved to configuration.
   //gEve->AddEvent(&eventManager);
 //  MultiView::getInstance()->drawRandomEvent();
-  frame->setupGeometry(options.oldGeom);
+  frame->setupGeometry(options.run2);
 
   gEve->AddEvent(&eventManager);
   frame->DoFirstEvent();
   gSystem->ProcessEvents();
   gEve->Redraw3D(true);
-
-  std::cout << "Initializer constructor end getting Multiview instance" << std::endl;
-  auto multiView = MultiView::getInstance();
-  std::cout << "Initializer constructor end getting EventRegistration instance" << std::endl;
-  auto eventReg = EventRegistration::getInstance();
 }
 
 Initializer::~Initializer() = default;
 
-void Initializer::setupGeometry(bool oldGeom)
+void Initializer::setupGeometry(bool run2)
 {
   // read path to geometry files from config file
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);
   
   // get geometry from Geometry Manager and register in multiview
-  std::cout << "setupGeometry getting Multiview instance" << std::endl;
   auto multiView = MultiView::getInstance();
-  std::cout << "setupGeometry getting EventRegistration instance" << std::endl;
-  auto eventReg = EventRegistration::getInstance();
   
   for(int iDet=0;iDet<NvisualisationGroups;++iDet){
     EVisualisationGroup det = static_cast<EVisualisationGroup>(iDet);
@@ -127,14 +118,14 @@ void Initializer::setupGeometry(bool oldGeom)
          || detName=="MID" || detName=="MFT" || detName=="AD0"
          || detName=="FMD"){// don't load MUON+MFT and AD and standard TPC to R-Phi view
         
-        multiView->drawGeometryForDetector(detName, oldGeom, true,false);
+        multiView->drawGeometryForDetector(detName, run2, true,false);
       }
       else if(detName=="RPH"){// special TPC geom from R-Phi view
         
-        multiView->drawGeometryForDetector(detName, oldGeom, false,true,false);
+        multiView->drawGeometryForDetector(detName, run2, false,true,false);
       }
       else{// default
-        multiView->drawGeometryForDetector(detName, oldGeom);
+        multiView->drawGeometryForDetector(detName, run2);
       }
     }
   }
@@ -156,10 +147,7 @@ void Initializer::setupCamera()
   zoom[MultiView::ViewZrho] = settings.GetValue("camera.Rho-Z.zoom",1.0);
   
   // get necessary elements of the multiview and set camera position
-  std::cout << "setupCamera getting Multiview instance" << std::endl;
   auto multiView = MultiView::getInstance();
-  std::cout << "setupCamera getting EventRegistration instance" << std::endl;
-  auto eventReg = EventRegistration::getInstance();
   
   for(int viewIter=0;viewIter<MultiView::NumberOfViews;++viewIter){
     TGLViewer *glView = multiView->getView(static_cast<MultiView::EViews>(viewIter))->GetGLViewer();
@@ -178,9 +166,6 @@ void Initializer::setupBackground()
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);
   Color_t col = settings.GetValue("background.color", 1);
-
-  std::cout << "setupBackground getting EventRegistration instance" << std::endl;
-  auto eventReg = EventRegistration::getInstance();
 
   for(int viewIter=0; viewIter<MultiView::NumberOfViews;++viewIter){
     TEveViewer *view = MultiView::getInstance()->getView(static_cast<MultiView::EViews>(viewIter));

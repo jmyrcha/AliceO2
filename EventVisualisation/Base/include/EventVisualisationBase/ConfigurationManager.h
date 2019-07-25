@@ -34,7 +34,7 @@ public:
   static ConfigurationManager& getInstance();
   
   /// Returns current event display configuration
-  void getConfig(TEnv &settings) const;
+  void getConfig(TEnv &settings, bool run2 = false) const;
   
 private:
   /// Default constructor

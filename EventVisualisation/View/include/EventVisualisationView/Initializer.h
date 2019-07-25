@@ -25,8 +25,8 @@ struct Options {
   bool randomTracks;    // -r
   bool vsd;             // -v
   bool itc;             // -i
-  bool oldGeom;         // -g
-  std::string fileName; // -f 'data.root'
+  bool run2;            // -g
+  //std::string fileName; // -f 'data.root'
 } ;
 
 /// This class initializes a core of the visualisation system.
@@ -40,13 +40,13 @@ class Initializer
 {
   public:
     /// Default constructor
-    explicit Initializer(const Options options, const EventManager::EDataSource defaultDataSource = EventManager::SourceOffline);// default data source will be moved to a config file
+    explicit Initializer(const Options options, const EventManager::EDataSource defaultDataSource = EventManager::EDataSource::SourceOffline);// default data source will be moved to a config file
     /// Default destructor
     ~Initializer();
   
   private:
     /// Loads geometry for all detectors
-    void setupGeometry(bool oldGeom);
+    void setupGeometry(bool run2);
     /// Sets up background color
     void setupBackground();
     /// Sets up camera position

@@ -37,10 +37,10 @@ GeometryManager& GeometryManager::getInstance()
   return instance;
 }
 
-TEveGeoShape* GeometryManager::getGeometryForDetector(string detectorName, bool oldGeom)
+TEveGeoShape* GeometryManager::getGeometryForDetector(string detectorName, bool run2)
 {
   TEnv settings;
-  ConfigurationManager::getInstance().getConfig(settings);
+  ConfigurationManager::getInstance().getConfig(settings, run2);
 
   // read geometry path from config file
   string geomPath = settings.GetValue("simple.geom.path","");
@@ -56,10 +56,7 @@ TEveGeoShape* GeometryManager::getGeometryForDetector(string detectorName, bool 
     geomPath.replace(o2pos,o2pos+o2basePathSpecifier.size(),o2basePath);
   }
 
-  string runPath = "/O2";
-  if(oldGeom) {
-    runPath = "/run2";
-  }
+  const string runPath = run2 ? "/run2" : "/O2";
 
   // load ROOT file with geometry
   TFile *f = TFile::Open(Form("%s%s/simple_geom_%s.root", geomPath.c_str(), runPath.c_str(),detectorName.c_str()));
@@ -80,7 +77,7 @@ TEveGeoShape* GeometryManager::getGeometryForDetector(string detectorName, bool 
   }
 
   // prepare geometry to be drawn including all children
-  drawDeep(geomShape,
+  drawDeep(geomShape, run2,
            settings.GetValue(Form("%s.color",detectorName.c_str()),-1),
            settings.GetValue(Form("%s.trans",detectorName.c_str()),-1),
            settings.GetValue(Form("%s.line.color",detectorName.c_str()),-1));
@@ -90,12 +87,12 @@ TEveGeoShape* GeometryManager::getGeometryForDetector(string detectorName, bool 
   return geomShape;
 }
 
-void GeometryManager::drawDeep(TEveGeoShape *geomShape,Color_t color, Char_t transparency, Color_t lineColor)
+void GeometryManager::drawDeep(TEveGeoShape *geomShape, bool run2, Color_t color, Char_t transparency, Color_t lineColor)
 {
   if(geomShape->HasChildren()){
     geomShape->SetRnrSelf(false);
     
-    if(strcmp(geomShape->GetElementName(),"TPC_Drift_1")==0){// hack for TPC drift chamber
+    if(run2 && strcmp(geomShape->GetElementName(),"TPC_Drift_1")==0){// hack for TPC drift chamber
       geomShape->SetRnrSelf(kTRUE);
       if(color>=0) geomShape->SetMainColor(color);
       if(lineColor>=0){
@@ -112,7 +109,7 @@ void GeometryManager::drawDeep(TEveGeoShape *geomShape,Color_t color, Char_t tra
     }
     
     for(TEveElement::List_i i = geomShape->BeginChildren(); i != geomShape->EndChildren(); ++i){
-      drawDeep(static_cast<TEveGeoShape*>(*i),color,transparency,lineColor);
+      drawDeep(static_cast<TEveGeoShape*>(*i), run2, color, transparency, lineColor);
     }
   }
   else
@@ -131,7 +128,7 @@ void GeometryManager::drawDeep(TEveGeoShape *geomShape,Color_t color, Char_t tra
       geomShape->SetMainTransparency(transparency);
     }
       
-    if(strcmp(geomShape->GetElementName(),"PHOS_5")==0){// hack for PHOS module which is not installed
+    if(run2 && strcmp(geomShape->GetElementName(),"PHOS_5")==0){// hack for PHOS module which is not installed
       geomShape->SetRnrSelf(false);
     }
   }

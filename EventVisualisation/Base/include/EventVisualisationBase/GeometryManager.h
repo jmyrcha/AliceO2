@@ -35,11 +35,11 @@ class GeometryManager
     static GeometryManager& getInstance();
   
     /// Returns ROOT shapes describing simplified geometry of given detector
-    TEveGeoShape* getGeometryForDetector(std::string detectorName, bool oldGeom = false);
+    TEveGeoShape* getGeometryForDetector(std::string detectorName, bool run2 = false);
   
   private:
     /// Goes through all children nodes of geometry shape and sets drawing options
-    void drawDeep(TEveGeoShape *geomShape, Color_t color, Char_t transparency, Color_t lineColor);
+    void drawDeep(TEveGeoShape *geomShape, bool run2, Color_t color, Char_t transparency, Color_t lineColor);
   
     /// Default constructor
     GeometryManager() = default;
