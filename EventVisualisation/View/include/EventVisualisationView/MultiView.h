@@ -81,6 +81,9 @@ class MultiView:public EventRegistration
   
     /// Registers an element to be drawn
     void registerElement(TEveElement* event) override;
+
+    ///
+    void registerEvent(TEveElement* event) { return registerElement(event); }
     /// Removes all shapes representing current event
     void destroyAllEvents() override;
   
@@ -89,7 +92,7 @@ class MultiView:public EventRegistration
     /// Default constructor
     MultiView();
     /// Default destructor
-    ~MultiView();
+    ~MultiView();// = default;
     
     static MultiView *sInstance;                              ///< Single instance of the multiview
 
