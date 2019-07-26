@@ -57,16 +57,11 @@ using namespace o2::event_visualisation;
 
 #include "EventVisualisationView/MultiView.h"
 
-//#include "ITSMFTReconstruction/ChipMappingITS.h"
-//#include "ITSMFTReconstruction/DigitPixelReader.h"
-//#include "ITSMFTReconstruction/RawPixelReader.h"
-//#include "ITSMFTBase/SegmentationAlpide.h"
-//#include "TPCBase/Digit.h"
+#include "TPCBase/Digit.h"
 #include "TPCBase/Mapper.h"
-//#include "ITSBase/GeometryTGeo.h"
+#include "TPCReconstruction/RawReader.h"
 //#include "DataFormatsTPC/ClusterNative.h"
 //#include "DataFormatsTPC/ClusterNativeHelper.h"
-//#include "DataFormatsITSMFT/ROFRecord.h"
 #include "DataFormatsTPC/TrackTPC.h"
 //#include "DetectorsCommonDataFormats/DetID.h"
 //#include "CommonDataFormat/InteractionRecord.h"
@@ -84,39 +79,165 @@ public:
     void loadData(int entry);
     void displayData(int entry);
     int getLastEvent() const { return mLastEvent; }
-    //void setDigiTree(TTree* t) { mDigiTree = t; }
+    void setDigiTree(TTree* t);
     //void setClusTree(TTree* t);
     void setTracTree(TTree* t);
+
+    void setRawReader(std::string infile)
+    {
+      auto reader = new RawReader();
+      if(!reader->addInputFile(-1, -1, -1, infile, -1)) {
+        std::cout << "Could not add file for raw reader!" << std::endl;
+        return;
+      }
+      mRawReader = reader;
+      mRawReader->loadEvent(0);
+    }
+
+//    void setDigitPixelReader(std::string input)
+//    {
+//      auto reader = new DigitPixelReader();
+//      reader->openInput(input, o2::detectors::DetID("ITS"));
+//      reader->init();
+//      reader->readNextEntry();
+//      mPixelReader = dynamic_cast<PixelReader*>(reader);                    // incompatible class DigitPixelReader : public PixelReader
+//      assert(mPixelReader != nullptr);
+//      mPixelReader->getNextChipData(mChipData);
+//      mIR = mChipData.getInteractionRecord();
+//    }
 
 private:
     // Data loading members
     //ClusterNativeHelper::Reader reader;
+    RawReader* mRawReader = nullptr;
     int mLastEvent = 0;
-    //std::vector<Digit> mDigits;
+    int kNumberOfDigitsBranches = 36;
+    std::vector<std::vector<Digit>*> mDigitBuffer;
+    std::vector<gsl::span<Digit>> mDigits;
     //ClusterNativeAccess clusterIndex;
     //std::unique_ptr<ClusterNative[]> mClusterBuffer;
-    //MCLabelContainer mcBuffer;
     //std::vector<ClusterNative>* mClusterBuffer = nullptr;
     //gsl::span<ClusterNative> mClusters;
     //std::unique_ptr<ClusterNativeAccess> mClusters;
-    //vector<TrackTPC> tracks;
-    //MCLabelContainer tracksMC;
     std::vector<TrackTPC>* mTrackBuffer = nullptr;
     gsl::span<TrackTPC> mTracks;
-    //void loadDigits();
-    //void loadDigits(int entry);
+    void loadDigits();
+    void loadDigits(int entry);
+    void loadRawDigits();
+    void loadRawDigits(int entry);
     //void loadClusters(int entry);
     void loadTracks(int entry);
 
-    //TTree* mDigiTree = nullptr;
+    TTree* mDigiTree = nullptr;
     //TTree* mClusTree = nullptr;
     TTree* mTracTree = nullptr;
 
     // TEve-related members
     TEveElementList* mEvent = nullptr;
+    TEveElement* getEveDigits();
     //TEveElement* getEveClusters();
     TEveElement* getEveTracks();
 } evdata;
+
+void Data::setDigiTree(TTree* tree)
+{
+    if (tree == nullptr) {
+        std::cerr << "No tree for digits!\n";
+        return;
+    }
+    std::cout << "Reading from tree\n";
+    mDigitBuffer.resize(kNumberOfDigitsBranches);
+    for(int i = 0; i < kNumberOfDigitsBranches; i++) {
+      std::string digiStr = "TPCDigit_" + std::to_string(i);
+      tree->SetBranchAddress(digiStr.c_str(), &(mDigitBuffer[i]));
+    }
+
+    mDigiTree = tree;
+}
+
+void Data::loadRawDigits()
+{
+  //mDigits.clear();
+
+  const auto& mapper = Mapper::instance();
+
+  o2::tpc::PadPos padPos;
+  while (std::shared_ptr<std::vector<uint16_t>> data = mRawReader->getNextData(padPos)) {
+    if (!data)
+      continue;
+
+    CRU cru(mRawReader->getRegion());
+
+//    const auto pad = mapper.globalPadNumber(padPos);
+//    const auto& localXYZ = mapper.padCentre(pad);
+//    const auto globalXYZ = mapper.LocalToGlobal(localXYZ,
+//                                                cru.sector());
+
+    // row is local in region (CRU)
+    const int row = padPos.getRow();
+    const int pad = padPos.getPad();
+    if (row == 255 || pad == 255)
+      continue;
+
+    //int timeBin = 0;
+    for (const auto& signalI : *data) {
+      //const float signal = float(signalI);
+      //++timeBin;
+    }
+  }
+
+  //std::cout << "Number of TPC Digits: " << mDigits.size() << '\n';
+}
+
+
+void Data::loadRawDigits(int entry)
+{
+  if (mRawReader == nullptr)
+    return;
+
+  int eventId = mRawReader->loadEvent(entry);
+
+  mLastEvent++;
+  loadRawDigits();
+}
+
+void Data::loadDigits(int entry)
+{
+  static int lastLoaded = -1;
+
+  if (mDigiTree == nullptr)
+    return;
+
+  auto event = entry;
+  int eventsCount = 0;
+  for(int i = 0; i < kNumberOfDigitsBranches; i++) {
+    std::string digiStr = "TPCDigit_" + std::to_string(i);
+    eventsCount += mDigiTree->GetBranch(digiStr.c_str())->GetEntries();
+  }
+  if ((event < 0) || (event >= eventsCount)) {
+    std::cerr << "Digits: Out of event range ! " << event << '\n';
+    return;
+  }
+  if (event != lastLoaded) {
+    for(int i = 0; i < kNumberOfDigitsBranches; i++) {
+      mDigitBuffer[i]->clear();
+    }
+    mDigiTree->GetEntry(event);
+    lastLoaded = event;
+  }
+
+  int size = 0;
+  int first = 0;
+  mDigits.resize(kNumberOfDigitsBranches);
+  for(int i = 0; i < kNumberOfDigitsBranches; i++) {
+    int last = mDigitBuffer[i]->size();
+    mDigits[i] = gsl::make_span(&(*mDigitBuffer[i])[first], last - first);
+    size += mDigits[i].size();
+  }
+
+  std::cout << "Number of TPC Digits: " << size << '\n';
+}
+
 
 //void Data::setClusTree(TTree* tree)
 //{
@@ -188,9 +309,30 @@ void Data::loadTracks(int entry)
 
 void Data::loadData(int entry)
 {
-    //loadDigits(entry);
+    //loadRawDigits(entry);
+    loadDigits(entry);
     //loadClusters(entry);
     loadTracks(entry);
+}
+
+TEveElement* Data::getEveDigits()
+{
+    const auto& mapper = Mapper::instance();
+    TEvePointSet* digits = new TEvePointSet("digits");
+    digits->SetMarkerColor(kBlue);
+
+    for(int i = 0; i < kNumberOfDigitsBranches; i++) {
+      for (const auto& d : mDigits[i]) {
+        const auto pad = mapper.globalPadNumber(PadPos(d.getRow(),
+                                                       d.getPad()));
+        const auto& localXYZ = mapper.padCentre(pad);
+        const auto globalXYZ = mapper.LocalToGlobal(localXYZ,
+                                                    CRU(d.getCRU()).sector());
+        // TODO: One needs event time0 to get z-coordinate
+        digits->SetNextPoint(globalXYZ.X(), globalXYZ.Y(), 0.0f);
+      }
+    }
+    return digits;
 }
 
 //TEveElement* Data::getEveClusters()
@@ -250,10 +392,12 @@ void Data::displayData(int entry)
     ename += std::to_string(entry);
 
     // Event display
+    auto digits = getEveDigits();
     //auto clusters = getEveClusters();
     auto tracks = getEveTracks();
     delete mEvent;
     mEvent = new TEveElementList(ename.c_str());
+    mEvent->AddElement(digits);
     //mEvent->AddElement(clusters);
     mEvent->AddElement(tracks);
     auto multi = o2::event_visualisation::MultiView::getInstance();
@@ -343,8 +487,8 @@ int main(int argc, char **argv)
     }
 
     int entry = 0;
-    //std::string digifile = "tpcdigits.root";
-    //bool rawdata = false;
+    std::string digifile = "tpcdigits.root";
+    bool rawdata = false;
     std::string tracfile = "tpctracks.root";
     std::string inputGeom = "O2geometry.root";
 
@@ -378,24 +522,23 @@ int main(int argc, char **argv)
     TFile* file;
 
     // Data sources
-//    if (rawdata) {
+    if (rawdata) {
+      // TODO: Another raw file for TPC? If at all?
 //        std::ifstream* rawfile = new std::ifstream(digifile.data(), std::ifstream::binary);
 //        if (rawfile->good()) {
 //            delete rawfile;
 //            std::cout << "Running with raw digits...\n";
-//            evdata.setRawPixelReader(digifile.data());
+//            evdata.setRawReader(digifile.data());
 //        } else
 //            std::cerr << "\nERROR: Cannot open file: " << digifile << "\n\n";
-//    } else {
-//        file = TFile::Open(digifile.data());
-//        if (file && gFile->IsOpen()) {
-//            file->Close();
-//            std::cout << "Running with MC digits...\n";
-//            evdata.setDigitPixelReader(digifile.data());
-//            //evdata.setDigiTree((TTree*)gFile->Get("o2sim"));
-//        } else
-//            std::cerr << "\nERROR: Cannot open file: " << digifile << "\n\n";
-//    }
+    } else {
+        file = TFile::Open(digifile.data());
+        if (file && gFile->IsOpen()) {
+            std::cout << "Running with MC digits...\n";
+            evdata.setDigiTree((TTree*)gFile->Get("o2sim"));
+        } else
+            std::cerr << "\nERROR: Cannot open file: " << digifile << "\n\n";
+    }
 
     file = TFile::Open(tracfile.data());
     if (file && gFile->IsOpen()) {
@@ -403,11 +546,6 @@ int main(int argc, char **argv)
     }
     else
         std::cerr << "\nERROR: Cannot open file: " << tracfile << "\n\n";
-
-//    std::cout << "\n **** Navigation over events ****\n";
-//    std::cout << " load(event) \t jump to the specified event \n";
-//    std::cout << " next() \t\t load next event \n";
-//    std::cout << " prev() \t\t load previous event \n";
 
     // Manually adding an event
     gEve->AddEvent(new TEveEventManager("Event", "ALICE TPC Event"));
