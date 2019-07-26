@@ -60,7 +60,7 @@ TEveGeoShape* GeometryManager::getGeometryForDetector(string detectorName, bool 
 
   // load ROOT file with geometry
   TFile *f = TFile::Open(Form("%s%s/simple_geom_%s.root", geomPath.c_str(), runPath.c_str(),detectorName.c_str()));
-  cout << "GeometryManager::GetSimpleGeom opening geometry for: " << detectorName << endl;
+  //cout << "GeometryManager::GetSimpleGeom opening geometry for: " << detectorName << endl;
   if(!f){
     cout<<"GeometryManager::GetSimpleGeom -- no file with geometry found for: "<<detectorName<<"!"<<endl;
     return nullptr;

@@ -22,3 +22,8 @@ o2_target_root_dictionary(EventVisualisationView
 o2_add_executable(eve
                   SOURCES src/main.cxx
                   PUBLIC_LINK_LIBRARIES O2::EventVisualisationView)
+
+o2_add_executable(tpc-eve
+        SOURCES src/tpc_main.cxx
+        PUBLIC_LINK_LIBRARIES O2::EventVisualisationView
+        O2::TPCBase)

@@ -212,6 +212,14 @@ void MultiView::destroyAllGeometries()
   
 void MultiView::registerElement(TEveElement* event)
 {
+  if(!gEve) {
+    std::cout << "gEve null!" << std::endl;
+    return;
+  }
+  if(!(gEve->GetCurrentEvent())) {
+    std::cout << "gEve->GetCurrentEvent() null!" << std::endl;
+    return;
+  }
   gEve->GetCurrentEvent()->AddElement(event);
   getProjection(ProjectionRphi)->ImportElements(event,getScene(SceneRphiEvent));
   getProjection(ProjectionZrho)->ImportElements(event,getScene(SceneZrhoEvent));
