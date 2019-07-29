@@ -22,7 +22,6 @@
 #include "EventVisualisationBase/ConfigurationManager.h"
 
 #include "EventVisualisationDataConverter/VisualisationEvent.h"
-#include <EventVisualisationBase/EventRegistration.h>
 
 #include <TEveManager.h>
 #include <TEveTrackPropagator.h>
@@ -45,7 +44,7 @@ DataInterpreterVSD::~DataInterpreterVSD() {
   }
 }
 
-TEveElement* DataInterpreterVSD::interpretDataForType(TObject* data, EVisualisationDataType /*type*/) {
+VisualisationEvent* DataInterpreterVSD::interpretDataForType(TObject* data, EVisualisationDataType /*type*/) {
   if (mVSD == nullptr)
     mVSD = new TEveVSD;
   this->DropEvent();
@@ -64,7 +63,8 @@ TEveElement* DataInterpreterVSD::interpretDataForType(TObject* data, EVisualisat
 //        this->LoadClusters(this->fTOFClusters, "TOF", 3);
 
     this->LoadEsdTracks();
-    return this->mTrackList;
+    //return this->mTrackList;
+    return nullptr;
 }
 
 void DataInterpreterVSD::LoadClusters(TEvePointSet *&ps, const TString &det_name, Int_t det_id) {

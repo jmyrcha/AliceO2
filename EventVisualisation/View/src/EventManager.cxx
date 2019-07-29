@@ -12,12 +12,11 @@
 /// \file    EventManager.cxx
 /// \author  Jeremi Niedziela
 
-#include "EventVisualisationBase/EventManager.h"
+#include "EventVisualisationView/EventManager.h"
 #include "EventVisualisationDataConverter/VisualisationEvent.h"
 #include "EventVisualisationBase/ConfigurationManager.h"
 #include "EventVisualisationBase/DataSource.h"
 #include "EventVisualisationBase/DataInterpreter.h"
-#include "EventVisualisationBase/EventRegistration.h"
 #include <EventVisualisationBase/DataSourceOffline.h>
 #include <EventVisualisationDetectors/DataReaderVSD.h>
 
@@ -54,14 +53,14 @@ void EventManager::Open() {
             break;
         case SourceOffline: {
               DataSourceOffline *source = new DataSourceOffline();
-              if(DataInterpreter::getInstance(EVisualisationGroup::VSD)) {
-                DataReader *vsd = new DataReaderVSD();
-                vsd->open();
-                source->registerReader(vsd, EVisualisationGroup::VSD);
-              }
-              if(DataInterpreter::getInstance(EVisualisationGroup::RND)) {
-                source->registerReader(nullptr, EVisualisationGroup::RND);  // no need to read
-              }
+//              if(DataInterpreter::getInstance(EVisualisationGroup::VSD)) {
+//                DataReader *vsd = new DataReaderVSD();
+//                vsd->open();
+//                source->registerReader(vsd, EVisualisationGroup::VSD);
+//              }
+//              if(DataInterpreter::getInstance(EVisualisationGroup::RND)) {
+//                source->registerReader(nullptr, EVisualisationGroup::RND);  // no need to read
+//              }
               setDataSource(source);
             }
             break;
@@ -76,13 +75,13 @@ void EventManager::GotoEvent(Int_t no) {
         no = getDataSource()->GetEventCount()-1;
     }
     this->currentEvent = no;
-    EventRegistration::getInstance()->destroyAllEvents();
+    //EventRegistration::getInstance()->destroyAllEvents();
     for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; i++) {
       DataInterpreter* interpreter = DataInterpreter::getInstance((EVisualisationGroup)i);
       if(interpreter) {
         TObject *data = getDataSource()->getEventData(no, (EVisualisationGroup)i);
-        TEveElement *eveElement = interpreter->interpretDataForType(data, NoData);
-        EventRegistration::getInstance()->registerElement(eveElement);
+        //TEveElement *eveElement = interpreter->interpretDataForType(data, NoData);
+        //EventRegistration::getInstance()->registerElement(eveElement);
       }
     }
 }

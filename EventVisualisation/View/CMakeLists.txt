@@ -9,13 +9,14 @@
 # submit itself to any jurisdiction.
 
 o2_add_library(EventVisualisationView
-               SOURCES src/MultiView.cxx src/Initializer.cxx src/EventManagerFrame.cxx
+               SOURCES src/MultiView.cxx src/Initializer.cxx src/EventManagerFrame.cxx src/EventManager.cxx
                PUBLIC_LINK_LIBRARIES O2::EventVisualisationBase
                                      O2::EventVisualisationDetectors)
 
 o2_target_root_dictionary(EventVisualisationView
                           HEADERS include/EventVisualisationView/MultiView.h
                                   include/EventVisualisationView/Initializer.h
+                                  include/EventVisualisationView/EventManager.h
                                   include/EventVisualisationView/EventManagerFrame.h
                           LINKDEF src/EventVisualisationViewLinkDef.h)
 

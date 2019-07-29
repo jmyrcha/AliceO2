@@ -9,13 +9,13 @@
 // or submit itself to any jurisdiction.
 
 ///
-/// \file    MinimalisticEvent.h
+/// \file    VisualisationEvent.h
 /// \author  Jeremi Niedziela
 /// \author  Maciej Grochowicz
 ///
 
-#ifndef ALICE_O2_EVENTVISUALISATION_BASE_VISUALISATIONEVENT_H
-#define ALICE_O2_EVENTVISUALISATION_BASE_VISUALISATIONEVENT_H
+#ifndef ALICE_O2_DATACONVERTER_VISUALISATIONEVENT_H
+#define ALICE_O2_DATACONVERTER_VISUALISATIONEVENT_H
 
 #include "EventVisualisationDataConverter/VisualisationTrack.h"
 

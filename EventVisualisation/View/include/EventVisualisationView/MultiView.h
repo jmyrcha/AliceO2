@@ -15,7 +15,6 @@
 #ifndef ALICE_O2_EVENTVISUALISATION_BASE_MULTIVIEW_H
 #define ALICE_O2_EVENTVISUALISATION_BASE_MULTIVIEW_H
 
-#include <EventVisualisationBase/EventRegistration.h>
 #include <TGLViewer.h>
 #include <TEveGeoShape.h>
 #include <TEveScene.h>
@@ -33,7 +32,7 @@ namespace event_visualisation {
 /// or remove simplified geometries. One can also register visualisation objects for
 /// drawing in the MultiView, which will be imported to 3D view and projections.
   
-class MultiView:public EventRegistration
+class MultiView
 {
   public:
     enum EViews{
@@ -80,12 +79,12 @@ class MultiView:public EventRegistration
     void destroyAllGeometries();
   
     /// Registers an element to be drawn
-    void registerElement(TEveElement* event) override;
+    void registerElement(TEveElement* event);
 
     ///
     void registerEvent(TEveElement* event) { return registerElement(event); }
     /// Removes all shapes representing current event
-    void destroyAllEvents() override;
+    void destroyAllEvents();
   
     void drawRandomEvent();
   private:

@@ -24,7 +24,7 @@
 /// with tracks colored by PID only.
 
 #include "EventVisualisationBase/DataInterpreter.h"
-#include "EventVisualisationBase/EventManager.h"
+#include "EventVisualisationView/EventManager.h"
 #include "EventVisualisationBase/VisualisationConstants.h"
 #include <TEvePointSet.h>
 #include <TEveViewer.h>
@@ -58,8 +58,8 @@ public:
     // Default destructor
     ~DataInterpreterVSD() final;
 
-    // Returns a list of random tracks colored by PID
-    TEveElement *interpretDataForType(TObject* data, EVisualisationDataType type) final;
+    //
+    VisualisationEvent *interpretDataForType(TObject* data, EVisualisationDataType type) final;
 };
 
 }

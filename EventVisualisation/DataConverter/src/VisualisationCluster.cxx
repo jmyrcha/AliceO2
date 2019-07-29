@@ -9,16 +9,20 @@
 // or submit itself to any jurisdiction.
 
 ///
-/// \file   EventRegistration.cxx
-/// \brief  breaking link dependency between EventVisualisation modules (here MultiView can register)
-/// \author julian.myrcha@cern.ch
+/// \file    VisualisationCluster.cxx
+/// \author  Julian Myrcha
+///
 
-#include <EventVisualisationBase/EventRegistration.h>
+#include "EventVisualisationDataConverter/VisualisationCluster.h"
+#include <iostream>
+
+using namespace std;
 
 namespace o2  {
-namespace event_visualisation {
+    namespace event_visualisation {
 
-EventRegistration* EventRegistration::instance = nullptr;
 
-}
+        VisualisationCluster::VisualisationCluster() = default;
+
+    }
 }

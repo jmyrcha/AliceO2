@@ -21,7 +21,6 @@
 
 #include <TEveElement.h>
 #include <TEveEventManager.h>
-#include <TQObject.h>
 
 #include <string>
 
@@ -37,7 +36,7 @@ namespace event_visualisation {
 
 class DataSource;
 
-class EventManager : public TEveEventManager, public TQObject
+class EventManager : public TEveEventManager
 {
 public:
     enum EDataSource{

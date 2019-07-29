@@ -9,13 +9,13 @@
 // or submit itself to any jurisdiction.
 
 ///
-/// \file    MinimalisticTrack.h
+/// \file    VisualisationTrack.h
 /// \author  Jeremi Niedziela
 /// \author  Maciej Grochowicz
 ///
 
-#ifndef ALICE_O2_EVENTVISUALISATION_BASE_VISUALISATIONTRACK_H
-#define ALICE_O2_EVENTVISUALISATION_BASE_VISUALISATIONTRACK_H
+#ifndef ALICE_O2_DATACONVERTER_VISUALISATIONTRACK_H
+#define ALICE_O2_DATACONVERTER_VISUALISATIONTRACK_H
 
 #include "ConversionConstants.h"
 
@@ -27,7 +27,7 @@
 namespace o2  {
 namespace event_visualisation {
 
-/// Minimalistic description of particles track
+/// Minimalistic description of a particle's track
 ///
 /// This class is used mainly for visualisation purpose.
 /// It keeps basic information about a track, such as its vertex,
