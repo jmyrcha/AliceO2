@@ -61,8 +61,8 @@ using namespace o2::event_visualisation;
 #include "TPCBase/Digit.h"
 #include "TPCBase/Mapper.h"
 #include "TPCReconstruction/RawReader.h"
-//#include "DataFormatsTPC/ClusterNative.h"
-//#include "DataFormatsTPC/ClusterNativeHelper.h"
+#include "DataFormatsTPC/ClusterNative.h"
+#include "DataFormatsTPC/ClusterNativeHelper.h"
 #include "DataFormatsTPC/TrackTPC.h"
 //#include "DetectorsCommonDataFormats/DetID.h"
 //#include "CommonDataFormat/InteractionRecord.h"
@@ -95,34 +95,40 @@ public:
       mRawReader = reader;
       mRawReader->loadEvent(0);
     }
+    void setClusReader(std::string infile) {
+      auto reader = new ClusterNativeHelper::Reader();
+      reader->init(infile.c_str());
+      mClusterIndex = std::make_unique<o2::tpc::ClusterNativeAccess>();
+      mClusReader = reader;
+      std::cout << "Cluster reader set" << std::endl;
+    }
     bool getRawData() { return mRawData; }
     void setRawData(bool rawData) { mRawData = rawData; }
 
 private:
     // Data loading members
-    //ClusterNativeHelper::Reader reader;
+    ClusterNativeHelper::Reader* mClusReader = nullptr;
     bool mRawData = false;
     RawReader* mRawReader = nullptr;
     int mLastEvent = 0;
-    int kNumberOfSectors = 36;
     std::vector<std::vector<HitGroup>*> mHitsBuffer;
     std::vector<gsl::span<HitGroup>> mHits;
     std::vector<std::vector<Digit>*> mDigitBuffer;
     std::vector<gsl::span<Digit>> mDigits;
-    //ClusterNativeAccess clusterIndex;
-    //std::unique_ptr<ClusterNative[]> mClusterBuffer;
+    std::unique_ptr<ClusterNative[]> mClusterBuffer;
+    MCLabelContainer mClusterMCBuffer;
+    std::unique_ptr<ClusterNativeAccess> mClusterIndex;
+    const ClusterNativeAccess* mClusterIndexStruct = nullptr;
     //std::vector<ClusterNative>* mClusterBuffer = nullptr;
     //gsl::span<ClusterNative> mClusters;
-    //std::unique_ptr<ClusterNativeAccess> mClusters;
     std::vector<TrackTPC>* mTrackBuffer = nullptr;
     gsl::span<TrackTPC> mTracks;
-    void loadHits();
     void loadHits(int entry);
     void loadDigits();
     void loadDigits(int entry);
     void loadRawDigits();
     void loadRawDigits(int entry);
-    //void loadClusters(int entry);
+    void loadClusters(int entry);
     void loadTracks(int entry);
 
     TTree* mHitsTree = nullptr;
@@ -134,7 +140,7 @@ private:
     TEveElementList* mEvent = nullptr;
     TEveElement* getEveHits();
     TEveElement* getEveDigits();
-    //TEveElement* getEveClusters();
+    TEveElement* getEveClusters();
     TEveElement* getEveTracks();
 } evdata;
 
@@ -144,8 +150,8 @@ void Data::setHitsTree(TTree* tree)
     std::cerr << "No tree for hits!\n";
     return;
   }
-  mHitsBuffer.resize(kNumberOfSectors);
-  for(int sector = 0; sector < kNumberOfSectors; sector++) {
+  mHitsBuffer.resize(o2::tpc::Constants::MAXSECTOR);
+  for(int sector = 0; sector < o2::tpc::Constants::MAXSECTOR; sector++) {
     std::stringstream hitsStr;
     hitsStr << "TPCHitsShiftedSector" << sector;
     tree->SetBranchAddress(hitsStr.str().c_str(), &(mHitsBuffer[sector]));
@@ -169,7 +175,7 @@ void Data::loadHits(int entry)
     return;
   }
   if (entry != lastLoaded) {
-    for(int sector = 0; sector < kNumberOfSectors; sector++) {
+    for(int sector = 0; sector < o2::tpc::Constants::MAXSECTOR; sector++) {
       mHitsBuffer[sector]->clear();
     }
     mHitsTree->GetEntry(entry);
@@ -178,8 +184,8 @@ void Data::loadHits(int entry)
 
   int size = 0;
   int first = 0;
-  mHits.resize(kNumberOfSectors);
-  for(int sector = 0; sector < kNumberOfSectors; sector++) {
+  mHits.resize(o2::tpc::Constants::MAXSECTOR);
+  for(int sector = 0; sector < o2::tpc::Constants::MAXSECTOR; sector++) {
     int last = mHitsBuffer[sector]->size();
     mHits[sector] = gsl::make_span(&(*mHitsBuffer[sector])[first], last - first);
     size += mHits[sector].size();
@@ -195,8 +201,8 @@ void Data::setDigiTree(TTree* tree)
         return;
     }
 
-    mDigitBuffer.resize(kNumberOfSectors);
-    for(int sector = 0; sector < kNumberOfSectors; sector++) {
+    mDigitBuffer.resize(o2::tpc::Constants::MAXSECTOR);
+    for(int sector = 0; sector < o2::tpc::Constants::MAXSECTOR; sector++) {
       std::stringstream digiStr;
       digiStr << "TPCDigit_" << sector;
       tree->SetBranchAddress(digiStr.str().c_str(), &(mDigitBuffer[sector]));
@@ -273,7 +279,7 @@ void Data::loadDigits(int entry)
     return;
   }
   if (entry != lastLoaded) {
-    for(int i = 0; i < kNumberOfSectors; i++) {
+    for(int i = 0; i < o2::tpc::Constants::MAXSECTOR; i++) {
       mDigitBuffer[i]->clear();
     }
     mDigiTree->GetEntry(entry);
@@ -282,8 +288,8 @@ void Data::loadDigits(int entry)
 
   int size = 0;
   int first = 0;
-  mDigits.resize(kNumberOfSectors);
-  for(int i = 0; i < kNumberOfSectors; i++) {
+  mDigits.resize(o2::tpc::Constants::MAXSECTOR);
+  for(int i = 0; i < o2::tpc::Constants::MAXSECTOR; i++) {
     int last = mDigitBuffer[i]->size();
     mDigits[i] = gsl::make_span(&(*mDigitBuffer[i])[first], last - first);
     size += mDigits[i].size();
@@ -291,7 +297,6 @@ void Data::loadDigits(int entry)
 
   std::cout << "Number of TPC Digits: " << size << '\n';
 }
-
 
 //void Data::setClusTree(TTree* tree)
 //{
@@ -303,29 +308,33 @@ void Data::loadDigits(int entry)
 //    mClusTree = tree;
 //}
 
-//void Data::loadClusters(int entry)
-//{
-//    static int lastLoaded = -1;
-//
-//    if (mClusTree == nullptr)
-//        return;
-//
-//    auto event = entry;
-//    if ((event < 0) || (event >= mClusTree->GetEntries())) {
-//        std::cerr << "Clusters: Out of event range ! " << event << '\n';
-//        return;
-//    }
-//    if (event != lastLoaded) {
-//        mClusterBuffer->clear();
-//        mClusTree->GetEntry(event);
-//        lastLoaded = event;
-//    }
-//
-//    int first = 0, last = mClusterBuffer->size();
-//    mClusters = gsl::make_span(&(*mClusterBuffer)[first], last - first);
-//
-//    std::cout << "Number of TPC Clusters: " << mClusters.size() << '\n';
-//}
+void Data::loadClusters(int entry)
+{
+    static int lastLoaded = -1;
+
+    if (mClusReader == nullptr)
+        return;
+
+    if ((entry < 0) || (entry >= mClusReader->getTreeSize())) {
+        std::cerr << "Clusters: Out of event range ! " << entry << '\n';
+        return;
+    }
+    if (entry != lastLoaded) {
+        //mClusterBuffer->clear();
+        mClusReader->read(entry);
+        //mClusTree->GetEntry(event);
+        lastLoaded = entry;
+    }
+
+    //int first = 0, last = mClusterBuffer->size();
+    //mClusters = gsl::make_span(&(*mClusterBuffer)[first], last - first);
+
+    // Based on: MatchTPCITS::loadTPCClustersChunk()
+    mClusReader->fillIndex(*mClusterIndex.get(), mClusterBuffer, mClusterMCBuffer);
+    mClusterIndexStruct = mClusterIndex.get();
+
+    std::cout << "Number of TPC Clusters: " << mClusterIndexStruct->nClustersTotal << '\n';
+}
 
 void Data::setTracTree(TTree* tree)
 {
@@ -369,7 +378,7 @@ void Data::loadData(int entry)
     } else {
       loadDigits(entry);
     }
-    //loadClusters(entry);
+    loadClusters(entry);
     loadTracks(entry);
 }
 
@@ -400,34 +409,39 @@ TEveElement* Data::getEveDigits()
       for (const auto& d : mDigits[i]) {
         const auto pad = mapper.globalPadNumber(PadPos(d.getRow(),
                                                        d.getPad()));
-        const auto& localXYZ = mapper.padCentre(pad);
+        const LocalPosition3D localXYZ(mapper.padCentre(pad).X(), mapper.padCentre(pad).Y(), d.getTimeStamp());
+        //const auto& localXYZ = mapper.padCentre(pad);
         const auto globalXYZ = mapper.LocalToGlobal(localXYZ,
                                                     CRU(d.getCRU()).sector());
         // TODO: One needs event time0 to get z-coordinate
-        digits->SetNextPoint(globalXYZ.X(), globalXYZ.Y(), 0.0f);
+        digits->SetNextPoint(globalXYZ.X(), globalXYZ.Y(), globalXYZ.Z());
       }
     }
     return digits;
 }
 
-//TEveElement* Data::getEveClusters()
-//{
-//    const auto& mapper = Mapper::instance();
-//    TEvePointSet* clusters = new TEvePointSet("clusters");
-//    clusters->SetMarkerColor(kBlue);
-//    for (const auto& c : mClusters) {
-//        const auto pad = mapper.globalPadNumber(PadPos(c.getRow(),
-//                                                       c.getPad()));
-//        const auto& localXYZ = mapper.padCentre(pad);
-//        const auto globalXYZ = mapper.LocalToGlobal(localXYZ,
-//                                                    CRU(c.getCRU()).sector());
-//        clusters->SetNextPoint(globalXYZ.X(), globalXYZ.Y(), globalXYZ.Z());
-//    }
-//    return clusters;
-//}
+TEveElement* Data::getEveClusters()
+{
+    const auto& mapper = Mapper::instance();
+    TEvePointSet* clusters = new TEvePointSet("clusters");
+    clusters->SetMarkerColor(kRed);
+    const auto& clusterRefs = mClusterIndexStruct->clusters;
+    for(int sector = 0; sector < o2::tpc::Constants::MAXSECTOR; sector++) {
+      for(int row = 0; row < o2::tpc::Constants::MAXGLOBALPADROW; row++) {
+        const auto& c = clusterRefs[sector][row];
+
+        const auto pad = mapper.globalPadNumber(PadPos(row, c->getPad()));
+        const LocalPosition3D localXYZ(mapper.padCentre(pad).X(), mapper.padCentre(pad).Y(), c->getTime());
+        const auto globalXYZ = mapper.LocalToGlobal(localXYZ, sector);
+        clusters->SetNextPoint(globalXYZ.X(), globalXYZ.Y(), globalXYZ.Z());
+      }
+    }
+    return clusters;
+}
 
 TEveElement* Data::getEveTracks()
 {
+    const auto& mapper = Mapper::instance();
     TEveTrackList* tracks = new TEveTrackList("tracks");
     auto prop = tracks->GetPropagator();
     prop->SetMagField(0.5);
@@ -442,19 +456,20 @@ TEveElement* Data::getEveTracks()
         track->SetLineColor(kMagenta);
         tracks->AddElement(track);
 
-//        TEvePointSet* tpoints = new TEvePointSet("tclusters");
-//        tpoints->SetMarkerColor(kGreen);
-//        int nc = rec.getNClusterReferences();
-//        while (nc--) {
-//            uint8_t sector, row;
-//            uint32_t clusterIndexInRow;
-//            rec.getClusterReference(nc, sector, row, clusterIndexInRow);
-//            const ClusterNative& cl = rec.getCluster(nc, *clusters, sector, row);
-//            const ClusterNative& clLast = rec.getCluster(0, *clusters);
-//            const auto& gloC = c.getXYZGloRot(*gman);
-//            tpoints->SetNextPoint(gloC.X(), gloC.Y(), gloC.Z());
-//        }
-//        track->AddElement(tpoints);
+        TEvePointSet* tpoints = new TEvePointSet("tclusters");
+        tpoints->SetMarkerColor(kGreen);
+        int nc = rec.getNClusterReferences();
+        while (nc--) {
+            uint8_t sector, row;
+            uint32_t clusterIndexInRow;
+            rec.getClusterReference(nc, sector, row, clusterIndexInRow);
+            const auto& cl = rec.getCluster(nc, *mClusterIndexStruct, sector, row);
+            const auto pad = mapper.globalPadNumber(PadPos(row, cl.getPad()));
+            const LocalPosition3D localXYZ(mapper.padCentre(pad).X(), mapper.padCentre(pad).Y(), cl.getTime());
+            const auto globalXYZ = mapper.LocalToGlobal(localXYZ, sector);
+            tpoints->SetNextPoint(globalXYZ.X(), globalXYZ.Y(), globalXYZ.Z());
+        }
+        track->AddElement(tpoints);
     }
     tracks->MakeTracks();
 
@@ -469,13 +484,13 @@ void Data::displayData(int entry)
     // Event display
     auto hits = getEveHits();
     auto digits = getEveDigits();
-    //auto clusters = getEveClusters();
+    auto clusters = getEveClusters();
     auto tracks = getEveTracks();
     delete mEvent;
     mEvent = new TEveElementList(ename.c_str());
     mEvent->AddElement(hits);
     mEvent->AddElement(digits);
-    //mEvent->AddElement(clusters);
+    mEvent->AddElement(clusters);
     mEvent->AddElement(tracks);
     auto multi = o2::event_visualisation::MultiView::getInstance();
     multi->registerElement(mEvent);
@@ -567,6 +582,7 @@ int main(int argc, char **argv)
     std::string rawfile = "o2sim.root"; // should be e.g. GBTx0_Run005 - not a file per se?
     std::string hitsfile = "o2sim.root";
     std::string digifile = "tpcdigits.root";
+    std::string clusfile = "tpc-native-clusters.root";
     evdata.setRawData(false);
     std::string tracfile = "tpctracks.root";
     std::string inputGeom = "O2geometry.root";
@@ -624,6 +640,8 @@ int main(int argc, char **argv)
         } else
             std::cerr << "\nERROR: Cannot open file: " << digifile << "\n\n";
     }
+
+    evdata.setClusReader(clusfile);
 
     file = TFile::Open(tracfile.data());
     if (file && gFile->IsOpen()) {
