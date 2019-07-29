@@ -39,9 +39,9 @@ mTimeStamp(timeStamp)
   
 }
  
-VisualisationTrack* VisualisationEvent::getTrack(int i)
+const VisualisationTrack& VisualisationEvent::getTrack(int i) const
 {
-  return &mTracks[i];
+  return mTracks[i];
 }
   
 }

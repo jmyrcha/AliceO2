@@ -47,7 +47,7 @@ public:
   }
   
   // Should return visualisation objects for required data type
-  virtual VisualisationEvent* interpretDataForType(TObject* data, EVisualisationDataType type) = 0;
+  virtual std::unique_ptr<VisualisationEvent> interpretDataForType(TObject* data, EVisualisationDataType type) = 0;
 
   static DataInterpreter* getInstance(EVisualisationGroup type) { return instance[type];}
   static void setInstance(DataInterpreter* instance, EVisualisationGroup type) { DataInterpreter::instance[type] = instance;}

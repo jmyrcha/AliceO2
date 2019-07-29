@@ -11,5 +11,6 @@
 o2_add_library(EventVisualisationDetectors
                SOURCES src/DataReaderVSD.cxx
                        src/DataReaderITS.cxx
+                       src/DataInterpreterITS.cxx
 #                       src/DataInterpreterVSD.cxx
                PUBLIC_LINK_LIBRARIES O2::EventVisualisationBase)

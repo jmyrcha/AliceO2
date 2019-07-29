@@ -14,8 +14,8 @@
 /// \author p.nowakowski@cern.ch
 
 
-#ifndef ALICE_O2_EVENTVISUALISATION_BASE_DATAINTERPRETERVSD_H
-#define ALICE_O2_EVENTVISUALISATION_BASE_DATAINTERPRETERVSD_H
+#ifndef ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAINTERPRETERVSD_H
+#define ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAINTERPRETERVSD_H
 
 
 ///
@@ -24,7 +24,6 @@
 /// with tracks colored by PID only.
 
 #include "EventVisualisationBase/DataInterpreter.h"
-#include "EventVisualisationView/EventManager.h"
 #include "EventVisualisationBase/VisualisationConstants.h"
 #include <TEvePointSet.h>
 #include <TEveViewer.h>
@@ -59,7 +58,7 @@ public:
     ~DataInterpreterVSD() final;
 
     //
-    VisualisationEvent *interpretDataForType(TObject* data, EVisualisationDataType type) final;
+    std::unique_ptr<VisualisationEvent> interpretDataForType(TObject* data, EVisualisationDataType type) final;
 };
 
 }

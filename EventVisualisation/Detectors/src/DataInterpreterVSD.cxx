@@ -44,7 +44,7 @@ DataInterpreterVSD::~DataInterpreterVSD() {
   }
 }
 
-VisualisationEvent* DataInterpreterVSD::interpretDataForType(TObject* data, EVisualisationDataType /*type*/) {
+    std::unique_ptr<VisualisationEvent> DataInterpreterVSD::interpretDataForType(TObject* data, EVisualisationDataType /*type*/) {
   if (mVSD == nullptr)
     mVSD = new TEveVSD;
   this->DropEvent();

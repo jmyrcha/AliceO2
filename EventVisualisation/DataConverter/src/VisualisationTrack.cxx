@@ -52,9 +52,9 @@ mHelixCurvature(helixCurvature),
 mTheta(theta),
 mPhi(phi)
 {
-  addMomentum(pxpypz);
-  addStartCoordinates(startXYZ);
-  addEndCoordinates(endXYZ);
+  setMomentum(pxpypz);
+  setStartCoordinates(startXYZ);
+  setEndCoordinates(endXYZ);
   mID = ID;
   mType = gTrackTypes[type];
 }
@@ -64,19 +64,19 @@ void VisualisationTrack::addChild(int childID)
   mChildrenIDs.push_back(childID);
 }
 
-void VisualisationTrack::addMomentum(double pxpypz[3])
+void VisualisationTrack::setMomentum(double pxpypz[3])
 {
   for (int i = 0; i < 3; i++)
     mMomentum[i] = pxpypz[i];
 }
 
-void VisualisationTrack::addStartCoordinates(double xyz[3])
+void VisualisationTrack::setStartCoordinates(double xyz[3])
 {
   for (int i = 0; i < 3; i++)
     mStartCoordinates[i] = xyz[i];
 }
 
-void VisualisationTrack::addEndCoordinates(double xyz[3])
+void VisualisationTrack::setEndCoordinates(double xyz[3])
 {
   for (int i = 0; i < 3; i++)
     mEndCoordinates[i] = xyz[i];

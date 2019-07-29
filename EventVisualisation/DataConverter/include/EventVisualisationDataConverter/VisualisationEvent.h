@@ -42,9 +42,11 @@ class VisualisationEvent
     void addTrack(const VisualisationTrack& track){ mTracks.push_back(track); }
   
     // Multiplicity getter
-    inline int GetMultiplicity(){return mMultiplicity;}
+    inline int GetMultiplicity(){ return mMultiplicity; }
     // Returns track with index i
-    VisualisationTrack* getTrack(int i);
+    const VisualisationTrack& getTrack(int i) const;
+    // Returns number of tracks
+    size_t getTrackCount() const { return mTracks.size(); }
 private:
     int mEventNumber;                       /// event number in file
     int mRunNumber;                         /// run number
@@ -55,7 +57,7 @@ private:
     std::vector<VisualisationTrack> mTracks; /// an array of minimalistic tracks
 };
 
-#endif
+}
+}
 
-}
-}
+#endif

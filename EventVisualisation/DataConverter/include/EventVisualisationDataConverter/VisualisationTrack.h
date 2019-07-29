@@ -22,6 +22,7 @@
 #include <iosfwd>
 #include <string>
 #include <vector>
+#include <array>
 #include <cmath>
 
 namespace o2  {
@@ -76,14 +77,17 @@ class VisualisationTrack
     int     getCharge(){return mCharge;}
     // PID (particle identification code) getter
     int     getPID(){return mPID;}
+
+    size_t getPointCount() { return mPolyX.size(); }
+    std::array<double, 3> getPoint(size_t i) { return std::array<double, 3>{mPolyX[i], mPolyY[i], mPolyZ[i]};}
   
 private:
     // Set coordinates of the beginning of the track
-    void addStartCoordinates(double xyz[3]);
+    void setStartCoordinates(double xyz[3]);
     // Set coordinates of the end of the track
-    void addEndCoordinates(double xyz[3]);
+    void setEndCoordinates(double xyz[3]);
     /// Set momentum vector
-    void addMomentum(double pxpypz[3]);
+    void setMomentum(double pxpypz[3]);
 
     int mID;                           /// Unique identifier of the track
     std::string mType;                 /// Type (standard, V0 mother, daughter etc.)

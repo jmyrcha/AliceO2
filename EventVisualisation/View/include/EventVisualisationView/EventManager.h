@@ -14,8 +14,8 @@
 /// \author julian.myrcha@cern.ch
 /// \author p.nowakowski@cern.ch
 
-#ifndef ALICE_O2_EVENTVISUALISATION_BASE_EVENTMANAGER_H
-#define ALICE_O2_EVENTVISUALISATION_BASE_EVENTMANAGER_H
+#ifndef ALICE_O2_EVENTVISUALISATION_VIEW_EVENTMANAGER_H
+#define ALICE_O2_EVENTVISUALISATION_VIEW_EVENTMANAGER_H
 
 #include "CCDB/Manager.h"
 
@@ -23,6 +23,7 @@
 #include <TEveEventManager.h>
 
 #include <string>
+#include <EventVisualisationDataConverter/VisualisationEvent.h>
 
 namespace o2  {
 namespace event_visualisation {
@@ -89,6 +90,9 @@ private:
     EventManager(EventManager const&) = delete;
     /// Deleted assignemt operator
     void operator=(EventManager const&) = delete;
+
+    //Display visualisation event
+    void displayVisualisationEvent(VisualisationEvent &event);
 };
 
 }
