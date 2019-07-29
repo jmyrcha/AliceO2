@@ -13,7 +13,7 @@
 /// \author  Jeremi Niedziela
 
 #include "EventVisualisationBase/EventManager.h"
-#include "EventVisualisationDataConverter/MinimalisticEvent.h"
+#include "EventVisualisationDataConverter/VisualisationEvent.h"
 #include "EventVisualisationBase/ConfigurationManager.h"
 #include "EventVisualisationBase/DataSource.h"
 #include "EventVisualisationBase/DataInterpreter.h"

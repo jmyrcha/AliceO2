@@ -14,8 +14,8 @@
 /// \author  Maciej Grochowicz
 ///
 
-#ifndef ALICE_O2_EVENTVISUALISATION_BASE_MINIMALISTICTRACK_H
-#define ALICE_O2_EVENTVISUALISATION_BASE_MINIMALISTICTRACK_H
+#ifndef ALICE_O2_EVENTVISUALISATION_BASE_VISUALISATIONTRACK_H
+#define ALICE_O2_EVENTVISUALISATION_BASE_VISUALISATIONTRACK_H
 
 #include "ConversionConstants.h"
 
@@ -33,14 +33,14 @@ namespace event_visualisation {
 /// It keeps basic information about a track, such as its vertex,
 /// momentum, PID, phi and theta or helix curvature.
   
-class MinimalisticTrack
+class VisualisationTrack
 {
   public:
     // Default constructor
-    MinimalisticTrack();
+    VisualisationTrack();
 
     // Constructor with properties initialisation
-    MinimalisticTrack(
+    VisualisationTrack(
             int charge,
             double energy,
             int ID,
@@ -76,9 +76,6 @@ class MinimalisticTrack
     int     getCharge(){return mCharge;}
     // PID (particle identification code) getter
     int     getPID(){return mPID;}
-  
-    // Generates random track
-    void fillWithRandomData();
   
 private:
     // Set coordinates of the beginning of the track

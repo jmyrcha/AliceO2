@@ -14,10 +14,10 @@
 /// \author  Maciej Grochowicz
 ///
 
-#ifndef ALICE_O2_EVENTVISUALISATION_BASE_MINIMALISTICEVENT_H
-#define ALICE_O2_EVENTVISUALISATION_BASE_MINIMALISTICEVENT_H
+#ifndef ALICE_O2_EVENTVISUALISATION_BASE_VISUALISATIONEVENT_H
+#define ALICE_O2_EVENTVISUALISATION_BASE_VISUALISATIONEVENT_H
 
-#include "EventVisualisationDataConverter/MinimalisticTrack.h"
+#include "EventVisualisationDataConverter/VisualisationTrack.h"
 
 #include <vector>
 #include <ctime>
@@ -32,21 +32,19 @@ namespace event_visualisation {
 /// clusters and calorimeter towers, which can be used for visualisation
 /// or exported for external applications.
 
-class MinimalisticEvent
+class VisualisationEvent
 {
   public:
     // Default constructor
-    MinimalisticEvent(int eventNumber, int runNumber, double energy, int multiplicity, std::string collidingSystem, time_t timeStamp);
+    VisualisationEvent(int eventNumber, int runNumber, double energy, int multiplicity, std::string collidingSystem, time_t timeStamp);
   
     // Adds minimalistic track inside minimalistic event
-    void addTrack(const MinimalisticTrack& track){ mTracks.push_back(track); }
-    // Generates random tracks
-    void fillWithRandomTracks();
+    void addTrack(const VisualisationTrack& track){ mTracks.push_back(track); }
   
     // Multiplicity getter
     inline int GetMultiplicity(){return mMultiplicity;}
     // Returns track with index i
-    MinimalisticTrack* getTrack(int i);
+    VisualisationTrack* getTrack(int i);
 private:
     int mEventNumber;                       /// event number in file
     int mRunNumber;                         /// run number
@@ -54,7 +52,7 @@ private:
     int mMultiplicity;                      /// number of particles reconstructed
     std::string mCollidingSystem;           /// colliding system (e.g. proton-proton)
     std::time_t mTimeStamp;                 /// collision timestamp
-    std::vector<MinimalisticTrack> mTracks; /// an array of minimalistic tracks
+    std::vector<VisualisationTrack> mTracks; /// an array of minimalistic tracks
 };
 
 #endif

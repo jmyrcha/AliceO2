@@ -22,7 +22,7 @@
 #include "EventVisualisationBase/ConfigurationManager.h"
 #include "EventVisualisationBase/Track.h"
 
-#include "EventVisualisationDataConverter/MinimalisticEvent.h"
+#include "EventVisualisationDataConverter/VisualisationEvent.h"
 #include <EventVisualisationBase/EventRegistration.h>
 
 #include <TEveManager.h>

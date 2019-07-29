@@ -27,7 +27,6 @@
 #include "EventVisualisationBase/DataReaderVSD.h"
 #include "EventVisualisationBase/EventRegistration.h"
 #include "EventVisualisationDetectors/DataInterpreterVSD.h"
-#include "EventVisualisationDetectors/DataInterpreterRND.h"
 
 #include <TGTab.h>
 #include <TEnv.h>
@@ -59,8 +58,6 @@ void Initializer::setup(const Options options, EventManager::EDataSource default
   eventManager.setCdbPath(ocdbStorage);
 
   EventRegistration::setInstance(MultiView::getInstance());
-  if(options.randomTracks)
-    DataInterpreter::setInstance(new DataInterpreterRND(), EVisualisationGroup::RND);
   if(options.vsd)
     DataInterpreter::setInstance(new DataInterpreterVSD(), EVisualisationGroup::VSD);
 
