@@ -79,15 +79,13 @@ namespace o2 {
 
                 gsl::span<itsmft::Cluster> mClusters = gsl::make_span(&(*clusArr)[first], last - first);
 
-//                TEvePointSet *cPointSet = new TEvePointSet("clusters");
-//                cPointSet->SetMarkerColor(kBlue);
-//
-//                for (const auto& c : mClusters) {
-//                    const auto& gloC = c.getXYZGloRot(*gman);
-//                    cPointSet->SetNextPoint(gloC.X(), gloC.Y(), gloC.Z());
-//                }
-//
-//                return cPointSet;
+                for (const auto& c : mClusters) {
+                    const auto& gloC = c.getXYZGloRot(*gman);
+                    double xyz[3] = {gloC.X(), gloC.Y(), gloC.Z()};
+                    VisualisationCluster cluster(xyz);
+
+                    ret_event->addCluster(cluster);
+                }
             }
             else if(type == ESD) {
                 TFile *trackFile = (TFile*)list->At(0);

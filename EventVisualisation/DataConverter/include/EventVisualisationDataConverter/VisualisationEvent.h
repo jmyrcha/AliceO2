@@ -17,6 +17,7 @@
 #ifndef ALICE_O2_DATACONVERTER_VISUALISATIONEVENT_H
 #define ALICE_O2_DATACONVERTER_VISUALISATIONEVENT_H
 
+#include "EventVisualisationDataConverter/VisualisationCluster.h"
 #include "EventVisualisationDataConverter/VisualisationTrack.h"
 
 #include <vector>
@@ -40,13 +41,21 @@ class VisualisationEvent
   
     // Adds minimalistic track inside minimalistic event
     void addTrack(const VisualisationTrack& track){ mTracks.push_back(track); }
+    // Adds minimalistic cluster inside minimalistic event
+    void addCluster(const VisualisationCluster& cluster){ mClusters.push_back(cluster); }
   
     // Multiplicity getter
     inline int GetMultiplicity(){ return mMultiplicity; }
+
     // Returns track with index i
     const VisualisationTrack& getTrack(int i) const;
     // Returns number of tracks
     size_t getTrackCount() const { return mTracks.size(); }
+
+    // Returns cluster with index i
+    const VisualisationCluster& getCluster(int i) const;
+    // Returns number of clusters
+    size_t getClusterCount() const { return mClusters.size(); }
 private:
     int mEventNumber;                       /// event number in file
     int mRunNumber;                         /// run number
@@ -55,6 +64,7 @@ private:
     std::string mCollidingSystem;           /// colliding system (e.g. proton-proton)
     std::time_t mTimeStamp;                 /// collision timestamp
     std::vector<VisualisationTrack> mTracks; /// an array of minimalistic tracks
+    std::vector<VisualisationCluster> mClusters; /// an array of minimalistic clusters
 };
 
 }

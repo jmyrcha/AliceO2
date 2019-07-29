@@ -85,7 +85,7 @@ void EventManager::GotoEvent(Int_t no) {
       DataInterpreter* interpreter = DataInterpreter::getInstance((EVisualisationGroup)i);
       if(interpreter) {
         TObject *data = getDataSource()->getEventData(no, (EVisualisationGroup)i);
-        std::unique_ptr<VisualisationEvent> event = interpreter->interpretDataForType(data, ESD);
+        std::unique_ptr<VisualisationEvent> event = interpreter->interpretDataForType(data, Clusters);
         displayVisualisationEvent(*event);
       }
     }
@@ -152,7 +152,24 @@ void EventManager::displayVisualisationEvent(VisualisationEvent &event) {
         }
         list->AddElement(vistrack);
     }
-    MultiView::getInstance()->registerElement(list);
+
+    if(trackCount != 0) {
+        MultiView::getInstance()->registerElement(list);
+    }
+
+    size_t clusterCount = event.getClusterCount();
+    auto *point_list = new TEvePointSet("clusters");
+    point_list->IncDenyDestroy();
+    point_list->SetMarkerColor(kBlue);
+
+    for(size_t i = 0; i < clusterCount; ++i) {
+        VisualisationCluster cluster = event.getCluster(i);
+        point_list->SetNextPoint(cluster.X(), cluster.Y(), cluster.Z());
+    }
+
+    if(clusterCount != 0) {
+        MultiView::getInstance()->registerElement(point_list);
+    }
 }
 
 }

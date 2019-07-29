@@ -112,7 +112,7 @@ private:
     std::vector<double> mPolyZ;
 };
 
-#endif
+}
+}
 
-}
-}
+#endif

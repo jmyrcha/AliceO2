@@ -34,7 +34,15 @@ namespace o2  {
         {
         public:
             // Default constructor
-            VisualisationCluster();
+            VisualisationCluster(double XYZ[]);
+
+            double X() { return mCoordinates[0]; }
+            double Y() { return mCoordinates[1]; }
+            double Z() { return mCoordinates[2]; }
+        private:
+            void setCoordinates(double xyz[3]);
+
+            double      mCoordinates[3];  /// Vector of cluster's coordinates
 
         private:
         };
