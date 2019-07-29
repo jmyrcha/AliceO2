@@ -20,7 +20,6 @@
 #include "EventVisualisationDetectors/DataInterpreterVSD.h"
 
 #include "EventVisualisationBase/ConfigurationManager.h"
-#include "EventVisualisationBase/Track.h"
 
 #include "EventVisualisationDataConverter/VisualisationEvent.h"
 #include <EventVisualisationBase/EventRegistration.h>

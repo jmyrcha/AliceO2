@@ -14,7 +14,7 @@
 /// \author p.nowakowski@cern.ch
 
 
-#include <EventVisualisationBase/DataReaderVSD.h>
+#include <EventVisualisationDetectors/DataReaderVSD.h>
 #include <TSystem.h>
 #include <TEveManager.h>
 #include <TFile.h>

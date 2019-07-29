@@ -9,6 +9,7 @@
 # submit itself to any jurisdiction.
 
 o2_add_library(EventVisualisationDetectors
-               SOURCES
+               SOURCES src/DataReaderVSD.cxx
+                       src/DataReaderITS.cxx
                        src/DataInterpreterVSD.cxx
                PUBLIC_LINK_LIBRARIES O2::EventVisualisationBase)

@@ -19,7 +19,7 @@
 #include "EventVisualisationBase/DataInterpreter.h"
 #include "EventVisualisationBase/EventRegistration.h"
 #include <EventVisualisationBase/DataSourceOffline.h>
-#include <EventVisualisationBase/DataReaderVSD.h>
+#include <EventVisualisationDetectors/DataReaderVSD.h>
 
 #include <TEveManager.h>
 #include <TEveProjectionManager.h>

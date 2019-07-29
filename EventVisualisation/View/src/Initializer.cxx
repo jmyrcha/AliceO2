@@ -24,7 +24,7 @@
 #include "EventVisualisationBase/VisualisationConstants.h"
 #include "EventVisualisationView/EventManagerFrame.h"
 #include "EventVisualisationBase/DataSourceOffline.h"
-#include "EventVisualisationBase/DataReaderVSD.h"
+#include "EventVisualisationDetectors/DataReaderVSD.h"
 #include "EventVisualisationBase/EventRegistration.h"
 #include "EventVisualisationDetectors/DataInterpreterVSD.h"
 
