@@ -9,17 +9,28 @@
 // or submit itself to any jurisdiction.
 
 ///
-/// \file    DataInterpreter.cxx
-/// \author  Jeremi Niedziela
+/// \file    VisualisationCluster.cxx
+/// \author  Julian Myrcha
+///
 
-#include "EventVisualisationBase/DataInterpreter.h"
-
+#include "EventVisualisationDataConverter/VisualisationCluster.h"
 #include <iostream>
 
 using namespace std;
 
 namespace o2  {
-namespace event_visualisation {
-DataInterpreter::DataInterpreter() = default;
-}
+    namespace event_visualisation {
+
+
+        VisualisationCluster::VisualisationCluster(double XYZ[]) {
+            setCoordinates(XYZ);
+        }
+
+        void VisualisationCluster::setCoordinates(double xyz[3])
+        {
+            for (int i = 0; i < 3; i++)
+                mCoordinates[i] = xyz[i];
+        }
+
+    }
 }

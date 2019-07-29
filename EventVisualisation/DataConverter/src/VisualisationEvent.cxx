@@ -14,7 +14,7 @@
 /// \author  Maciej Grochowicz
 ///
 
-#include "EventVisualisationDataConverter/MinimalisticEvent.h"
+#include "EventVisualisationDataConverter/VisualisationEvent.h"
 
 using namespace std;
 
@@ -22,7 +22,7 @@ namespace o2  {
 namespace event_visualisation {
 
 /// Ctor -- set the minimalistic event up
-MinimalisticEvent::MinimalisticEvent( int eventNumber,
+VisualisationEvent::VisualisationEvent( int eventNumber,
                                       int runNumber,
                                       double energy,
                                       int multiplicity,
@@ -38,20 +38,15 @@ mTimeStamp(timeStamp)
 {
   
 }
-
-void MinimalisticEvent::fillWithRandomTracks()
-{
-  for(int i=0;i<mMultiplicity;i++){
-    MinimalisticTrack track = MinimalisticTrack();
-    track.fillWithRandomData();
-    mTracks.push_back(track);
-  }
-}
  
-MinimalisticTrack* MinimalisticEvent::getTrack(int i)
+const VisualisationTrack& VisualisationEvent::getTrack(int i) const
 {
-  return &mTracks[i];
+  return mTracks[i];
 }
-  
+
+const VisualisationCluster &VisualisationEvent::getCluster(int i) const {
+  return mClusters[i];
+}
+
 }
 }

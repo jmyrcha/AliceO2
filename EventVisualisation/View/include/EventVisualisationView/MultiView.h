@@ -12,8 +12,8 @@
 /// \file    MultiView.h
 /// \author  Jeremi Niedziela
 
-#ifndef ALICE_O2_EVENTVISUALISATION_BASE_MULTIVIEW_H
-#define ALICE_O2_EVENTVISUALISATION_BASE_MULTIVIEW_H
+#ifndef ALICE_O2_EVENTVISUALISATION_VIEW_MULTIVIEW_H
+#define ALICE_O2_EVENTVISUALISATION_VIEW_MULTIVIEW_H
 
 #include <TGLViewer.h>
 #include <TEveGeoShape.h>
@@ -44,9 +44,9 @@ class MultiView
     
     enum EScenes{
       Scene3dGeom,    ///< 3D scene of geometry
+      Scene3dEvent,   ///< 3D scene of event
       SceneRPhiGeom,  ///< R-Phi scene of geometry
       SceneZrhoGeom , ///< Z-Pho scene of geometry
-      Scene3dEvent,   ///< 3D scene of event
       SceneRphiEvent, ///< R-Phi scene of event
       SceneZrhoEvent ,///< Z-Rho scene of event
       NumberOfScenes  ///< Total number of scenes
@@ -78,17 +78,20 @@ class MultiView
     /// Removes all geometries
     void destroyAllGeometries();
   
-    /// Registers an event to be drawn
-    void registerEvent(TEveElement* event);
+    /// Registers an element to be drawn
+    void registerElement(TEveElement* event);
+
+    ///
+    void registerEvent(TEveElement* event) { return registerElement(event); }
     /// Removes all shapes representing current event
     void destroyAllEvents();
-  
-    void drawRandomEvent();
+
+    void redraw3D();
   private:
     /// Default constructor
     MultiView();
     /// Default destructor
-    ~MultiView();
+    ~MultiView() = default;
     
     static MultiView *sInstance;                              ///< Single instance of the multiview
 

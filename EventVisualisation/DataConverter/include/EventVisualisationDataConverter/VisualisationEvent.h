@@ -9,15 +9,16 @@
 // or submit itself to any jurisdiction.
 
 ///
-/// \file    MinimalisticEvent.h
+/// \file    VisualisationEvent.h
 /// \author  Jeremi Niedziela
 /// \author  Maciej Grochowicz
 ///
 
-#ifndef ALICE_O2_EVENTVISUALISATION_BASE_MINIMALISTICEVENT_H
-#define ALICE_O2_EVENTVISUALISATION_BASE_MINIMALISTICEVENT_H
+#ifndef ALICE_O2_DATACONVERTER_VISUALISATIONEVENT_H
+#define ALICE_O2_DATACONVERTER_VISUALISATIONEVENT_H
 
-#include "EventVisualisationDataConverter/MinimalisticTrack.h"
+#include "EventVisualisationDataConverter/VisualisationCluster.h"
+#include "EventVisualisationDataConverter/VisualisationTrack.h"
 
 #include <vector>
 #include <ctime>
@@ -32,21 +33,29 @@ namespace event_visualisation {
 /// clusters and calorimeter towers, which can be used for visualisation
 /// or exported for external applications.
 
-class MinimalisticEvent
+class VisualisationEvent
 {
   public:
     // Default constructor
-    MinimalisticEvent(int eventNumber, int runNumber, double energy, int multiplicity, std::string collidingSystem, time_t timeStamp);
+    VisualisationEvent(int eventNumber, int runNumber, double energy, int multiplicity, std::string collidingSystem, time_t timeStamp);
   
     // Adds minimalistic track inside minimalistic event
-    void addTrack(const MinimalisticTrack& track){ mTracks.push_back(track); }
-    // Generates random tracks
-    void fillWithRandomTracks();
+    void addTrack(const VisualisationTrack& track){ mTracks.push_back(track); }
+    // Adds minimalistic cluster inside minimalistic event
+    void addCluster(const VisualisationCluster& cluster){ mClusters.push_back(cluster); }
   
     // Multiplicity getter
-    inline int GetMultiplicity(){return mMultiplicity;}
+    inline int GetMultiplicity(){ return mMultiplicity; }
+
     // Returns track with index i
-    MinimalisticTrack* getTrack(int i);
+    const VisualisationTrack& getTrack(int i) const;
+    // Returns number of tracks
+    size_t getTrackCount() const { return mTracks.size(); }
+
+    // Returns cluster with index i
+    const VisualisationCluster& getCluster(int i) const;
+    // Returns number of clusters
+    size_t getClusterCount() const { return mClusters.size(); }
 private:
     int mEventNumber;                       /// event number in file
     int mRunNumber;                         /// run number
@@ -54,10 +63,11 @@ private:
     int mMultiplicity;                      /// number of particles reconstructed
     std::string mCollidingSystem;           /// colliding system (e.g. proton-proton)
     std::time_t mTimeStamp;                 /// collision timestamp
-    std::vector<MinimalisticTrack> mTracks; /// an array of minimalistic tracks
+    std::vector<VisualisationTrack> mTracks; /// an array of minimalistic tracks
+    std::vector<VisualisationCluster> mClusters; /// an array of minimalistic clusters
 };
 
-#endif
+}
+}
 
-}
-}
+#endif

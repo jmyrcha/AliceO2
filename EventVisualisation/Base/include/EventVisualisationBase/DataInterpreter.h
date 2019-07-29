@@ -15,7 +15,6 @@
 #ifndef ALICE_O2_EVENTVISUALISATION_BASE_DATAINTERPRETER_H
 #define ALICE_O2_EVENTVISUALISATION_BASE_DATAINTERPRETER_H
 
-#include "EventVisualisationBase/EventManager.h"
 #include "EventVisualisationBase/VisualisationConstants.h"
 
 #include <TEveElement.h>
@@ -29,16 +28,17 @@ namespace event_visualisation {
 /// to interpret detector-specific data (such as hits, digits, clusters)
 /// as a set of visualisation objects (points, lines, boxes).
 
-class DataInterpreter
-{
+class VisualisationEvent;
+
+class DataInterpreter {
 public:
   // Default constructor
   DataInterpreter();
   // Virtual destructor
-  virtual ~DataInterpreter();
+  virtual ~DataInterpreter() = default;
   
   // Should return visualisation objects for required data type
-  virtual TEveElement* interpretDataForType(EDataType type);
+  virtual std::unique_ptr<VisualisationEvent> interpretDataForType(TObject* data, EVisualisationDataType type) = 0;
 };
   
 }

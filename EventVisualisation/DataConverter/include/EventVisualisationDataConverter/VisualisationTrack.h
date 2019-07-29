@@ -9,38 +9,39 @@
 // or submit itself to any jurisdiction.
 
 ///
-/// \file    MinimalisticTrack.h
+/// \file    VisualisationTrack.h
 /// \author  Jeremi Niedziela
 /// \author  Maciej Grochowicz
 ///
 
-#ifndef ALICE_O2_EVENTVISUALISATION_BASE_MINIMALISTICTRACK_H
-#define ALICE_O2_EVENTVISUALISATION_BASE_MINIMALISTICTRACK_H
+#ifndef ALICE_O2_DATACONVERTER_VISUALISATIONTRACK_H
+#define ALICE_O2_DATACONVERTER_VISUALISATIONTRACK_H
 
 #include "ConversionConstants.h"
 
 #include <iosfwd>
 #include <string>
 #include <vector>
+#include <array>
 #include <cmath>
 
 namespace o2  {
 namespace event_visualisation {
 
-/// Minimalistic description of particles track
+/// Minimalistic description of a particle's track
 ///
 /// This class is used mainly for visualisation purpose.
 /// It keeps basic information about a track, such as its vertex,
 /// momentum, PID, phi and theta or helix curvature.
   
-class MinimalisticTrack
+class VisualisationTrack
 {
   public:
     // Default constructor
-    MinimalisticTrack();
+    VisualisationTrack();
 
     // Constructor with properties initialisation
-    MinimalisticTrack(
+    VisualisationTrack(
             int charge,
             double energy,
             int ID,
@@ -76,17 +77,17 @@ class MinimalisticTrack
     int     getCharge(){return mCharge;}
     // PID (particle identification code) getter
     int     getPID(){return mPID;}
-  
-    // Generates random track
-    void fillWithRandomData();
+
+    size_t getPointCount() { return mPolyX.size(); }
+    std::array<double, 3> getPoint(size_t i) { return std::array<double, 3>{mPolyX[i], mPolyY[i], mPolyZ[i]};}
   
 private:
     // Set coordinates of the beginning of the track
-    void addStartCoordinates(double xyz[3]);
+    void setStartCoordinates(double xyz[3]);
     // Set coordinates of the end of the track
-    void addEndCoordinates(double xyz[3]);
+    void setEndCoordinates(double xyz[3]);
     /// Set momentum vector
-    void addMomentum(double pxpypz[3]);
+    void setMomentum(double pxpypz[3]);
 
     int mID;                           /// Unique identifier of the track
     std::string mType;                 /// Type (standard, V0 mother, daughter etc.)
@@ -111,7 +112,7 @@ private:
     std::vector<double> mPolyZ;
 };
 
-#endif
+}
+}
 
-}
-}
+#endif
