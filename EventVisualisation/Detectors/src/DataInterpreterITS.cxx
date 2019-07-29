@@ -116,6 +116,7 @@ TEveElement* DataInterpreterITS::interpretDataForType(TObject* data, EDataType t
         clustersRof->GetEntry(0);
 
         TEveTrackList* trackList = new TEveTrackList("tracks");
+        trackList->IncDenyDestroy();
         auto prop = trackList->GetPropagator();
         prop->SetMagField(0.5);
         prop->SetMaxR(50.);
@@ -128,27 +129,63 @@ TEveElement* DataInterpreterITS::interpretDataForType(TObject* data, EDataType t
 
         gsl::span<o2::its::TrackITS> mTracks = gsl::make_span(&(*trkArr)[first], last - first);
 
+        struct TrackletTest {
+            std::array<float, 3> mP;
+            Int_t sign;
+            std::vector<double> mPolyX;
+            std::vector<double> mPolyY;
+            std::vector<double> mPolyZ;
+        };
+
+        std::vector<TrackletTest> points;
+
         for (const auto& rec : mTracks) {
-            std::array<float, 3> p{0, 0, 0};
+            std::array<float, 3> p;
             rec.getPxPyPzGlo(p);
             TEveRecTrackD t;
             t.fP = { p[0], p[1], p[2] };
             t.fSign = (rec.getSign() < 0) ? -1 : 1;
             TEveTrack* track = new TEveTrack(&t, prop);
-            track->SetLineColor(kMagenta);
-            trackList->AddElement(track);
-            TEvePointSet* tpoints = new TEvePointSet("tclusters");
-            tpoints->SetMarkerColor(kGreen);
-            int nc = rec.getNumberOfClusters();
-            while (nc--) {
-                Int_t idx = rec.getClusterEntry(nc);
-                itsmft::Cluster& c = (*clusArr)[idx];
-                const auto& gloC = c.getXYZGloRot(*gman);
-                tpoints->SetNextPoint(gloC.X(), gloC.Y(), gloC.Z());
+            track->MakeTrack();
+
+            TrackletTest test;
+
+            test.mP = { p[0], p[1], p[2] };
+            test.sign = t.fSign;
+
+//            TEvePointSet* tpoints = new TEvePointSet("tclusters");
+//            int nc = rec.getNumberOfClusters();
+//            while (nc--) {
+//                Int_t idx = rec.getClusterEntry(nc);
+//                itsmft::Cluster& c = (*clusArr)[idx];
+//                const auto& gloC = c.getXYZGloRot(*gman);
+//                tpoints->SetNextPoint(gloC.X(), gloC.Y(), gloC.Z());
+//            }
+
+            for(Int_t i = 0; i < track->GetN(); ++i) {
+                Float_t x,y,z;
+                track->GetPoint(i, x, y, z);
+                test.mPolyX.push_back(x);
+                test.mPolyY.push_back(y);
+                test.mPolyZ.push_back(z);
             }
-            track->AddElement(tpoints);
+
+            points.push_back(test);
         }
-        trackList->MakeTracks();
+
+        for(const auto& track: points) {
+            TEveRecTrackD t;
+            t.fP = { track.mP[0], track.mP[1], track.mP[2] };
+            t.fSign = track.sign;
+            TEveTrack* vistrack = new TEveTrack(&t, &TEveTrackPropagator::fgDefault);
+            vistrack->SetLineColor(kMagenta);
+            vistrack->Reset(track.mPolyZ.size());
+
+            for(size_t i = 0; i < track.mPolyZ.size(); ++i) {
+                vistrack->SetNextPoint(track.mPolyX[i], track.mPolyY[i], track.mPolyZ[i]);
+            }
+            trackList->AddElement(vistrack);
+        }
 
         return trackList;
     }

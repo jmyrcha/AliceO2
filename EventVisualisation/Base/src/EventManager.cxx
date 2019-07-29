@@ -97,7 +97,7 @@ void EventManager::GotoEvent(Int_t no) {
       DataInterpreter* interpreter = DataInterpreter::getInstance((EVisualisationGroup)i);
       if(interpreter) {
         TObject *data = getDataSource()->getEventData(no, (EVisualisationGroup)i);
-        TEveElement *eveElement = interpreter->interpretDataForType(data, Clusters);
+        TEveElement *eveElement = interpreter->interpretDataForType(data, ESD);
         EventRegistration::getInstance()->registerElement(eveElement);
       }
     }
