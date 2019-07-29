@@ -57,6 +57,7 @@ using namespace o2::event_visualisation;
 
 #include "EventVisualisationView/MultiView.h"
 
+#include "TPCSimulation/Point.h" // for o2::tpc::HitGroup
 #include "TPCBase/Digit.h"
 #include "TPCBase/Mapper.h"
 #include "TPCReconstruction/RawReader.h"
@@ -79,6 +80,7 @@ public:
     void loadData(int entry);
     void displayData(int entry);
     int getLastEvent() const { return mLastEvent; }
+    void setHitsTree(TTree* t);
     void setDigiTree(TTree* t);
     //void setClusTree(TTree* t);
     void setTracTree(TTree* t);
@@ -93,25 +95,18 @@ public:
       mRawReader = reader;
       mRawReader->loadEvent(0);
     }
-
-//    void setDigitPixelReader(std::string input)
-//    {
-//      auto reader = new DigitPixelReader();
-//      reader->openInput(input, o2::detectors::DetID("ITS"));
-//      reader->init();
-//      reader->readNextEntry();
-//      mPixelReader = dynamic_cast<PixelReader*>(reader);                    // incompatible class DigitPixelReader : public PixelReader
-//      assert(mPixelReader != nullptr);
-//      mPixelReader->getNextChipData(mChipData);
-//      mIR = mChipData.getInteractionRecord();
-//    }
+    bool getRawData() { return mRawData; }
+    void setRawData(bool rawData) { mRawData = rawData; }
 
 private:
     // Data loading members
     //ClusterNativeHelper::Reader reader;
+    bool mRawData = false;
     RawReader* mRawReader = nullptr;
     int mLastEvent = 0;
-    int kNumberOfDigitsBranches = 36;
+    int kNumberOfSectors = 36;
+    std::vector<std::vector<HitGroup>*> mHitsBuffer;
+    std::vector<gsl::span<HitGroup>> mHits;
     std::vector<std::vector<Digit>*> mDigitBuffer;
     std::vector<gsl::span<Digit>> mDigits;
     //ClusterNativeAccess clusterIndex;
@@ -121,6 +116,8 @@ private:
     //std::unique_ptr<ClusterNativeAccess> mClusters;
     std::vector<TrackTPC>* mTrackBuffer = nullptr;
     gsl::span<TrackTPC> mTracks;
+    void loadHits();
+    void loadHits(int entry);
     void loadDigits();
     void loadDigits(int entry);
     void loadRawDigits();
@@ -128,16 +125,68 @@ private:
     //void loadClusters(int entry);
     void loadTracks(int entry);
 
+    TTree* mHitsTree = nullptr;
     TTree* mDigiTree = nullptr;
     //TTree* mClusTree = nullptr;
     TTree* mTracTree = nullptr;
 
     // TEve-related members
     TEveElementList* mEvent = nullptr;
+    TEveElement* getEveHits();
     TEveElement* getEveDigits();
     //TEveElement* getEveClusters();
     TEveElement* getEveTracks();
 } evdata;
+
+void Data::setHitsTree(TTree* tree)
+{
+  if (tree == nullptr) {
+    std::cerr << "No tree for hits!\n";
+    return;
+  }
+  mHitsBuffer.resize(kNumberOfSectors);
+  for(int sector = 0; sector < kNumberOfSectors; sector++) {
+    std::stringstream hitsStr;
+    hitsStr << "TPCHitsShiftedSector" << sector;
+    tree->SetBranchAddress(hitsStr.str().c_str(), &(mHitsBuffer[sector]));
+  }
+
+  mHitsTree = tree;
+}
+
+// Based on: macro/analyzeHits::analyseTPC()
+void Data::loadHits(int entry)
+{
+  static int lastLoaded = -1;
+
+  if (mHitsTree == nullptr)
+    return;
+
+  int eventsCount = mHitsTree->GetBranch("TPCHitsShiftedSector0")->GetEntries();
+  std::cout << "Hits: Number of events: " << eventsCount << std::endl;
+  if ((entry < 0) || (entry >= eventsCount)) {
+    std::cerr << "Hits: Out of event range ! " << entry << '\n';
+    return;
+  }
+  if (entry != lastLoaded) {
+    for(int sector = 0; sector < kNumberOfSectors; sector++) {
+      mHitsBuffer[sector]->clear();
+    }
+    mHitsTree->GetEntry(entry);
+    lastLoaded = entry;
+  }
+
+  int size = 0;
+  int first = 0;
+  mHits.resize(kNumberOfSectors);
+  for(int sector = 0; sector < kNumberOfSectors; sector++) {
+    int last = mHitsBuffer[sector]->size();
+    mHits[sector] = gsl::make_span(&(*mHitsBuffer[sector])[first], last - first);
+    size += mHits[sector].size();
+  }
+
+  std::cout << "Number of TPC Hits: " << size << '\n';
+}
 
 void Data::setDigiTree(TTree* tree)
 {
@@ -145,22 +194,23 @@ void Data::setDigiTree(TTree* tree)
         std::cerr << "No tree for digits!\n";
         return;
     }
-    std::cout << "Reading from tree\n";
-    mDigitBuffer.resize(kNumberOfDigitsBranches);
-    for(int i = 0; i < kNumberOfDigitsBranches; i++) {
-      std::string digiStr = "TPCDigit_" + std::to_string(i);
-      tree->SetBranchAddress(digiStr.c_str(), &(mDigitBuffer[i]));
+
+    mDigitBuffer.resize(kNumberOfSectors);
+    for(int sector = 0; sector < kNumberOfSectors; sector++) {
+      std::stringstream digiStr;
+      digiStr << "TPCDigit_" << sector;
+      tree->SetBranchAddress(digiStr.str().c_str(), &(mDigitBuffer[sector]));
     }
 
     mDigiTree = tree;
 }
 
+// Based on: CalibRawBase::processEventRawReader()
 void Data::loadRawDigits()
 {
-  //mDigits.clear();
+  mDigitBuffer.resize(1);
 
-  const auto& mapper = Mapper::instance();
-
+  int size = 0;
   o2::tpc::PadPos padPos;
   while (std::shared_ptr<std::vector<uint16_t>> data = mRawReader->getNextData(padPos)) {
     if (!data)
@@ -168,25 +218,27 @@ void Data::loadRawDigits()
 
     CRU cru(mRawReader->getRegion());
 
-//    const auto pad = mapper.globalPadNumber(padPos);
-//    const auto& localXYZ = mapper.padCentre(pad);
-//    const auto globalXYZ = mapper.LocalToGlobal(localXYZ,
-//                                                cru.sector());
-
     // row is local in region (CRU)
     const int row = padPos.getRow();
     const int pad = padPos.getPad();
     if (row == 255 || pad == 255)
       continue;
 
-    //int timeBin = 0;
+    int timeBin = 0;
     for (const auto& signalI : *data) {
-      //const float signal = float(signalI);
-      //++timeBin;
+      const float signal = float(signalI);
+      mDigitBuffer[0]->emplace_back(cru, signal, row, pad, timeBin);
+      size++;
+      ++timeBin;
     }
+    std::cout << "timeBin counts: " << timeBin << std::endl;
   }
 
-  //std::cout << "Number of TPC Digits: " << mDigits.size() << '\n';
+  int first = 0;
+  int last = mDigitBuffer[0]->size();
+  mDigits[0] = gsl::make_span(&(*mDigitBuffer[0])[first], last - first);
+
+  std::cout << "Number of TPC Digits: " << size << '\n';
 }
 
 
@@ -194,6 +246,11 @@ void Data::loadRawDigits(int entry)
 {
   if (mRawReader == nullptr)
     return;
+
+  if ((entry < 0) || (entry >= mRawReader->getEventNumber())) {
+    std::cerr << "Raw digits: Out of event range ! " << entry << '\n';
+    return;
+  }
 
   int eventId = mRawReader->loadEvent(entry);
 
@@ -208,28 +265,25 @@ void Data::loadDigits(int entry)
   if (mDigiTree == nullptr)
     return;
 
-  auto event = entry;
   int eventsCount = 0;
-  for(int i = 0; i < kNumberOfDigitsBranches; i++) {
-    std::string digiStr = "TPCDigit_" + std::to_string(i);
-    eventsCount += mDigiTree->GetBranch(digiStr.c_str())->GetEntries();
-  }
-  if ((event < 0) || (event >= eventsCount)) {
-    std::cerr << "Digits: Out of event range ! " << event << '\n';
+  eventsCount = mDigiTree->GetBranch("TPCDigit_0")->GetEntries();
+  std::cout << "Digits: Number of events: " << eventsCount << std::endl;
+  if ((entry < 0) || (entry >= eventsCount)) {
+    std::cerr << "Digits: Out of event range ! " << entry << '\n';
     return;
   }
-  if (event != lastLoaded) {
-    for(int i = 0; i < kNumberOfDigitsBranches; i++) {
+  if (entry != lastLoaded) {
+    for(int i = 0; i < kNumberOfSectors; i++) {
       mDigitBuffer[i]->clear();
     }
-    mDigiTree->GetEntry(event);
-    lastLoaded = event;
+    mDigiTree->GetEntry(entry);
+    lastLoaded = entry;
   }
 
   int size = 0;
   int first = 0;
-  mDigits.resize(kNumberOfDigitsBranches);
-  for(int i = 0; i < kNumberOfDigitsBranches; i++) {
+  mDigits.resize(kNumberOfSectors);
+  for(int i = 0; i < kNumberOfSectors; i++) {
     int last = mDigitBuffer[i]->size();
     mDigits[i] = gsl::make_span(&(*mDigitBuffer[i])[first], last - first);
     size += mDigits[i].size();
@@ -290,15 +344,15 @@ void Data::loadTracks(int entry)
     if (mTracTree == nullptr)
         return;
 
-    auto event = entry;
-    if ((event < 0) || (event >= mTracTree->GetEntries())) {
-        std::cerr << "Tracks: Out of event range ! " << event << '\n';
+    std::cout << "Tracks: Number of events: " << mTracTree->GetEntries() << std::endl;
+    if ((entry < 0) || (entry >= mTracTree->GetEntries())) {
+        std::cerr << "Tracks: Out of event range ! " << entry << '\n';
         return;
     }
-    if (event != lastLoaded) {
+    if (entry != lastLoaded) {
         mTrackBuffer->clear();
-        mTracTree->GetEntry(event);
-        lastLoaded = event;
+        mTracTree->GetEntry(entry);
+        lastLoaded = entry;
     }
 
     int first = 0, last = mTrackBuffer->size();
@@ -309,10 +363,31 @@ void Data::loadTracks(int entry)
 
 void Data::loadData(int entry)
 {
-    //loadRawDigits(entry);
-    loadDigits(entry);
+    loadHits(entry);
+    if(evdata.getRawData()) {
+      loadRawDigits(entry);
+    } else {
+      loadDigits(entry);
+    }
     //loadClusters(entry);
     loadTracks(entry);
+}
+
+TEveElement* Data::getEveHits()
+{
+  const auto& mapper = Mapper::instance();
+  TEvePointSet* hits = new TEvePointSet("hits");
+  hits->SetMarkerColor(kYellow);
+
+  for(int i = 0; i < mHits.size(); i++) {
+    for (const auto& hv : mHits[i]) {
+      for(int j = 0; j < hv.getSize(); j++) {
+        const auto& h = hv.getHit(j);
+        hits->SetNextPoint(h.GetX(), h.GetY(), h.GetZ());
+      }
+    }
+  }
+  return hits;
 }
 
 TEveElement* Data::getEveDigits()
@@ -321,7 +396,7 @@ TEveElement* Data::getEveDigits()
     TEvePointSet* digits = new TEvePointSet("digits");
     digits->SetMarkerColor(kBlue);
 
-    for(int i = 0; i < kNumberOfDigitsBranches; i++) {
+    for(int i = 0; i < mDigits.size(); i++) {
       for (const auto& d : mDigits[i]) {
         const auto pad = mapper.globalPadNumber(PadPos(d.getRow(),
                                                        d.getPad()));
@@ -392,11 +467,13 @@ void Data::displayData(int entry)
     ename += std::to_string(entry);
 
     // Event display
+    auto hits = getEveHits();
     auto digits = getEveDigits();
     //auto clusters = getEveClusters();
     auto tracks = getEveTracks();
     delete mEvent;
     mEvent = new TEveElementList(ename.c_str());
+    mEvent->AddElement(hits);
     mEvent->AddElement(digits);
     //mEvent->AddElement(clusters);
     mEvent->AddElement(tracks);
@@ -487,8 +564,10 @@ int main(int argc, char **argv)
     }
 
     int entry = 0;
+    std::string rawfile = "o2sim.root"; // should be e.g. GBTx0_Run005 - not a file per se?
+    std::string hitsfile = "o2sim.root";
     std::string digifile = "tpcdigits.root";
-    bool rawdata = false;
+    evdata.setRawData(false);
     std::string tracfile = "tpctracks.root";
     std::string inputGeom = "O2geometry.root";
 
@@ -522,15 +601,21 @@ int main(int argc, char **argv)
     TFile* file;
 
     // Data sources
-    if (rawdata) {
+    file = TFile::Open(hitsfile.data());
+    if (file && gFile->IsOpen()) {
+      evdata.setHitsTree((TTree*)gFile->Get("o2sim"));
+    } else
+      std::cerr << "\nERROR: Cannot open file: " << hitsfile << "\n\n";
+
+    if (evdata.getRawData()) {
       // TODO: Another raw file for TPC? If at all?
-//        std::ifstream* rawfile = new std::ifstream(digifile.data(), std::ifstream::binary);
-//        if (rawfile->good()) {
-//            delete rawfile;
-//            std::cout << "Running with raw digits...\n";
-//            evdata.setRawReader(digifile.data());
-//        } else
-//            std::cerr << "\nERROR: Cannot open file: " << digifile << "\n\n";
+        std::ifstream* rawfileStream = new std::ifstream(rawfile.data(), std::ifstream::binary);
+        if (rawfileStream->good()) {
+            delete rawfileStream;
+            std::cout << "Running with raw digits...\n";
+            evdata.setRawReader(rawfile.data());
+        } else
+            std::cerr << "\nERROR: Cannot open file: " << rawfile << "\n\n";
     } else {
         file = TFile::Open(digifile.data());
         if (file && gFile->IsOpen()) {

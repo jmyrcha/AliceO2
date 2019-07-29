@@ -26,4 +26,4 @@ o2_add_executable(eve
 o2_add_executable(tpc-eve
         SOURCES src/tpc_main.cxx
         PUBLIC_LINK_LIBRARIES O2::EventVisualisationView
-		O2::TPCBase O2::TPCReconstruction)
+		O2::TPCBase O2::TPCReconstruction O2::TPCSimulation)
