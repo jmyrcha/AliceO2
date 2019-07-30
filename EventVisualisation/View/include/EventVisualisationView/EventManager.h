@@ -24,6 +24,8 @@
 
 #include <string>
 #include <EventVisualisationDataConverter/VisualisationEvent.h>
+#include <EventVisualisationBase/DataInterpreter.h>
+#include <EventVisualisationBase/DataReader.h>
 
 namespace o2  {
 namespace event_visualisation {
@@ -73,10 +75,12 @@ public:
     void RemoveNewEventCommand(const TString& cmd) override ;
     void ClearNewEventCommands() override ;
 
-    void DropEvent();
+    void registerDetector(DataReader *reader, DataInterpreter *interpreter, EVisualisationGroup type);
 
 private:
     static EventManager *instance;
+    DataInterpreter* dataInterpreters[EVisualisationGroup::NvisualisationGroups];
+    DataReader* dataReaders[EVisualisationGroup::NvisualisationGroups];
     EDataSource mCurrentDataSourceType = EDataSource::SourceOffline;
     DataSource *dataSource = nullptr;
     TString dataPath = "";

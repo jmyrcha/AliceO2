@@ -41,7 +41,13 @@ using namespace std;
 namespace o2 {
     namespace event_visualisation {
 
-        DataInterpreterITS::DataInterpreterITS() = default;
+        DataInterpreterITS::DataInterpreterITS()
+        {
+            //Prepare coordinate translator
+            base::GeometryManager::loadGeometry("O2geometry.root", "FAIRGeom");
+            its::GeometryTGeo* gman = its::GeometryTGeo::Instance();
+            gman->fillMatrixCache(o2::utils::bit2Mask(o2::TransformType::T2GRot));
+        }
 
         DataInterpreterITS::~DataInterpreterITS() = default;
 
@@ -49,14 +55,11 @@ namespace o2 {
             TList *list = (TList*)data;
             Int_t event = ((TVector2*)list->At(2))->X();
 
-            //Prepare coordinate translator
-            base::GeometryManager::loadGeometry("O2geometry.root", "FAIRGeom");
-            its::GeometryTGeo* gman = its::GeometryTGeo::Instance();
-            gman->fillMatrixCache(o2::utils::bit2Mask(o2::TransformType::T2GRot));
-
             auto ret_event = std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0);
 
             if(type == Clusters) {
+                its::GeometryTGeo* gman = its::GeometryTGeo::Instance();
+
                 TFile *clustFile = (TFile*)list->At(1);
                 TTree *clusters = (TTree*)clustFile->Get("o2sim");
                 TTree *clustersRof = (TTree*)clustFile->Get("ITSClustersROF");
@@ -129,7 +132,7 @@ namespace o2 {
                 first = currentTrackROF.getROFEntry().getIndex();
                 last = first + currentTrackROF.getNROFEntries();
 
-                gsl::span<o2::its::TrackITS> mTracks = gsl::make_span(&(*trkArr)[first], last - first);
+                gsl::span<its::TrackITS> mTracks = gsl::make_span(&(*trkArr)[first], last - first);
 
                 for (const auto& rec : mTracks) {
                     std::array<float, 3> p;
@@ -153,6 +156,7 @@ namespace o2 {
                         eve_track->GetPoint(i, x, y, z);
                         track.addPolyPoint(x, y, z);
                     }
+                    delete eve_track;
 
 //                    TEvePointSet* tpoints = new TEvePointSet("tclusters");
 //                    int nc = rec.getNumberOfClusters();
@@ -165,6 +169,7 @@ namespace o2 {
 
                     ret_event->addTrack(track);
                 }
+                delete trackList;
             }
             return ret_event;
         }

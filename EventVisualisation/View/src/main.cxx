@@ -112,7 +112,6 @@ int main(int argc, char **argv) {
     // Start the application
     app->Run(kTRUE);
 
-    DataInterpreter::removeInstances();
     // Terminate application
     TEveManager::Terminate();
     app->Terminate(0);

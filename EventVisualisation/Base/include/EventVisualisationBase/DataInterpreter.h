@@ -31,26 +31,14 @@ namespace event_visualisation {
 class VisualisationEvent;
 
 class DataInterpreter {
-private:
-  static DataInterpreter* instance[EVisualisationGroup::NvisualisationGroups];
 public:
   // Default constructor
   DataInterpreter();
   // Virtual destructor
   virtual ~DataInterpreter() = default;
-  static void removeInstances() {
-    for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; i++)
-      if(instance[i] != nullptr) {
-        delete instance[i];
-        instance[i] = nullptr;
-      }
-  }
   
   // Should return visualisation objects for required data type
   virtual std::unique_ptr<VisualisationEvent> interpretDataForType(TObject* data, EVisualisationDataType type) = 0;
-
-  static DataInterpreter* getInstance(EVisualisationGroup type) { return instance[type];}
-  static void setInstance(DataInterpreter* instance, EVisualisationGroup type) { DataInterpreter::instance[type] = instance;}
 };
   
 }
