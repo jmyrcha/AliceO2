@@ -47,6 +47,11 @@ EventManager& EventManager::getInstance()
 }
 
 EventManager::EventManager() : TEveEventManager("Event", "") {
+    for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; i++)
+    {
+        dataInterpreters[i] = nullptr;
+        dataReaders[i] = nullptr;
+    }
 }
 
 void EventManager::Open() {
@@ -54,18 +59,16 @@ void EventManager::Open() {
     {
         case SourceOnline:
             break;
-        case SourceOffline: {
+        case SourceOffline:
+            {
               DataSourceOffline *source = new DataSourceOffline();
-              if(DataInterpreter::getInstance(EVisualisationGroup::VSD)) {
-                  DataReader *vsd = new DataReaderVSD();
-                  vsd->open();
-                  source->registerReader(vsd, EVisualisationGroup::VSD);
-              }
-              if(DataInterpreter::getInstance(EVisualisationGroup::ITS)) {
-                  DataReader *its = new DataReaderITS();
-                  its->open();
-                  source->registerReader(its, EVisualisationGroup::ITS);
-              }
+                for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; i++)
+                {
+                    if (dataInterpreters[i] != nullptr) {
+                        dataReaders[i]->open();
+                        source->registerReader(dataReaders[i], static_cast<EVisualisationGroup>(i));
+                    }
+                }
               setDataSource(source);
             }
             break;
@@ -82,7 +85,7 @@ void EventManager::GotoEvent(Int_t no) {
     this->currentEvent = no;
     MultiView::getInstance()->destroyAllEvents();
     for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; i++) {
-      DataInterpreter* interpreter = DataInterpreter::getInstance((EVisualisationGroup)i);
+      DataInterpreter* interpreter = dataInterpreters[i];
       if(interpreter) {
         TObject *data = getDataSource()->getEventData(no, (EVisualisationGroup)i);
         std::unique_ptr<VisualisationEvent> event = interpreter->interpretDataForType(data, Clusters);
@@ -122,11 +125,17 @@ void EventManager::ClearNewEventCommands() {
 }
 
 EventManager::~EventManager() {
-    instance = nullptr;
-}
+    for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; i++)
+    {
+        if(dataInterpreters[i] != nullptr) {
+            delete dataInterpreters[i];
+            delete dataReaders[i];
 
-void EventManager::DropEvent() {
-  DestroyElements();
+            dataInterpreters[i] = nullptr;
+            dataReaders[i] = nullptr;
+        }
+    }
+    instance = nullptr;
 }
 
 void EventManager::displayVisualisationEvent(VisualisationEvent &event) {
@@ -170,6 +179,12 @@ void EventManager::displayVisualisationEvent(VisualisationEvent &event) {
     if(clusterCount != 0) {
         MultiView::getInstance()->registerElement(point_list);
     }
+}
+
+void EventManager::registerDetector(DataReader *reader, DataInterpreter *interpreter, EVisualisationGroup type)
+{
+    dataReaders[type] = reader;
+    dataInterpreters[type] = interpreter;
 }
 
 }

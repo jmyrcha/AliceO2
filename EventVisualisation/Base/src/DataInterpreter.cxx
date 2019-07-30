@@ -20,8 +20,6 @@ using namespace std;
 
 namespace o2  {
 namespace event_visualisation {
-
-DataInterpreter* DataInterpreter::instance[EVisualisationGroup::NvisualisationGroups];
 DataInterpreter::DataInterpreter() = default;
 }
 }

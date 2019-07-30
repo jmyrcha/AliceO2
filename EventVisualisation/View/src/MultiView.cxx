@@ -194,7 +194,7 @@ void MultiView::registerElement(TEveElement* event) {
 }
 
 void MultiView::destroyAllEvents() {
-  gEve->GetCurrentEvent()->RemoveElements();
+  gEve->GetCurrentEvent()->DestroyElements();
   getScene(SceneRphiEvent)->DestroyElements();
   getScene(SceneZrhoEvent)->DestroyElements();
 }
