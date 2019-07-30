@@ -27,8 +27,10 @@
 #include <EventVisualisationBase/DataInterpreter.h>
 #include <EventVisualisationBase/DataReader.h>
 
-namespace o2  {
-namespace event_visualisation {
+namespace o2
+{
+namespace event_visualisation
+{
 
 /// EventManager is a singleton class managing event loading.
 ///
@@ -41,62 +43,74 @@ class DataSource;
 
 class EventManager : public TEveEventManager
 {
-public:
-    enum EDataSource{
-      SourceOnline,   ///< Online reconstruction is a source of events
-      SourceOffline,  ///< Local files are the source of events
-      SourceHLT       ///< HLT reconstruction is a source of events
-    };
+ public:
+  enum EDataSource
+  {
+    SourceOnline,   ///< Online reconstruction is a source of events
+    SourceOffline,  ///< Local files are the source of events
+    SourceHLT       ///< HLT reconstruction is a source of events
+  };
 
-    /// Returns an instance of EventManager
-    static EventManager& getInstance();
+  /// Returns an instance of EventManager
+  static EventManager& getInstance();
 
-    /// Setter of the current data source type
-    inline void setDataSourceType(EDataSource source)   { mCurrentDataSourceType = source; }
-    /// Setter of the current data source path
-    inline void setDataSourcePath(const TString& path)  { dataPath = path;}
-    /// Sets the CDB path in CCDB Manager
-    inline void setCdbPath(const TString& path)  {
-      o2::ccdb::Manager::Instance()->setDefaultStorage(path.Data());
-    }
-    Int_t getCurrentEvent() {return currentEvent;}
-    DataSource *getDataSource() {return dataSource;}
-    void setDataSource(DataSource *dataSource)          { this->dataSource = dataSource; }
+  /// Setter of the current data source type
+  inline void setDataSourceType(EDataSource source)
+  { mCurrentDataSourceType = source; }
 
-    void Open() override ;
-    void GotoEvent(Int_t /*event*/) override ;
-    void NextEvent() override ;
-    void PrevEvent() override ;
-    void Close() override ;
+  /// Setter of the current data source path
+  inline void setDataSourcePath(const TString& path)
+  { dataPath = path; }
 
-    void AfterNewEventLoaded() override;
+  /// Sets the CDB path in CCDB Manager
+  inline void setCdbPath(const TString& path)
+  {
+    o2::ccdb::Manager::Instance()->setDefaultStorage(path.Data());
+  }
 
-    void AddNewEventCommand(const TString& cmd) override ;
-    void RemoveNewEventCommand(const TString& cmd) override ;
-    void ClearNewEventCommands() override ;
+  Int_t getCurrentEvent()
+  { return currentEvent; }
 
-    void registerDetector(DataReader *reader, DataInterpreter *interpreter, EVisualisationGroup type);
+  DataSource* getDataSource()
+  { return dataSource; }
 
-private:
-    static EventManager *instance;
-    DataInterpreter* dataInterpreters[EVisualisationGroup::NvisualisationGroups];
-    DataReader* dataReaders[EVisualisationGroup::NvisualisationGroups];
-    EDataSource mCurrentDataSourceType = EDataSource::SourceOffline;
-    DataSource *dataSource = nullptr;
-    TString dataPath = "";
-    Int_t currentEvent = 0;
+  void setDataSource(DataSource* dataSource)
+  { this->dataSource = dataSource; }
 
-    /// Default constructor
-    EventManager();
-    /// Default destructor
-    ~EventManager() final;
-    /// Deleted copy constructor
-    EventManager(EventManager const&) = delete;
-    /// Deleted assignemt operator
-    void operator=(EventManager const&) = delete;
+  void Open() override;
+  void GotoEvent(Int_t /*event*/) override;
+  void NextEvent() override;
+  void PrevEvent() override;
+  void Close() override;
 
-    //Display visualisation event
-    void displayVisualisationEvent(VisualisationEvent &event);
+  void AfterNewEventLoaded() override;
+
+  void AddNewEventCommand(const TString& cmd) override;
+  void RemoveNewEventCommand(const TString& cmd) override;
+  void ClearNewEventCommands() override;
+
+  void registerDetector(DataReader* reader, DataInterpreter* interpreter, EVisualisationGroup type);
+
+ private:
+  static EventManager* instance;
+  DataInterpreter* dataInterpreters[EVisualisationGroup::NvisualisationGroups];
+  DataReader* dataReaders[EVisualisationGroup::NvisualisationGroups];
+  EDataSource mCurrentDataSourceType = EDataSource::SourceOffline;
+  DataSource* dataSource = nullptr;
+  TString dataPath = "";
+  Int_t currentEvent = 0;
+
+  /// Default constructor
+  EventManager();
+  /// Default destructor
+  ~EventManager() final;
+  /// Deleted copy constructor
+  EventManager(EventManager const&) = delete;
+  /// Deleted assignemt operator
+  void operator=(EventManager const&) = delete;
+
+  //Display visualisation event
+  void displayVisualisationEvent(VisualisationEvent& event);
 };
 
 }

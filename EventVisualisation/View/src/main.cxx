@@ -30,23 +30,25 @@
 using namespace std;
 using namespace o2::event_visualisation;
 
-std::string printOptions(Options*o) {
+std::string printOptions(Options* o)
+{
   std::string res;
-  res.append(std::string("randomTracks: ")+(o->randomTracks?"true":"false")+"\n");
-  res.append(std::string("vds         : ")+(o->vsd?"true":"false")+"\n");
-  res.append(std::string("itc         : ")+(o->itc?"true":"false")+"\n");
+  res.append(std::string("randomTracks: ") + (o->randomTracks ? "true" : "false") + "\n");
+  res.append(std::string("vds         : ") + (o->vsd ? "true" : "false") + "\n");
+  res.append(std::string("itc         : ") + (o->itc ? "true" : "false") + "\n");
   return res;
 }
 
-Options *processCommandLine(int argc, char *argv[]) {
+Options* processCommandLine(int argc, char* argv[])
+{
   static Options options;
   int opt;
 
   // put ':' in the starting of the
   // string so that program can
   //distinguish between '?' and ':'
-  while((opt = getopt(argc, argv, ":if:rv")) != -1) {
-    switch(opt) {
+  while ((opt = getopt(argc, argv, ":if:rv")) != -1) {
+    switch (opt) {
       case 'r':
         options.randomTracks = true;
         break;
@@ -70,7 +72,7 @@ Options *processCommandLine(int argc, char *argv[]) {
 
   // optind is for the extra arguments
   // which are not parsed
-  for(; optind < argc; optind++){
+  for (; optind < argc; optind++) {
     printf("extra arguments: %s\n", argv[optind]);
     return nullptr;
   }
@@ -78,43 +80,48 @@ Options *processCommandLine(int argc, char *argv[]) {
   return &options;
 }
 
-int main(int argc, char **argv) {
-    cout<<"Welcome in O2 event visualisation tool"<<endl;
-    Options *options = processCommandLine(argc, argv);
-    if(options == nullptr)
-      exit(-1);
+int main(int argc, char** argv)
+{
+  cout << "Welcome in O2 event visualisation tool" << endl;
+  Options* options = processCommandLine(argc, argv);
+  if (options == nullptr) {
+    exit(-1);
+  }
 
-    srand(static_cast<unsigned int>(time(nullptr)));
+  srand(static_cast<unsigned int>(time(nullptr)));
 
-    TEnv settings;
-    ConfigurationManager::getInstance().getConfig(settings);
+  TEnv settings;
+  ConfigurationManager::getInstance().getConfig(settings);
 
-    std::array<const char*, 7> keys = {"Gui.DefaultFont", "Gui.MenuFont", "Gui.MenuHiFont",
-                                    "Gui.DocFixedFont", "Gui.DocPropFont", "Gui.IconFont", "Gui.StatusFont"};
-    for(const auto& key : keys) {
-        if(settings.Defined(key))
-            gEnv->SetValue(key,  settings.GetValue(key, ""));
+  std::array<const char*, 7> keys = {
+    "Gui.DefaultFont", "Gui.MenuFont", "Gui.MenuHiFont",
+    "Gui.DocFixedFont", "Gui.DocPropFont", "Gui.IconFont", "Gui.StatusFont"
+  };
+  for (const auto& key : keys) {
+    if (settings.Defined(key)) {
+      gEnv->SetValue(key, settings.GetValue(key, ""));
     }
+  }
 
-    // create ROOT application environment
-    TApplication *app = new TApplication("o2eve", &argc, argv);
-    app->Connect("TEveBrowser", "CloseWindow()", "TApplication", app, "Terminate()");
+  // create ROOT application environment
+  TApplication* app = new TApplication("o2eve", &argc, argv);
+  app->Connect("TEveBrowser", "CloseWindow()", "TApplication", app, "Terminate()");
 
-    cout<<"Initializing TEveManager"<<endl;
-    if(!TEveManager::Create(kTRUE, "FI")){
-        cout<<"FATAL -- Could not create TEveManager!!"<<endl;
-        exit(0);
-    }
+  cout << "Initializing TEveManager" << endl;
+  if (!TEveManager::Create(kTRUE, "FI")) {
+    cout << "FATAL -- Could not create TEveManager!!" << endl;
+    exit(0);
+  }
 
-    // Initialize o2 Event Visualisation
-    Initializer::setup(*options);
+  // Initialize o2 Event Visualisation
+  Initializer::setup(*options);
 
-    // Start the application
-    app->Run(kTRUE);
+  // Start the application
+  app->Run(kTRUE);
 
-    // Terminate application
-    TEveManager::Terminate();
-    app->Terminate(0);
+  // Terminate application
+  TEveManager::Terminate();
+  app->Terminate(0);
 
-    return 0;
+  return 0;
 }
