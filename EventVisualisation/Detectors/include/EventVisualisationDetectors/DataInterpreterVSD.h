@@ -41,7 +41,7 @@ private:
 
   TEveViewerList *mViewers = nullptr;  // for debug purpose
 
-  void LoadEsdTracks();
+  void LoadEsdTracks(VisualisationEvent &event);
   TEveTrackList *mTrackList = nullptr;
   TEvePointSet *mITSClusters = nullptr;
   TEvePointSet *mTPCClusters = nullptr;

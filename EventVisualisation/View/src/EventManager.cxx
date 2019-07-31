@@ -82,16 +82,33 @@ void EventManager::GotoEvent(Int_t no) {
     if(no == -1) {
         no = getDataSource()->GetEventCount()-1;
     }
+
     this->currentEvent = no;
+
     MultiView::getInstance()->destroyAllEvents();
-    for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; i++) {
-      DataInterpreter* interpreter = dataInterpreters[i];
-      if(interpreter) {
-        TObject *data = getDataSource()->getEventData(no, (EVisualisationGroup)i);
-        std::unique_ptr<VisualisationEvent> event = interpreter->interpretDataForType(data, Clusters);
-        displayVisualisationEvent(*event);
+
+    for (int i = 0; i < EVisualisationDataType::NdataTypes; ++i)
+    {
+        dataTypeLists[i] = new TEveElementList(gDataTypeNames[i].c_str());
+    }
+
+    for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; ++i) {
+      for(int dataType = 0; dataType < EVisualisationDataType::NdataTypes; ++dataType) {
+        DataInterpreter* interpreter = dataInterpreters[i];
+        if(interpreter) {
+            TObject *data = getDataSource()->getEventData(no, (EVisualisationGroup)i);
+            std::unique_ptr<VisualisationEvent> event = interpreter->interpretDataForType(data, (EVisualisationDataType)dataType);
+            displayVisualisationEvent(*event, gVisualisationGroupName[i]);
+        }
       }
     }
+
+    for (int i = 0; i < EVisualisationDataType::NdataTypes; ++i)
+    {
+        MultiView::getInstance()->registerElement(dataTypeLists[i]);
+    }
+
+    MultiView::getInstance()->redraw3D();
 }
 
 void EventManager::NextEvent() {
@@ -138,10 +155,10 @@ EventManager::~EventManager() {
     instance = nullptr;
 }
 
-void EventManager::displayVisualisationEvent(VisualisationEvent &event) {
+void EventManager::displayVisualisationEvent(VisualisationEvent &event, const std::string &detectorName) {
     size_t trackCount = event.getTrackCount();
 
-    auto *list = new TEveTrackList;
+    auto *list = new TEveTrackList(detectorName.c_str());
     list->IncDenyDestroy();
 
     for(size_t i = 0; i < trackCount; ++i) {
@@ -162,12 +179,13 @@ void EventManager::displayVisualisationEvent(VisualisationEvent &event) {
         list->AddElement(vistrack);
     }
 
-    if(trackCount != 0) {
-        MultiView::getInstance()->registerElement(list);
+    if(trackCount != 0)
+    {
+        dataTypeLists[EVisualisationDataType::ESD]->AddElement(list);
     }
 
     size_t clusterCount = event.getClusterCount();
-    auto *point_list = new TEvePointSet("clusters");
+    auto *point_list = new TEvePointSet(detectorName.c_str());
     point_list->IncDenyDestroy();
     point_list->SetMarkerColor(kBlue);
 
@@ -176,8 +194,9 @@ void EventManager::displayVisualisationEvent(VisualisationEvent &event) {
         point_list->SetNextPoint(cluster.X(), cluster.Y(), cluster.Z());
     }
 
-    if(clusterCount != 0) {
-        MultiView::getInstance()->registerElement(point_list);
+    if(clusterCount != 0)
+    {
+        dataTypeLists[EVisualisationDataType::Clusters]->AddElement(point_list);
     }
 }
 

@@ -44,7 +44,8 @@ DataInterpreterVSD::~DataInterpreterVSD() {
   }
 }
 
-    std::unique_ptr<VisualisationEvent> DataInterpreterVSD::interpretDataForType(TObject* data, EVisualisationDataType /*type*/) {
+
+std::unique_ptr<VisualisationEvent> DataInterpreterVSD::interpretDataForType(TObject* data, EVisualisationDataType type) {
   if (mVSD == nullptr)
     mVSD = new TEveVSD;
   this->DropEvent();
@@ -55,16 +56,20 @@ DataInterpreterVSD::~DataInterpreterVSD() {
 
   this->AttachEvent();
 
+  auto ret_event = std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0);
+
   // Load event data into visualization structures.
 
 //        this->LoadClusters(this->fITSClusters, "ITS", 0);
 //        this->LoadClusters(this->fTPCClusters, "TPC", 1);
 //        this->LoadClusters(this->fTRDClusters, "TRD", 2);
 //        this->LoadClusters(this->fTOFClusters, "TOF", 3);
+    if(type == ESD)
+    {
+        LoadEsdTracks(*ret_event);
+    }
 
-    this->LoadEsdTracks();
-    //return this->mTrackList;
-    return nullptr;
+    return ret_event;
 }
 
 void DataInterpreterVSD::LoadClusters(TEvePointSet *&ps, const TString &det_name, Int_t det_id) {
@@ -110,44 +115,41 @@ void DataInterpreterVSD::DropEvent() {
   mDirectory = nullptr;
 }
 
-void DataInterpreterVSD::LoadEsdTracks() {
-  // Read reconstructed tracks from current event.
+void DataInterpreterVSD::LoadEsdTracks(VisualisationEvent &event) {
 
-  if (mTrackList == nullptr) {
-    mTrackList = new TEveTrackList("ESD Tracks");
-    mTrackList->SetMainColor(6);
-    mTrackList->SetMarkerColor(kYellow);
-    mTrackList->SetMarkerStyle(4);
-    mTrackList->SetMarkerSize(0.5);
-    mTrackList->SetLineWidth(1);
+    TEveTrackList *list = new TEveTrackList();
+    TEveTrackPropagator *trkProp = list->GetPropagator();
+    trkProp->SetMagField(0.5);
+    trkProp->SetStepper(TEveTrackPropagator::kRungeKutta);
 
-    mTrackList->IncDenyDestroy();
-  } else {
-    mTrackList->DestroyElements();
+    Int_t nTracks = mVSD->fTreeR->GetEntries();
+    for (Int_t n = 0; n < nTracks; n++)
+    {
+        mVSD->fTreeR->GetEntry(n);
+
+        auto *eve_track = new TEveTrack(&mVSD->fR, trkProp);
+        eve_track->MakeTrack();
+
+        auto start = eve_track->GetLineStart();
+        auto end = eve_track->GetLineEnd();
+        auto p = eve_track->GetMomentum();
+
+        double track_start[3] = {start.fX, start.fY, start.fZ};
+        double track_end[3] = {end.fX, end.fY, end.fZ};
+        double track_p[3] = {p[0], p[1], p[2]};
+
+        VisualisationTrack track(eve_track->GetCharge(), 0.0, 0, 0, 0.0, 0.0, track_start, track_end, track_p, 0, 0.0, 0.0, 0.0, 0);
+
+        for(Int_t i = 0; i < eve_track->GetN(); ++i) {
+            Float_t x,y,z;
+            eve_track->GetPoint(i, x, y, z);
+            track.addPolyPoint(x, y, z);
+        }
+        delete eve_track;
+
+        event.addTrack(track);
   }
-
-  TEveTrackPropagator *trkProp = mTrackList->GetPropagator();
-  // !!!! Need to store field on file !!!!
-  // Can store TEveMagField ?
-  trkProp->SetMagField(0.5);
-  trkProp->SetStepper(TEveTrackPropagator::kRungeKutta);
-
-  Int_t nTracks = mVSD->fTreeR->GetEntries();
-
-
-  for (Int_t n = 0; n < nTracks; n++) {
-    mVSD->fTreeR->GetEntry(n);
-
-    auto *track = new TEveTrack(&mVSD->fR, trkProp);
-
-    track->SetAttLineAttMarker(mTrackList);
-    track->SetName(Form("ESD Track %d", mVSD->fR.fIndex));
-    track->SetStdTitle();
-    track->SetAttLineAttMarker(mTrackList);
-    mTrackList->AddElement(track);
-  }
-
-  mTrackList->MakeTracks();
+  delete list;
 }
 
 }

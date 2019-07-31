@@ -81,6 +81,7 @@ private:
     static EventManager *instance;
     DataInterpreter* dataInterpreters[EVisualisationGroup::NvisualisationGroups];
     DataReader* dataReaders[EVisualisationGroup::NvisualisationGroups];
+    TEveElementList* dataTypeLists[EVisualisationDataType::NdataTypes];
     EDataSource mCurrentDataSourceType = EDataSource::SourceOffline;
     DataSource *dataSource = nullptr;
     TString dataPath = "";
@@ -96,7 +97,7 @@ private:
     void operator=(EventManager const&) = delete;
 
     //Display visualisation event
-    void displayVisualisationEvent(VisualisationEvent &event);
+    void displayVisualisationEvent(VisualisationEvent &event, const std::string &detectorName);
 };
 
 }

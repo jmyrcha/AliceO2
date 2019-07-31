@@ -85,8 +85,8 @@ class MultiView
     void registerEvent(TEveElement* event) { return registerElement(event); }
     /// Removes all shapes representing current event
     void destroyAllEvents();
-  
-    void drawRandomEvent();
+
+    void redraw3D();
   private:
     /// Default constructor
     MultiView();

@@ -189,14 +189,19 @@ void MultiView::registerElement(TEveElement* event) {
   gEve->GetCurrentEvent()->AddElement(event);
   getProjection(ProjectionRphi)->ImportElements(event,getScene(SceneRphiEvent));
   getProjection(ProjectionZrho)->ImportElements(event,getScene(SceneZrhoEvent));
-  
-  gEve->Redraw3D();
+
+  redraw3D();
 }
 
 void MultiView::destroyAllEvents() {
   gEve->GetCurrentEvent()->DestroyElements();
   getScene(SceneRphiEvent)->DestroyElements();
   getScene(SceneZrhoEvent)->DestroyElements();
+}
+
+void MultiView::redraw3D()
+{
+    gEve->Redraw3D();
 }
 }
 }

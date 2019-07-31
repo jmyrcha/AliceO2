@@ -33,7 +33,6 @@ enum EVisualisationGroup {
   TOF,
   TPC,
   TRD,
-  RND,
   VSD,
   NvisualisationGroups
 };
@@ -49,7 +48,7 @@ const std::string gVisualisationGroupName[NvisualisationGroups] = {
   "TOF",
   "TPC",
   "TRD",
-  "RND"
+  "VSD"
 };
   
 enum EVisualisationDataType{
