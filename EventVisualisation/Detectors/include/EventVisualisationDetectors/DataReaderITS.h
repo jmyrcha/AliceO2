@@ -24,21 +24,14 @@ namespace o2 {
 
         class DataReaderITS : public DataReader {
         private:
-            Int_t fMaxEv;
-            TFile *clusFile;
-            TFile *tracFile;
+            Int_t mMaxEv;
+            TFile *mClusFile;
+            TFile *mTracFile;
         public:
             DataReaderITS();
             void open() override;
             Int_t GetEventCount() override;
-
-
-            /*
-            zwraca TLista
-             */
-
-
-            TObject* getEventData(int no) override;
+            TObject* getEventData(int no) override;     /// returns a TList
         };
 
     }

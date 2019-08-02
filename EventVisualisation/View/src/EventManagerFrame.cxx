@@ -23,7 +23,6 @@
 #include <Rtypes.h>
 #include <iostream>
 
-
 ClassImp(o2::event_visualisation::EventManagerFrame)
 
 namespace o2
@@ -71,7 +70,6 @@ EventManagerFrame::EventManagerFrame(o2::event_visualisation::EventManager& even
     mClusters = EventManagerFrame::makeCheckButton(f, "Clusters",2 * width);
     mClusters->SetState(kButtonDown);
     mClusters->Connect("Clicked()", cls, this, "DoClusters()");
-
   }
   SetCleanup(kDeepCleanup);
   Layout();
@@ -93,7 +91,6 @@ TGTextButton* EventManagerFrame::makeButton(TGCompositeFrame* p, const char* txt
   return b;
 }
 
-
 TGCheckButton* EventManagerFrame::makeCheckButton(TGCompositeFrame* p, const char* txt,
                                             Int_t width, Int_t lo, Int_t ro, Int_t to, Int_t bo)
 {
@@ -106,7 +103,6 @@ TGCheckButton* EventManagerFrame::makeCheckButton(TGCompositeFrame* p, const cha
   p->AddFrame(b, new TGLayoutHints(kLHintsNormal, lo, ro, to, bo));
   return b;
 }
-
 
 void EventManagerFrame::DoFirstEvent()
 {
@@ -139,7 +135,6 @@ void EventManagerFrame::DoSetEvent()
 void EventManagerFrame::DoScreenshot()
 {
 }
-
 
 void EventManagerFrame::DoR2Geometry()
 {

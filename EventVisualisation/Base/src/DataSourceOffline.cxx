@@ -31,19 +31,19 @@
 namespace o2 {
 namespace event_visualisation {
 
-DataReader* DataSourceOffline::instance[EVisualisationGroup::NvisualisationGroups];
+DataReader* DataSourceOffline::sInstance[EVisualisationGroup::NvisualisationGroups];
 
 TObject* DataSourceOffline::getEventData(int no, EVisualisationGroup purpose) {
-  if( instance[purpose] == nullptr)
+  if( sInstance[purpose] == nullptr)
     return nullptr;
-  return instance[purpose]->getEventData(no);
+  return sInstance[purpose]->getEventData(no);
 }
 
 
 int DataSourceOffline::GetEventCount() {
   for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; i++) {
-    if (instance[i] != nullptr)
-      return instance[i]->GetEventCount();
+    if (sInstance[i] != nullptr)
+      return sInstance[i]->GetEventCount();
   }
   return 1;
 };

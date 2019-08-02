@@ -150,7 +150,6 @@ void DataInterpreterVSD::LoadEsdTracks(VisualisationEvent &event) {
         event.addTrack(track);
     }
     delete list;
-
 }
 
 }

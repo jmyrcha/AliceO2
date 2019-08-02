@@ -29,20 +29,20 @@ namespace event_visualisation {
         TString clusterFile = "o2clus_its.root";
         TString trackFile = "o2trac_its.root";
 
-        this->tracFile = TFile::Open(trackFile);
-        this->clusFile = TFile::Open(clusterFile);
+        this->mTracFile = TFile::Open(trackFile);
+        this->mClusFile = TFile::Open(clusterFile);
 
-        TTree* roft = (TTree*)this->tracFile->Get("ITSTracksROF");
-        TTree* rofc = (TTree*)this->clusFile->Get("ITSClustersROF");
+        TTree* roft = (TTree*)this->mTracFile->Get("ITSTracksROF");
+        TTree* rofc = (TTree*)this->mClusFile->Get("ITSClustersROF");
 
         if(roft != nullptr && rofc != nullptr) {
 
             //TTree *tracks = (TTree*)this->tracFile->Get("o2sim");
             // temporary number of readout frames as number of events
-            TTree *tracksRof = (TTree*)this->tracFile->Get("ITSTracksROF");
+            TTree *tracksRof = (TTree*)this->mTracFile->Get("ITSTracksROF");
 
             //TTree *clusters = (TTree*)this->clusFile->Get("o2sim");
-            TTree *clustersRof = (TTree*)this->clusFile->Get("ITSClustersROF");
+            TTree *clustersRof = (TTree*)this->mClusFile->Get("ITSClustersROF");
 
             //Read all track RO frames to a buffer to count number of elements
 
@@ -57,7 +57,7 @@ namespace event_visualisation {
 
 
             if(trackROFrames->size() == clusterROFrames->size()) {
-                fMaxEv = trackROFrames->size();
+              mMaxEv = trackROFrames->size();
             } else {
                 Error("DataReaderITS", "Inconsistent number of readout frames in files");
                 exit(1);
@@ -66,14 +66,14 @@ namespace event_visualisation {
     }
 
     Int_t DataReaderITS::GetEventCount() {
-        return fMaxEv;
+        return mMaxEv;
     }
 
     TObject *DataReaderITS::getEventData(int no) {
         /// FIXME: Redesign the data reader class
         TList *list = new TList();
-        list->Add(this->tracFile);
-        list->Add(this->clusFile);
+        list->Add(this->mTracFile);
+        list->Add(this->mClusFile);
         TVector2 *v = new TVector2(no, 0);
         list->Add(v);
         return list;

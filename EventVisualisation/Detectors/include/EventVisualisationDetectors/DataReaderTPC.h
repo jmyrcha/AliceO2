@@ -21,12 +21,11 @@
 namespace o2 {
     namespace event_visualisation {
 
-
         class DataReaderTPC : public DataReader {
         private:
-            Int_t fMaxEv;
-            TFile *clusFile;
-            TFile *tracFile;
+            Int_t mMaxEv;
+            TFile *mClusFile;
+            TFile *mTracFile;
         public:
             DataReaderTPC();
             void open() override;

@@ -45,7 +45,6 @@ public:
     ~EventManagerFrame() override = default;
     ClassDef(EventManagerFrame, 0); // GUI window for AliEveEventManager.
 
-
 public: // slots
     void DoFirstEvent();
     void DoPrevEvent();
@@ -56,7 +55,6 @@ public: // slots
     void DoR2Geometry();
     void DoR3Geometry();
     void DoClusters();
-
 };
 
 

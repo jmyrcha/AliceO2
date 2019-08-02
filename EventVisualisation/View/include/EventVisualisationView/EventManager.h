@@ -27,12 +27,10 @@
 #include <EventVisualisationBase/DataInterpreter.h>
 #include <EventVisualisationBase/DataReader.h>
 
-
 namespace o2
 {
 namespace event_visualisation
 {
-
 
 /// EventManager is a singleton class managing event loading.
 ///
@@ -57,17 +55,16 @@ public:
 
     /// Setter of the current data source type
     inline void setDataSourceType(EDataSource source)   { mCurrentDataSourceType = source; }
-    /// Setter of the current data source path
-    inline void setDataSourcePath(const TString& path)  { dataPath = path;}
+
     /// Sets the CDB path in CCDB Manager
     inline void setCdbPath(const TString& path)  {
       o2::ccdb::Manager::Instance()->setDefaultStorage(path.Data());
     }
 
-    Int_t getCurrentEvent() const {return currentEvent;}
-    DataSource *getDataSource() const {return dataSource;}
+    Int_t getCurrentEvent() const {return mCurrentEvent;}
+    DataSource *getDataSource() const {return mDataSource;}
 
-    void setDataSource(DataSource *dataSource)          { this->dataSource = dataSource; }
+    void setDataSource(DataSource *dataSource)          { this->mDataSource = dataSource; }
 
     void Open() override ;
     void GotoEvent(Int_t /*event*/) override ;
@@ -84,21 +81,19 @@ public:
     void registerDetector(DataReader *reader, DataInterpreter *interpreter, EVisualisationGroup type);
 
 private:
-    static EventManager *instance;
-    DataInterpreter* dataInterpreters[EVisualisationGroup::NvisualisationGroups];
-    DataReader* dataReaders[EVisualisationGroup::NvisualisationGroups];
-
+    static EventManager *mInstance;
+    DataInterpreter* mDataInterpreters[EVisualisationGroup::NvisualisationGroups];
+    DataReader* mDataReaders[EVisualisationGroup::NvisualisationGroups];
 
     /// store lists of visualisation element in current event (row, clusters ...)
-    TEveElementList* dataTypeLists[EVisualisationDataType::NdataTypes];
+    TEveElementList* mDataTypeLists[EVisualisationDataType::NdataTypes];
 
     /// store user request to see data for given type  (row, clusters ...)
     TEveElementList* mRequestedDataTypes[EVisualisationDataType::NdataTypes];
 
     EDataSource mCurrentDataSourceType = EDataSource::SourceOffline;
-    DataSource *dataSource = nullptr;
-    TString dataPath = "";
-    Int_t currentEvent = 0;
+    DataSource *mDataSource = nullptr;
+    Int_t mCurrentEvent = 0;
 
     /// Default constructor
     EventManager();

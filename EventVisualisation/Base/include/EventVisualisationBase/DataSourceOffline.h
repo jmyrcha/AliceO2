@@ -26,7 +26,7 @@ namespace event_visualisation {
 
 class DataSourceOffline : public DataSource {
 protected:
-    static DataReader* instance[EVisualisationGroup::NvisualisationGroups];
+    static DataReader* sInstance[EVisualisationGroup::NvisualisationGroups];
 public:
     DataSourceOffline() = default;
 
@@ -39,7 +39,7 @@ public:
     int GetEventCount() override ;
 
     void registerReader(DataReader *reader, EVisualisationGroup purpose) {
-      instance[purpose] = reader;
+      sInstance[purpose] = reader;
     }
 
     TObject* getEventData(int no, EVisualisationGroup purpose) override;

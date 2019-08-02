@@ -29,27 +29,27 @@ namespace o2  {
             TString clusterFile = "tpc-native-clusters.root";
             TString trackFile = "tpctracks.root";
 
-            this->tracFile = TFile::Open(trackFile);
-            this->clusFile = TFile::Open(clusterFile);
+            this->mTracFile = TFile::Open(trackFile);
+            this->mClusFile = TFile::Open(clusterFile);
 
-            TTree* trec = static_cast<TTree*>(this->tracFile->Get("tpcrec"));
+            TTree* trec = static_cast<TTree*>(this->mTracFile->Get("tpcrec"));
             std::vector<tpc::TrackTPC> *trackBuffer = nullptr;
 
             trec->SetBranchAddress("TPCTracks", &trackBuffer);
             trec->GetEntry(0);
 
-            fMaxEv = trackBuffer->size();
+          mMaxEv = trackBuffer->size();
         }
 
         Int_t DataReaderTPC::GetEventCount() {
-            return fMaxEv;
+            return mMaxEv;
         }
 
         TObject *DataReaderTPC::getEventData(int no) {
             /// FIXME: Redesign the data reader class
             TList *list = new TList();
-            list->Add(this->tracFile);   // firs el = otwarty plik z trackaaami
-            list->Add(this->clusFile);   // second = otwarty plik z clustrami
+            list->Add(this->mTracFile);   // firs el = otwarty plik z trackaaami
+            list->Add(this->mClusFile);   // second = otwarty plik z clustrami
             TVector2 *v = new TVector2(no, 0); // który event chcemy wczytac
 
             list->Add(v);

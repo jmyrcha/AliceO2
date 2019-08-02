@@ -52,7 +52,6 @@ namespace event_visualisation
 
 void Initializer::setup(const Options options, EventManager::EDataSource defaultDataSource)
 {
-
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);
 
@@ -64,9 +63,12 @@ void Initializer::setup(const Options options, EventManager::EDataSource default
   eventManager.setDataSourceType(defaultDataSource);
   eventManager.setCdbPath(ocdbStorage);
 
-  //eventManager.registerDetector(new DataReaderVSD(), new DataInterpreterVSD(), EVisualisationGroup::VSD);
-  eventManager.registerDetector(new DataReaderITS(), new DataInterpreterITS(), EVisualisationGroup::ITS);
-  eventManager.registerDetector(new DataReaderTPC(), new DataInterpreterTPC(), EVisualisationGroup::TPC);
+  if(options.vsd)
+    eventManager.registerDetector(new DataReaderVSD(), new DataInterpreterVSD(), EVisualisationGroup::VSD);
+  if(options.its)
+    eventManager.registerDetector(new DataReaderITS(), new DataInterpreterITS(), EVisualisationGroup::ITS);
+  if(options.tpc)
+    eventManager.registerDetector(new DataReaderTPC(), new DataInterpreterTPC(), EVisualisationGroup::TPC);
 
   eventManager.setDataSourceType(EventManager::EDataSource::SourceOffline);
   eventManager.Open();
@@ -102,8 +104,6 @@ void Initializer::setup(const Options options, EventManager::EDataSource default
 //  MultiView::getInstance()->drawRandomEvent();
   frame->DoFirstEvent();
 }
-
-
 
 void Initializer::setupGeometry()
 {
