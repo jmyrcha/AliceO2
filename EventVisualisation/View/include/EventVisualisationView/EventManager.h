@@ -27,10 +27,12 @@
 #include <EventVisualisationBase/DataInterpreter.h>
 #include <EventVisualisationBase/DataReader.h>
 
+
 namespace o2
 {
 namespace event_visualisation
 {
+
 
 /// EventManager is a singleton class managing event loading.
 ///
@@ -61,8 +63,10 @@ public:
     inline void setCdbPath(const TString& path)  {
       o2::ccdb::Manager::Instance()->setDefaultStorage(path.Data());
     }
+
     Int_t getCurrentEvent() const {return currentEvent;}
     DataSource *getDataSource() const {return dataSource;}
+
     void setDataSource(DataSource *dataSource)          { this->dataSource = dataSource; }
 
     void Open() override ;
@@ -78,17 +82,19 @@ public:
     void ClearNewEventCommands() override ;
 
     void registerDetector(DataReader *reader, DataInterpreter *interpreter, EVisualisationGroup type);
-    
+
 private:
     static EventManager *instance;
     DataInterpreter* dataInterpreters[EVisualisationGroup::NvisualisationGroups];
     DataReader* dataReaders[EVisualisationGroup::NvisualisationGroups];
+
 
     /// store lists of visualisation element in current event (row, clusters ...)
     TEveElementList* dataTypeLists[EVisualisationDataType::NdataTypes];
 
     /// store user request to see data for given type  (row, clusters ...)
     TEveElementList* mRequestedDataTypes[EVisualisationDataType::NdataTypes];
+
     EDataSource mCurrentDataSourceType = EDataSource::SourceOffline;
     DataSource *dataSource = nullptr;
     TString dataPath = "";

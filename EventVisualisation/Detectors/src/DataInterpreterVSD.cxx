@@ -116,7 +116,7 @@ void DataInterpreterVSD::DropEvent() {
 }
 
 void DataInterpreterVSD::LoadEsdTracks(VisualisationEvent &event) {
-return;
+
     TEveTrackList *list = new TEveTrackList();
     TEveTrackPropagator *trkProp = list->GetPropagator();
     trkProp->SetMagField(0.5);
@@ -150,6 +150,7 @@ return;
         event.addTrack(track);
     }
     delete list;
+
 }
 
 }

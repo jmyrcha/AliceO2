@@ -32,9 +32,11 @@ namespace o2 {
             void open() override;
             Int_t GetEventCount() override;
 
+
             /*
             zwraca TLista
              */
+
 
             TObject* getEventData(int no) override;
         };

@@ -14,6 +14,7 @@
 /// \author julian.myrcha@cern.ch
 /// \author p.nowakowski@cern.ch
 
+
 #include "EventVisualisationView/EventManager.h"
 #include "EventVisualisationDataConverter/VisualisationEvent.h"
 #include "EventVisualisationBase/ConfigurationManager.h"
@@ -35,6 +36,7 @@
 #include <EventVisualisationView/MultiView.h>
 
 using namespace std;
+
 
 namespace o2
 {
@@ -152,72 +154,70 @@ void EventManager::ClearNewEventCommands()
 }
 
 
+
 EventManager::~EventManager() {
     for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; i++)
     {
         if(dataInterpreters[i] != nullptr) {
             delete dataInterpreters[i];
-            assert(dataReaders[i] != nullptr);
             delete dataReaders[i];
 
-      dataInterpreters[i] = nullptr;
-      dataReaders[i] = nullptr;
+            dataInterpreters[i] = nullptr;
+            dataReaders[i] = nullptr;
+        }
     }
-  }
-  instance = nullptr;
+    instance = nullptr;
 }
-
 
 void EventManager::displayVisualisationEvent(VisualisationEvent &event, const std::string &detectorName) {
-  size_t trackCount = event.getTrackCount();
+    size_t trackCount = event.getTrackCount();
 
-  auto *list = new TEveTrackList(detectorName.c_str());
-  list->IncDenyDestroy();
+    auto *list = new TEveTrackList(detectorName.c_str());
+    list->IncDenyDestroy();
 
-  for(size_t i = 0; i < trackCount; ++i) {
-    VisualisationTrack track = event.getTrack(i);
-    TEveRecTrackD t;
-    double *p = track.getMomentum();
-    t.fP = { p[0], p[1], p[2] };
-    t.fSign = track.getCharge() > 0 ? 1 : -1;
-    auto* vistrack = new TEveTrack(&t, &TEveTrackPropagator::fgDefault);
-    vistrack->SetLineColor(kMagenta);
-    size_t pointCount = track.getPointCount();
-    vistrack->Reset(pointCount);
+    for(size_t i = 0; i < trackCount; ++i) {
+        VisualisationTrack track = event.getTrack(i);
+        TEveRecTrackD t;
+        double *p = track.getMomentum();
+        t.fP = { p[0], p[1], p[2] };
+        t.fSign = track.getCharge() > 0 ? 1 : -1;
+        auto* vistrack = new TEveTrack(&t, &TEveTrackPropagator::fgDefault);
+        vistrack->SetLineColor(kMagenta);
+        size_t pointCount = track.getPointCount();
+        vistrack->Reset(pointCount);
 
-    for(size_t j = 0; j < pointCount; ++j) {
-      auto point = track.getPoint(j);
-      vistrack->SetNextPoint(point[0], point[1], point[2]);
+        for(size_t j = 0; j < pointCount; ++j) {
+            auto point = track.getPoint(j);
+            vistrack->SetNextPoint(point[0], point[1], point[2]);
+        }
+        list->AddElement(vistrack);
     }
-    list->AddElement(vistrack);
-  }
 
-  if(trackCount != 0)
-  {
-    dataTypeLists[EVisualisationDataType::ESD]->AddElement(list);
-  }
+    if(trackCount != 0)
+    {
+        dataTypeLists[EVisualisationDataType::ESD]->AddElement(list);
+    }
 
-  size_t clusterCount = event.getClusterCount();
-  auto *point_list = new TEvePointSet(detectorName.c_str());
-  point_list->IncDenyDestroy();
-  point_list->SetMarkerColor(kBlue);
+    size_t clusterCount = event.getClusterCount();
+    auto *point_list = new TEvePointSet(detectorName.c_str());
+    point_list->IncDenyDestroy();
+    point_list->SetMarkerColor(kBlue);
 
-  for(size_t i = 0; i < clusterCount; ++i) {
-    VisualisationCluster cluster = event.getCluster(i);
-    point_list->SetNextPoint(cluster.X(), cluster.Y(), cluster.Z());
-  }
+    for(size_t i = 0; i < clusterCount; ++i) {
+        VisualisationCluster cluster = event.getCluster(i);
+        point_list->SetNextPoint(cluster.X(), cluster.Y(), cluster.Z());
+    }
 
-  if(clusterCount != 0)
-  {
-    dataTypeLists[EVisualisationDataType::Clusters]->AddElement(point_list);
-  }
+    if(clusterCount != 0)
+    {
+        dataTypeLists[EVisualisationDataType::Clusters]->AddElement(point_list);
+    }
 }
 
-void
-EventManager::registerDetector(DataReader* reader, DataInterpreter* interpreter, EVisualisationGroup type)
+void EventManager::registerDetector(DataReader *reader, DataInterpreter *interpreter, EVisualisationGroup type)
 {
-  dataReaders[type] = reader;
-  dataInterpreters[type] = interpreter;
+    dataReaders[type] = reader;
+    dataInterpreters[type] = interpreter;
 }
 
 }

@@ -52,6 +52,7 @@ namespace event_visualisation
 
 void Initializer::setup(const Options options, EventManager::EDataSource defaultDataSource)
 {
+
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);
 
@@ -63,7 +64,7 @@ void Initializer::setup(const Options options, EventManager::EDataSource default
   eventManager.setDataSourceType(defaultDataSource);
   eventManager.setCdbPath(ocdbStorage);
 
-  eventManager.registerDetector(new DataReaderVSD(), new DataInterpreterVSD(), EVisualisationGroup::VSD);
+  //eventManager.registerDetector(new DataReaderVSD(), new DataInterpreterVSD(), EVisualisationGroup::VSD);
   eventManager.registerDetector(new DataReaderITS(), new DataInterpreterITS(), EVisualisationGroup::ITS);
   eventManager.registerDetector(new DataReaderTPC(), new DataInterpreterTPC(), EVisualisationGroup::TPC);
 
@@ -83,7 +84,7 @@ void Initializer::setup(const Options options, EventManager::EDataSource default
 
   browser->StartEmbedding(TRootBrowser::kBottom);
   EventManagerFrame* frame = new EventManagerFrame(eventManager);
-  browser->StopEmbedding("EventCtrl Balbinka");
+  browser->StopEmbedding("EventCtrl");
 
   if (fullscreen) {
     ((TGWindow*) gEve->GetBrowser()->GetTabLeft()->GetParent())->Resize(1, 0);
@@ -101,6 +102,7 @@ void Initializer::setup(const Options options, EventManager::EDataSource default
 //  MultiView::getInstance()->drawRandomEvent();
   frame->DoFirstEvent();
 }
+
 
 
 void Initializer::setupGeometry()
@@ -169,6 +171,7 @@ void Initializer::setupBackground()
 
   for (int viewIter = 0; viewIter < MultiView::NumberOfViews; ++viewIter) {
     TEveViewer* view = MultiView::getInstance()->getView(static_cast<MultiView::EViews>(viewIter));
+
     view->GetGLViewer()->SetClearColor(col);
   }
 }

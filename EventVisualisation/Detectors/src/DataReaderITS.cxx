@@ -36,6 +36,7 @@ namespace event_visualisation {
         TTree* rofc = (TTree*)this->clusFile->Get("ITSClustersROF");
 
         if(roft != nullptr && rofc != nullptr) {
+
             //TTree *tracks = (TTree*)this->tracFile->Get("o2sim");
             // temporary number of readout frames as number of events
             TTree *tracksRof = (TTree*)this->tracFile->Get("ITSTracksROF");
@@ -44,6 +45,7 @@ namespace event_visualisation {
             TTree *clustersRof = (TTree*)this->clusFile->Get("ITSClustersROF");
 
             //Read all track RO frames to a buffer to count number of elements
+
             std::vector<o2::itsmft::ROFRecord> *trackROFrames = nullptr;
             tracksRof->SetBranchAddress("ITSTracksROF", &trackROFrames);
             tracksRof->GetEntry(0);

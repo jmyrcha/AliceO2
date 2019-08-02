@@ -32,16 +32,19 @@ class EventManagerFrame : public TGMainFrame {
 private:
     static TGTextButton* makeButton(TGCompositeFrame* p, const char* txt, Int_t width=0,
                               Int_t lo=0, Int_t ro=0, Int_t to=0, Int_t bo=0);
+
     static TGCheckButton* makeCheckButton(TGCompositeFrame* p, const char* txt, Int_t width=0,
                                   Int_t lo=0, Int_t ro=0, Int_t to=0, Int_t bo=0);
 protected:
     o2::event_visualisation::EventManager   *mEventManager;            // Model object.
     TGNumberEntry        *mEventId;               // Display/edit current event id
     TGCheckButton        *mClusters;
+
 public:
     EventManagerFrame(o2::event_visualisation::EventManager& eventManager);
     ~EventManagerFrame() override = default;
     ClassDef(EventManagerFrame, 0); // GUI window for AliEveEventManager.
+
 
 public: // slots
     void DoFirstEvent();
@@ -53,6 +56,7 @@ public: // slots
     void DoR2Geometry();
     void DoR3Geometry();
     void DoClusters();
+
 };
 
 

@@ -51,6 +51,7 @@ namespace o2  {
             list->Add(this->tracFile);   // firs el = otwarty plik z trackaaami
             list->Add(this->clusFile);   // second = otwarty plik z clustrami
             TVector2 *v = new TVector2(no, 0); // który event chcemy wczytac
+
             list->Add(v);
             return list;
         }

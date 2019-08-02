@@ -43,7 +43,6 @@ DataReaderVSD::~DataReaderVSD()  {
   }
 
   if(mFile) {
-    assert(mFile != nullptr);
     mFile->Close();
     delete mFile;
     mFile = nullptr;
