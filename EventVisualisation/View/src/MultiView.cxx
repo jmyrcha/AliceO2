@@ -201,7 +201,7 @@ void MultiView::destroyAllEvents() {
 
 void MultiView::redraw3D()
 {
-    gEve->Redraw3D();
+    gEve->DoRedraw3D();
 }
 }
 }
