@@ -33,7 +33,6 @@ class DataReaderVSD : public DataReader {
     Int_t mMaxEv, mCurEv;
 
 public:
-    //Int_t GetEventCount() override { return mEvDirKeys->GetEntriesFast(); };
     int GetEventCount() override { return mEvDirKeys.size(); };
     DataReaderVSD();
     ~DataReaderVSD() override;

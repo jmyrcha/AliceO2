@@ -34,13 +34,13 @@ DataReaderVSD::DataReaderVSD()
 
 
 DataReaderVSD::~DataReaderVSD()  {
-  if (mEvDirKeys.size() > 0) {
-    for(auto obj:mEvDirKeys) {
-      assert(obj != nullptr);
-      delete obj;
-    }
-    mEvDirKeys.clear();
-  }
+//  if (mEvDirKeys.size() > 0) {
+//    for(auto obj:mEvDirKeys) {
+//      assert(obj != nullptr);
+//      delete obj;
+//    }
+//    mEvDirKeys.clear();
+//  }
 
   if(mFile) {
     mFile->Close();

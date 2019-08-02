@@ -48,7 +48,7 @@ Options* processCommandLine(int argc, char* argv[])
   // put ':' in the starting of the
   // string so that program can
   //distinguish between '?' and ':'
-  while ((opt = getopt(argc, argv, ":if:rv")) != -1) {
+  while ((opt = getopt(argc, argv, ":itf:rv")) != -1) {
     switch (opt) {
       case 'r':
         options.randomTracks = true;
