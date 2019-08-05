@@ -8,9 +8,19 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-/// \file Param.cxx
-/// \brief Implementation file for parameters to make code checker happy
-///
-/// \author Ole Schmidt, ole.schmidt@cern.ch
+#ifndef STEER_DIGITIZERWORKFLOW_PHOSDIGITIZER_H_
+#define STEER_DIGITIZERWORKFLOW_PHOSDIGITIZER_H_
 
-#include "SpacePoints/Param.h"
+#include "Framework/DataProcessorSpec.h"
+
+namespace o2
+{
+namespace phos
+{
+
+o2::framework::DataProcessorSpec getPHOSDigitizerSpec(int channel);
+
+} // end namespace phos
+} // end namespace o2
+
+#endif /* STEER_DIGITIZERWORKFLOW_PHOSDIGITIZER_H_ */
