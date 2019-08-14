@@ -64,9 +64,9 @@ using namespace o2::event_visualisation;
 #include "DataFormatsTPC/ClusterNative.h"
 #include "DataFormatsTPC/ClusterNativeHelper.h"
 #include "DataFormatsTPC/TrackTPC.h"
-//#include "DetectorsCommonDataFormats/DetID.h"
-//#include "CommonDataFormat/InteractionRecord.h"
+#include "TPCSimulation/SAMPAProcessing.h"
 #include "TGenericClassInfo.h"
+#include "TPCBase/CDBInterface.h"
 
 using namespace o2::tpc;
 
@@ -387,6 +387,7 @@ TEveElement* Data::getEveHits()
   const auto& mapper = Mapper::instance();
   TEvePointSet* hits = new TEvePointSet("hits");
   hits->SetMarkerColor(kYellow);
+  hits->SetMarkerSize(0.2);
 
   for(int i = 0; i < mHits.size(); i++) {
     for (const auto& hv : mHits[i]) {
@@ -401,20 +402,24 @@ TEveElement* Data::getEveHits()
 
 TEveElement* Data::getEveDigits()
 {
+    CDBInterface::instance().setUseDefaults();
     const auto& mapper = Mapper::instance();
+    SAMPAProcessing& sampa = SAMPAProcessing::instance();
     TEvePointSet* digits = new TEvePointSet("digits");
     digits->SetMarkerColor(kBlue);
+    digits->SetMarkerSize(0.2);
 
     for(int i = 0; i < mDigits.size(); i++) {
       for (const auto& d : mDigits[i]) {
         const auto pad = mapper.globalPadNumber(PadPos(d.getRow(),
                                                        d.getPad()));
-        const LocalPosition3D localXYZ(mapper.padCentre(pad).X(), mapper.padCentre(pad).Y(), d.getTimeStamp());
-        //const auto& localXYZ = mapper.padCentre(pad);
-        const auto globalXYZ = mapper.LocalToGlobal(localXYZ,
-                                                    CRU(d.getCRU()).sector());
-        // TODO: One needs event time0 to get z-coordinate
-        digits->SetNextPoint(globalXYZ.X(), globalXYZ.Y(), globalXYZ.Z());
+        const CRU cru(d.getCRU());
+        float z = sampa.getZfromTimeBin(d.getTimeStamp(), cru.side());
+
+        const auto& localXYZ = mapper.padCentre(pad);
+        const auto globalXYZ = mapper.LocalToGlobal(localXYZ, cru.sector());
+        // TODO: One needs event time0 to get proper z-coordinate
+        digits->SetNextPoint(globalXYZ.X(), globalXYZ.Y(), z);
       }
     }
     return digits;
@@ -422,18 +427,25 @@ TEveElement* Data::getEveDigits()
 
 TEveElement* Data::getEveClusters()
 {
+    CDBInterface::instance().setUseDefaults();
+    SAMPAProcessing& sampa = SAMPAProcessing::instance();
     const auto& mapper = Mapper::instance();
     TEvePointSet* clusters = new TEvePointSet("clusters");
     clusters->SetMarkerColor(kRed);
+    clusters->SetMarkerSize(0.2);
+
     const auto& clusterRefs = mClusterIndexStruct->clusters;
     for(int sector = 0; sector < o2::tpc::Constants::MAXSECTOR; sector++) {
+      Sector sec(sector);
       for(int row = 0; row < o2::tpc::Constants::MAXGLOBALPADROW; row++) {
         const auto& c = clusterRefs[sector][row];
+        float z = sampa.getZfromTimeBin(c->getTime(), sec.side());
 
         const auto pad = mapper.globalPadNumber(PadPos(row, c->getPad()));
-        const LocalPosition3D localXYZ(mapper.padCentre(pad).X(), mapper.padCentre(pad).Y(), c->getTime());
+        const auto& localXYZ = mapper.padCentre(pad);
         const auto globalXYZ = mapper.LocalToGlobal(localXYZ, sector);
-        clusters->SetNextPoint(globalXYZ.X(), globalXYZ.Y(), globalXYZ.Z());
+        // TODO: One needs event time0 to get proper z-coordinate
+        clusters->SetNextPoint(globalXYZ.X(), globalXYZ.Y(), z);
       }
     }
     return clusters;
@@ -441,6 +453,8 @@ TEveElement* Data::getEveClusters()
 
 TEveElement* Data::getEveTracks()
 {
+    CDBInterface::instance().setUseDefaults();
+    SAMPAProcessing& sampa = SAMPAProcessing::instance();
     const auto& mapper = Mapper::instance();
     TEveTrackList* tracks = new TEveTrackList("tracks");
     auto prop = tracks->GetPropagator();
@@ -458,16 +472,22 @@ TEveElement* Data::getEveTracks()
 
         TEvePointSet* tpoints = new TEvePointSet("tclusters");
         tpoints->SetMarkerColor(kGreen);
+        tpoints->SetMarkerSize(0.2);
+
         int nc = rec.getNClusterReferences();
         while (nc--) {
             uint8_t sector, row;
             uint32_t clusterIndexInRow;
             rec.getClusterReference(nc, sector, row, clusterIndexInRow);
             const auto& cl = rec.getCluster(nc, *mClusterIndexStruct, sector, row);
+            Sector sec(sector);
             const auto pad = mapper.globalPadNumber(PadPos(row, cl.getPad()));
-            const LocalPosition3D localXYZ(mapper.padCentre(pad).X(), mapper.padCentre(pad).Y(), cl.getTime());
+            float z = sampa.getZfromTimeBin(cl.getTime(), sec.side());
+            z -= rec.getTime0();
+            const auto& localXYZ = mapper.padCentre(pad);
             const auto globalXYZ = mapper.LocalToGlobal(localXYZ, sector);
-            tpoints->SetNextPoint(globalXYZ.X(), globalXYZ.Y(), globalXYZ.Z());
+            // TODO: One needs event time0 to get proper z-coordinate
+            tpoints->SetNextPoint(globalXYZ.X(), globalXYZ.Y(), z);
         }
         track->AddElement(tpoints);
     }
