@@ -74,6 +74,9 @@ extern TEveManager* gEve;
 
 static TGNumberEntry* gEntry;
 
+// TODO: Any TPC official constant?
+const int tpcReadoutCycle = 100; // in ms
+
 class Data
 {
 public:
@@ -111,6 +114,8 @@ private:
     bool mRawData = false;
     RawReader* mRawReader = nullptr;
     int mLastEvent = 0;
+    int mEventsCount = 0;
+
     std::vector<std::vector<HitGroup>*> mHitsBuffer;
     std::vector<gsl::span<HitGroup>> mHits;
     std::vector<std::vector<Digit>*> mDigitBuffer;
@@ -209,6 +214,20 @@ void Data::setDigiTree(TTree* tree)
     }
 
     mDigiTree = tree;
+
+    int time = 0;
+    mDigiTree->GetEntry(0); // Assuming that there will be 1 entry for all data
+    for(int sector = 0; sector < o2::tpc::Constants::MAXSECTOR; sector++) {
+      for(int i = 0; i < mDigitBuffer[sector]->size(); i++) {
+        std::cout << "Digits: Sector: " << sector << " number of digits: " << mDigitBuffer[sector]->size() << '\n';
+        int digitTime = (*mDigitBuffer[sector])[i].getTimeStamp();
+        if(digitTime > time) time = digitTime;
+        std::cout << "Digits: Sector: " << sector << " last digit time: " << digitTime << " current max time: " << time << '\n';
+      }
+    }
+    int eventCount = time / (2 * tpcReadoutCycle) + (time % (2 * tpcReadoutCycle) > 0 ? 1 : 0);
+    std::cout << "Digits: Current number of events: " << mEventsCount << " digits events: " << eventCount << '\n';
+    if(eventCount > mEventsCount) mEventsCount = eventCount;
 }
 
 // Based on: CalibRawBase::processEventRawReader()
@@ -271,28 +290,41 @@ void Data::loadDigits(int entry)
   if (mDigiTree == nullptr)
     return;
 
-  int eventsCount = 0;
-  eventsCount = mDigiTree->GetBranch("TPCDigit_0")->GetEntries();
-  std::cout << "Digits: Number of events: " << eventsCount << std::endl;
-  if ((entry < 0) || (entry >= eventsCount)) {
+  if ((entry < 0) || (entry >= mEventsCount)) {
     std::cerr << "Digits: Out of event range ! " << entry << '\n';
     return;
   }
   if (entry != lastLoaded) {
-    for(int i = 0; i < o2::tpc::Constants::MAXSECTOR; i++) {
-      mDigitBuffer[i]->clear();
-    }
-    mDigiTree->GetEntry(entry);
+//    for(int i = 0; i < o2::tpc::Constants::MAXSECTOR; i++) {
+//      mDigitBuffer[i]->clear();
+//    }
+    //mDigiTree->GetEntry(entry);
     lastLoaded = entry;
   }
 
   int size = 0;
-  int first = 0;
+  int startTime = 2 * tpcReadoutCycle * entry;
+  int endTime = startTime + 2 * tpcReadoutCycle;
+  std::cout << "Digit time bounds: " << startTime << ", " << endTime << '\n';
+  bool findFirst = true;
   mDigits.resize(o2::tpc::Constants::MAXSECTOR);
-  for(int i = 0; i < o2::tpc::Constants::MAXSECTOR; i++) {
-    int last = mDigitBuffer[i]->size();
-    mDigits[i] = gsl::make_span(&(*mDigitBuffer[i])[first], last - first);
-    size += mDigits[i].size();
+  for(int sector = 0; sector < o2::tpc::Constants::MAXSECTOR; sector++) {
+    int first = 0;
+    int last = 0;
+    for(int i = 0; i < mDigitBuffer[sector]->size(); i++) {
+      int digitTime = (*mDigitBuffer[sector])[i].getTimeStamp();
+      if(findFirst && digitTime >= startTime && digitTime <= endTime) {
+        first = i;
+        findFirst = false;
+      }
+      else if(!findFirst && digitTime > endTime) {
+        last = i;
+        break;
+      }
+    }
+    mDigits[sector] = gsl::make_span(&(*mDigitBuffer[sector])[first], last - first);
+    size += mDigits[sector].size();
+    std::cout << "Digits: Sector: " << sector << " number of digits: " << mDigits[sector].size() << " indices: " << first << ", " << last << '\n';
   }
 
   std::cout << "Number of TPC Digits: " << size << '\n';
@@ -344,6 +376,18 @@ void Data::setTracTree(TTree* tree)
     }
     tree->SetBranchAddress("TPCTracks", &mTrackBuffer);
     mTracTree = tree;
+
+    int time = 0;
+    mTracTree->GetEntry(0); // Assuming that there will be 1 entry for all data
+    for(int i = 0; i < mTrackBuffer->size(); i++) {
+      std::cout << "Tracks: Number of tracks: " << mTrackBuffer->size() << '\n';
+      int trackTime = (*mTrackBuffer)[i].getTime0();
+      if(trackTime > time) time = trackTime;
+      std::cout << "Tracks: Last track time: " << trackTime << " current max time: " << time << '\n';
+    }
+    int eventCount = time / (2 * tpcReadoutCycle) + (time % (2 * tpcReadoutCycle) > 0 ? 1 : 0);
+    std::cout << "Tracks: Current number of events: " << mEventsCount << " tracks events: " << eventCount << '\n';
+    if(eventCount > mEventsCount) mEventsCount = eventCount;
 }
 
 void Data::loadTracks(int entry)
@@ -351,21 +395,39 @@ void Data::loadTracks(int entry)
     static int lastLoaded = -1;
 
     if (mTracTree == nullptr)
-        return;
+      return;
 
-    std::cout << "Tracks: Number of events: " << mTracTree->GetEntries() << std::endl;
-    if ((entry < 0) || (entry >= mTracTree->GetEntries())) {
-        std::cerr << "Tracks: Out of event range ! " << entry << '\n';
-        return;
+    std::cout << "Tracks: Number of events: " << mEventsCount << std::endl;
+    if ((entry < 0) || (entry >= mEventsCount)) {
+      std::cerr << "Tracks: Out of event range ! " << entry << '\n';
+      return;
     }
     if (entry != lastLoaded) {
-        mTrackBuffer->clear();
-        mTracTree->GetEntry(entry);
-        lastLoaded = entry;
+  //        mTrackBuffer->clear();
+  //        mTracTree->GetEntry(entry);
+      lastLoaded = entry;
     }
 
-    int first = 0, last = mTrackBuffer->size();
+    int size = 0;
+    int startTime = 2 * tpcReadoutCycle * entry;
+    int endTime = startTime + 2 * tpcReadoutCycle;
+    std::cout << "Track time bounds: " << startTime << ", " << endTime << '\n';
+    bool findFirst = true;
+    int first = 0;
+    int last = 0;
+    for (int i = 0; i < mTrackBuffer->size(); i++) {
+      int trackTime = (*mTrackBuffer)[i].getTime0();
+      if (findFirst && trackTime >= startTime && trackTime <= endTime) {
+        first = i;
+        findFirst = false;
+      } else if (!findFirst && trackTime > endTime) {
+        last = i;
+        break;
+      }
+    }
     mTracks = gsl::make_span(&(*mTrackBuffer)[first], last - first);
+    size += mTracks.size();
+    std::cout << "Tracks: Number of tracks: " << mTracks.size() << " indices: " << first << ", " << last << '\n';
 
     std::cout << "Number of TPC Tracks: " << mTracks.size() << '\n';
 }
