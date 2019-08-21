@@ -17,19 +17,21 @@
 
 class TObject;
 
-namespace o2  {
-namespace event_visualisation {
+namespace o2
+{
+namespace event_visualisation
+{
 
-class DataReader {
-public:
+class DataReader
+{
+ public:
   virtual int GetEventCount() = 0;
   virtual ~DataReader() = default;
   virtual void open() = 0;
-  virtual TObject* getEventData(int no) = 0;
+  virtual TObject* getEventData(int eventNumber) = 0; /// returns a TList
 };
 
-
-}
-}
+} // namespace event_visualisation
+} // namespace o2
 
 #endif //ALICE_O2_EVENTVISUALISATION_BASE_DATAREADER_H

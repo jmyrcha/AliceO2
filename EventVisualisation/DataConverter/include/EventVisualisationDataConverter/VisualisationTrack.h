@@ -25,94 +25,95 @@
 #include <array>
 #include <cmath>
 
-namespace o2  {
-namespace event_visualisation {
+namespace o2
+{
+namespace event_visualisation
+{
 
 /// Minimalistic description of a particle's track
 ///
 /// This class is used mainly for visualisation purpose.
 /// It keeps basic information about a track, such as its vertex,
 /// momentum, PID, phi and theta or helix curvature.
-  
+
 class VisualisationTrack
 {
-  public:
-    // Default constructor
-    VisualisationTrack();
+ public:
+  // Default constructor
+  VisualisationTrack();
 
-    // Constructor with properties initialisation
-    VisualisationTrack(
-            int charge,
-            double energy,
-            int ID,
-            int PID,
-            double mass,
-            double signedPT,
-            double startXYZ[],
-            double endXYZ[],
-            double pxpypz[],
-            int parentID,
-            double phi,
-            double theta,
-            double helixCurvature,
-            int type
-    );
+  // Constructor with properties initialisation
+  VisualisationTrack(
+    int charge,
+    double energy,
+    int ID,
+    int PID,
+    double mass,
+    double signedPT,
+    double startXYZ[],
+    double endXYZ[],
+    double pxpypz[],
+    int parentID,
+    double phi,
+    double theta,
+    double helixCurvature,
+    int type);
 
-    // Add child particle (coming from decay of this particle)
-    void addChild(int childID);
-    // Add xyz coordinates of the point along the track
-    void addPolyPoint(double x, double y, double z);
-    // Add xyz coordinates of the point along the track
-    void addPolyPoint(double xyz[3]);
-    // Track type setter (standard track, V0, kink, cascade)
-    void setTrackType(ETrackType type);
+  // Add child particle (coming from decay of this particle)
+  void addChild(int childID);
+  // Add xyz coordinates of the point along the track
+  void addPolyPoint(double x, double y, double z);
+  // Add xyz coordinates of the point along the track
+  void addPolyPoint(double xyz[3]);
+  // Track type setter (standard track, V0, kink, cascade)
+  void setTrackType(ETrackType type);
 
-    // Vertex getter
-    double* getVertex(){return mStartCoordinates;}
-    // Momentum vector getter
-    double* getMomentum(){return mMomentum;}
-    // Beta (velocity) getter
-    double  getBeta(){return sqrt(1-std::pow(mMass/mEnergy,2));}
-    // Charge getter
-    int     getCharge(){return mCharge;}
-    // PID (particle identification code) getter
-    int     getPID(){return mPID;}
+  // Vertex getter
+  double* getVertex() { return mStartCoordinates; }
+  // Momentum vector getter
+  double* getMomentum() { return mMomentum; }
+  // Beta (velocity) getter
+  double getBeta() { return sqrt(1 - std::pow(mMass / mEnergy, 2)); }
+  // Charge getter
+  int getCharge() { return mCharge; }
+  // PID (particle identification code) getter
+  int getPID() { return mPID; }
 
-    size_t getPointCount() { return mPolyX.size(); }
-    std::array<double, 3> getPoint(size_t i) { return std::array<double, 3>{mPolyX[i], mPolyY[i], mPolyZ[i]};}
-  
-private:
-    // Set coordinates of the beginning of the track
-    void setStartCoordinates(double xyz[3]);
-    // Set coordinates of the end of the track
-    void setEndCoordinates(double xyz[3]);
-    /// Set momentum vector
-    void setMomentum(double pxpypz[3]);
+  size_t getPointCount() { return mPolyX.size(); }
+  std::array<double, 3> getPoint(size_t i) { return std::array<double, 3>{ mPolyX[i], mPolyY[i], mPolyZ[i] }; }
 
-    int mID;                           /// Unique identifier of the track
-    std::string mType;                 /// Type (standard, V0 mother, daughter etc.)
-    int         mCharge;               /// Charge of the particle
-    double      mEnergy;               /// Energy of the particle
-    int         mParentID;             /// ID of the parent-track (-1 means no parent)
-    int         mPID;                  /// PDG code of the particle
-    double      mSignedPT;             /// Signed transverse momentum
-    double      mMass;                 /// Mass of the particle
-    double      mMomentum[3];          /// Momentum vector
-    double      mStartCoordinates[3];  /// Vector of track's start coordinates
-    double      mEndCoordinates[3];    /// Vector of track's end coordinates
-    double      mHelixCurvature;       /// Helix curvature of the trajectory
-    double      mTheta;                /// An angle from Z-axis to the radius vector pointing to the particle
-    double      mPhi;                  /// An angle from X-axis to the radius vector pointing to the particle
-  
-    std::vector<int> mChildrenIDs;/// Uniqe IDs of children particles
-  
-    /// Polylines -- array of points along the trajectory of the track
-    std::vector<double> mPolyX;
-    std::vector<double> mPolyY;
-    std::vector<double> mPolyZ;
+ private:
+  // Set coordinates of the beginning of the track
+  void setStartCoordinates(double xyz[3]);
+  // Set coordinates of the end of the track
+  void setEndCoordinates(double xyz[3]);
+  /// Set momentum vector
+  void setMomentum(double pxpypz[3]);
+
+  int mID;                     /// Unique identifier of the track
+  std::string mType;           /// Type (standard, V0 mother, daughter etc.)
+  int mCharge;                 /// Charge of the particle
+  double mEnergy;              /// Energy of the particle
+  int mParentID;               /// ID of the parent-track (-1 means no parent)
+  int mPID;                    /// PDG code of the particle
+  double mSignedPT;            /// Signed transverse momentum
+  double mMass;                /// Mass of the particle
+  double mMomentum[3];         /// Momentum vector
+  double mStartCoordinates[3]; /// Vector of track's start coordinates
+  double mEndCoordinates[3];   /// Vector of track's end coordinates
+  double mHelixCurvature;      /// Helix curvature of the trajectory
+  double mTheta;               /// An angle from Z-axis to the radius vector pointing to the particle
+  double mPhi;                 /// An angle from X-axis to the radius vector pointing to the particle
+
+  std::vector<int> mChildrenIDs; /// Uniqe IDs of children particles
+
+  /// Polylines -- array of points along the trajectory of the track
+  std::vector<double> mPolyX;
+  std::vector<double> mPolyY;
+  std::vector<double> mPolyZ;
 };
 
-}
-}
+} // namespace event_visualisation
+} // namespace o2
 
-#endif
+#endif //ALICE_O2_DATACONVERTER_VISUALISATIONTRACK_H

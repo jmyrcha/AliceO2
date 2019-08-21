@@ -13,7 +13,7 @@
 /// \author julian.myrcha@cern.ch
 /// \author p.nowakowski@cern.ch
 
-#include <EventVisualisationBase/DataSourceOffline.h>
+#include "EventVisualisationBase/DataSourceOffline.h"
 
 #include <TSystem.h>
 #include <TEveTreeTools.h>
@@ -28,19 +28,22 @@
 #include <TVector3.h>
 #include <TObject.h>
 
-namespace o2 {
-namespace event_visualisation {
+namespace o2
+{
+namespace event_visualisation
+{
 
 DataReader* DataSourceOffline::sInstance[EVisualisationGroup::NvisualisationGroups];
 
-TObject* DataSourceOffline::getEventData(int no, EVisualisationGroup purpose) {
-  if( sInstance[purpose] == nullptr)
+TObject* DataSourceOffline::getEventData(int no, EVisualisationGroup purpose)
+{
+  if (sInstance[purpose] == nullptr)
     return nullptr;
   return sInstance[purpose]->getEventData(no);
 }
 
-
-int DataSourceOffline::GetEventCount() {
+int DataSourceOffline::GetEventCount()
+{
   for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; i++) {
     if (sInstance[i] != nullptr)
       return sInstance[i]->GetEventCount();
@@ -48,5 +51,5 @@ int DataSourceOffline::GetEventCount() {
   return 1;
 };
 
-}
-}
+} // namespace event_visualisation
+} // namespace o2

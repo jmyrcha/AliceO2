@@ -23,8 +23,10 @@
 #include <vector>
 #include <ctime>
 
-namespace o2  {
-namespace event_visualisation {
+namespace o2
+{
+namespace event_visualisation
+{
 
 /// Minimalistic description of an event
 ///
@@ -35,39 +37,40 @@ namespace event_visualisation {
 
 class VisualisationEvent
 {
-  public:
-    // Default constructor
-    VisualisationEvent(int eventNumber, int runNumber, double energy, int multiplicity, std::string collidingSystem, time_t timeStamp);
-  
-    // Adds minimalistic track inside minimalistic event
-    void addTrack(const VisualisationTrack& track){ mTracks.push_back(track); }
-    // Adds minimalistic cluster inside minimalistic event
-    void addCluster(const VisualisationCluster& cluster){ mClusters.push_back(cluster); }
-  
-    // Multiplicity getter
-    inline int GetMultiplicity(){ return mMultiplicity; }
+ public:
+  // Default constructor
+  VisualisationEvent(int eventNumber, int runNumber, double energy, int multiplicity, std::string collidingSystem, time_t timeStamp);
 
-    // Returns track with index i
-    const VisualisationTrack& getTrack(int i) const;
-    // Returns number of tracks
-    size_t getTrackCount() const { return mTracks.size(); }
+  // Adds minimalistic track inside minimalistic event
+  void addTrack(const VisualisationTrack& track) { mTracks.push_back(track); }
+  // Adds minimalistic cluster inside minimalistic event
+  void addCluster(const VisualisationCluster& cluster) { mClusters.push_back(cluster); }
 
-    // Returns cluster with index i
-    const VisualisationCluster& getCluster(int i) const;
-    // Returns number of clusters
-    size_t getClusterCount() const { return mClusters.size(); }
-private:
-    int mEventNumber;                       /// event number in file
-    int mRunNumber;                         /// run number
-    double mEnergy;                         /// energy of the collision
-    int mMultiplicity;                      /// number of particles reconstructed
-    std::string mCollidingSystem;           /// colliding system (e.g. proton-proton)
-    std::time_t mTimeStamp;                 /// collision timestamp
-    std::vector<VisualisationTrack> mTracks; /// an array of minimalistic tracks
-    std::vector<VisualisationCluster> mClusters; /// an array of minimalistic clusters
+  // Multiplicity getter
+  inline int GetMultiplicity() { return mMultiplicity; }
+
+  // Returns track with index i
+  const VisualisationTrack& getTrack(int i) const;
+  // Returns number of tracks
+  size_t getTrackCount() const { return mTracks.size(); }
+
+  // Returns cluster with index i
+  const VisualisationCluster& getCluster(int i) const;
+  // Returns number of clusters
+  size_t getClusterCount() const { return mClusters.size(); }
+
+ private:
+  int mEventNumber;                            /// event number in file
+  int mRunNumber;                              /// run number
+  double mEnergy;                              /// energy of the collision
+  int mMultiplicity;                           /// number of particles reconstructed
+  std::string mCollidingSystem;                /// colliding system (e.g. proton-proton)
+  std::time_t mTimeStamp;                      /// collision timestamp
+  std::vector<VisualisationTrack> mTracks;     /// an array of minimalistic tracks
+  std::vector<VisualisationCluster> mClusters; /// an array of minimalistic clusters
 };
 
-}
-}
+} // namespace event_visualisation
+} // namespace o2
 
-#endif
+#endif //ALICE_O2_DATACONVERTER_VISUALISATIONEVENT_H

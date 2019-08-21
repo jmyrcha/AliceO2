@@ -13,17 +13,19 @@
 /// \author julian.myrcha@cern.ch
 /// \author p.nowakowski@cern.ch
 
+#include "EventVisualisationView/EventManagerFrame.h"
+#include "EventVisualisationView/MultiView.h"
+#include "EventVisualisationBase/DataSourceOffline.h"
+#include "EventVisualisationDetectors/DataReaderVSD.h"
+
 #include <TGButton.h>
 #include <TGNumberEntry.h>
 #include <TGLabel.h>
-#include <EventVisualisationView/EventManagerFrame.h>
-#include <EventVisualisationView/MultiView.h>
-#include <EventVisualisationBase/DataSourceOffline.h>
-#include <EventVisualisationDetectors/DataReaderVSD.h>
+
 #include <Rtypes.h>
 #include <iostream>
 
-ClassImp(o2::event_visualisation::EventManagerFrame)
+ClassImp(o2::event_visualisation::EventManagerFrame);
 
 namespace o2
 {
@@ -67,7 +69,7 @@ EventManagerFrame::EventManagerFrame(o2::event_visualisation::EventManager& even
     b = EventManagerFrame::makeButton(f, "R3 Geometry", 2 * width);
     b->Connect("Clicked()", cls, this, "DoR3Geometry()");
 
-    mClusters = EventManagerFrame::makeCheckButton(f, "Clusters",2 * width);
+    mClusters = EventManagerFrame::makeCheckButton(f, "Clusters", 2 * width);
     mClusters->SetState(kButtonDown);
     mClusters->Connect("Clicked()", cls, this, "DoClusters()");
   }
@@ -76,7 +78,6 @@ EventManagerFrame::EventManagerFrame(o2::event_visualisation::EventManager& even
   MapSubwindows();
   MapWindow();
 }
-
 
 TGTextButton* EventManagerFrame::makeButton(TGCompositeFrame* p, const char* txt,
                                             Int_t width, Int_t lo, Int_t ro, Int_t to, Int_t bo)
@@ -92,7 +93,7 @@ TGTextButton* EventManagerFrame::makeButton(TGCompositeFrame* p, const char* txt
 }
 
 TGCheckButton* EventManagerFrame::makeCheckButton(TGCompositeFrame* p, const char* txt,
-                                            Int_t width, Int_t lo, Int_t ro, Int_t to, Int_t bo)
+                                                  Int_t width, Int_t lo, Int_t ro, Int_t to, Int_t bo)
 {
   TGCheckButton* b = new TGCheckButton(p, txt);
 
@@ -124,7 +125,7 @@ void EventManagerFrame::DoNextEvent()
 
 void EventManagerFrame::DoLastEvent()
 {
-  mEventManager->GotoEvent(-1);  /// -1 means last available
+  mEventManager->GotoEvent(-1); /// -1 means last available
   mEventId->SetIntNumber(mEventManager->getCurrentEvent());
 }
 
@@ -138,7 +139,6 @@ void EventManagerFrame::DoScreenshot()
 
 void EventManagerFrame::DoR2Geometry()
 {
-
 }
 
 void EventManagerFrame::DoR3Geometry()
@@ -150,5 +150,5 @@ void EventManagerFrame::DoClusters()
   std::cout << this->mClusters->IsOn() << std::endl;
 }
 
-}
-}
+} // namespace event_visualisation
+} // namespace o2

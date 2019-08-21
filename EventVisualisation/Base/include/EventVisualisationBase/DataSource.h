@@ -8,40 +8,42 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-/// \file DataReaderITS.h
-/// \brief VSD specific reading from file(s) (Visualisation Summary Data)
+/// \file DataSource.h
+/// \brief Group data reading
 /// \author julian.myrcha@cern.ch
 /// \author p.nowakowski@cern.ch
-
 
 #ifndef ALICE_O2_EVENTVISUALISATION_BASE_DATASOURCE_H
 #define ALICE_O2_EVENTVISUALISATION_BASE_DATASOURCE_H
 
-#include <EventVisualisationBase/VisualisationConstants.h>
+#include "EventVisualisationBase/VisualisationConstants.h"
 
 class TObject;
 
-namespace o2 {
-namespace event_visualisation {
+namespace o2
+{
+namespace event_visualisation
+{
 
-class DataSource {
-public:
-    virtual TObject* getEventData(int /*no*/, EVisualisationGroup /*purpose*/) { return nullptr;};
-    virtual int GetEventCount() { return 0; };
+class DataSource
+{
+ public:
+  virtual TObject* getEventData(int /*no*/, EVisualisationGroup /*purpose*/) { return nullptr; };
+  virtual int GetEventCount() { return 0; };
 
-    DataSource() = default;
+  DataSource() = default;
 
-    /// Default destructor
-    virtual ~DataSource() = default;
+  /// Default destructor
+  virtual ~DataSource() = default;
 
-    /// Deleted copy constructor
-    DataSource(DataSource const &) = delete;
+  /// Deleted copy constructor
+  DataSource(DataSource const&) = delete;
 
-    /// Deleted assignemt operator
-    void operator=(DataSource const &) = delete;
+  /// Deleted assignemt operator
+  void operator=(DataSource const&) = delete;
 };
 
-}
-}
+} // namespace event_visualisation
+} // namespace o2
 
 #endif //ALICE_O2_EVENTVISUALISATION_BASE_DATASOURCE_H

@@ -14,23 +14,26 @@
 ///
 
 #include "EventVisualisationDataConverter/VisualisationCluster.h"
+
 #include <iostream>
 
 using namespace std;
 
-namespace o2  {
-    namespace event_visualisation {
+namespace o2
+{
+namespace event_visualisation
+{
 
-
-        VisualisationCluster::VisualisationCluster(double XYZ[]) {
-            setCoordinates(XYZ);
-        }
-
-        void VisualisationCluster::setCoordinates(double xyz[3])
-        {
-            for (int i = 0; i < 3; i++)
-                mCoordinates[i] = xyz[i];
-        }
-
-    }
+VisualisationCluster::VisualisationCluster(double XYZ[])
+{
+  setCoordinates(XYZ);
 }
+
+void VisualisationCluster::setCoordinates(double xyz[3])
+{
+  for (int i = 0; i < 3; i++)
+    mCoordinates[i] = xyz[i];
+}
+
+} // namespace event_visualisation
+} // namespace o2

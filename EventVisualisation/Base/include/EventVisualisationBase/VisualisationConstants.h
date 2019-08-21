@@ -19,8 +19,10 @@
 
 #include <string>
 
-namespace o2  {
-namespace event_visualisation {
+namespace o2
+{
+namespace event_visualisation
+{
 
 enum EVisualisationGroup {
   ACO,
@@ -36,7 +38,7 @@ enum EVisualisationGroup {
   VSD,
   NvisualisationGroups
 };
-  
+
 const std::string gVisualisationGroupName[NvisualisationGroups] = {
   "ACO",
   "EMC",
@@ -50,30 +52,29 @@ const std::string gVisualisationGroupName[NvisualisationGroups] = {
   "TRD",
   "VSD"
 };
-  
-enum EVisualisationDataType{
-  Raw,      ///< Raw data
-  Hits,     ///< Hits
-  Digits,   ///< Digits
-  Clusters, ///< Reconstructed clusters (RecPoints)
-  ESD,      ///< Event Summary Data
-  AOD,      ///< Analysis Object Data
-  NoData,   ///< no data was loaded
-  NdataTypes///< number of supported data types
+
+enum EVisualisationDataType {
+  Raw,       ///< Raw data
+  Hits,      ///< Hits
+  Digits,    ///< Digits
+  Clusters,  ///< Reconstructed clusters (RecPoints)
+  ESD,       ///< Event Summary Data
+  AOD,       ///< Analysis Object Data
+  NoData,    ///< no data was loaded
+  NdataTypes ///< number of supported data types
 };
 
 const std::string gDataTypeNames[NdataTypes] = {
-    "Raw",
-    "Hits",
-    "Digits",
-    "Clusters",
-    "ESD",
-    "AOD",
-    "NoData"
+  "Raw",
+  "Hits",
+  "Digits",
+  "Clusters",
+  "ESD",
+  "AOD",
+  "NoData"
 };
 
-  
-}
-}
+} // namespace event_visualisation
+} // namespace o2
 
-#endif
+#endif //ALICE_O2_EVENTVISUALISATION_BASE_VISUALISATIONCONSTANTS_H

@@ -9,7 +9,7 @@
 // or submit itself to any jurisdiction.
 
 /// \file DataSourceOffline.h
-/// \brief Grouping reading from file(s)
+/// \brief Group reading from file(s)
 /// \author julian.myrcha@cern.ch
 /// \author p.nowakowski@cern.ch
 
@@ -21,33 +21,36 @@
 
 class TObject;
 
-namespace o2  {
-namespace event_visualisation {
+namespace o2
+{
+namespace event_visualisation
+{
 
-class DataSourceOffline : public DataSource {
-protected:
-    static DataReader* sInstance[EVisualisationGroup::NvisualisationGroups];
-public:
-    DataSourceOffline() = default;
+class DataSourceOffline : public DataSource
+{
+ protected:
+  static DataReader* sInstance[EVisualisationGroup::NvisualisationGroups];
 
-    ~DataSourceOffline() override = default;
-    DataSourceOffline(DataSourceOffline const&) = delete;
+ public:
+  DataSourceOffline() = default;
 
-    /// Deleted assigment operator
-    void operator=(DataSourceOffline const&) = delete;
+  ~DataSourceOffline() override = default;
+  DataSourceOffline(DataSourceOffline const&) = delete;
 
-    int GetEventCount() override ;
+  /// Deleted assigment operator
+  void operator=(DataSourceOffline const&) = delete;
 
-    void registerReader(DataReader *reader, EVisualisationGroup purpose) {
-      sInstance[purpose] = reader;
-    }
+  int GetEventCount() override;
 
-    TObject* getEventData(int no, EVisualisationGroup purpose) override;
+  void registerReader(DataReader* reader, EVisualisationGroup purpose)
+  {
+    sInstance[purpose] = reader;
+  }
+
+  TObject* getEventData(int no, EVisualisationGroup purpose) override;
 };
 
-
-}
-}
-
+} // namespace event_visualisation
+} // namespace o2
 
 #endif //ALICE_O2_EVENTVISUALISATION_BASE_DATASOURCEOFFLINE_H

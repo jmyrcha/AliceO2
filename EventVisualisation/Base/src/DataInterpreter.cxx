@@ -14,12 +14,12 @@
 
 #include "EventVisualisationBase/DataInterpreter.h"
 
-#include <iostream>
+namespace o2
+{
+namespace event_visualisation
+{
 
-using namespace std;
-
-namespace o2  {
-namespace event_visualisation {
 DataInterpreter::DataInterpreter() = default;
-}
-}
+
+} // namespace event_visualisation
+} // namespace o2

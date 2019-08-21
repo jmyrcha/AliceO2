@@ -12,28 +12,34 @@
 /// \brief TPC Detector-specific reading from file(s)
 /// \author julian.myrcha@cern.ch
 
-#ifndef O2EVE_EVENTVISUALISATION_DETECTORS_DATAREADERTPC_H
-#define O2EVE_EVENTVISUALISATION_DETECTORS_DATAREADERTPC_H
+#ifndef ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAREADERTPC_H
+#define ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAREADERTPC_H
 
-#include <TFile.h>
 #include "EventVisualisationBase/DataReader.h"
 
-namespace o2 {
-    namespace event_visualisation {
+#include <TFile.h>
 
-        class DataReaderTPC : public DataReader {
-        private:
-            Int_t mMaxEv;
-            TFile *mClusFile;
-            TFile *mTracFile;
-        public:
-            DataReaderTPC();
-            void open() override;
-            Int_t GetEventCount() override;
-            TObject* getEventData(int no) override;
-        };
+namespace o2
+{
+namespace event_visualisation
+{
 
-    }
-}
+class DataReaderTPC : public DataReader
+{
+ private:
+  Int_t mMaxEv;
+  TFile* mClusFile;
+  TFile* mTracFile;
+  Int_t mTPCReadoutCycle = 100; // ms, provisional
 
-#endif //O2EVE_DATAREADERITS_H
+ public:
+  DataReaderTPC();
+  void open() override;
+  Int_t GetEventCount() override;
+  TObject* getEventData(int eventNumber) override;
+};
+
+} // namespace event_visualisation
+} // namespace o2
+
+#endif //ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAREADERTPC_H

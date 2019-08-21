@@ -9,13 +9,12 @@
 // or submit itself to any jurisdiction.
 
 /// \file DataInterpreterTPC.h
-/// \brief converting TPC data to Event Visualisation primitives
+/// \brief Converting TPC data to Event Visualisation primitives
 /// \author julian.myrcha@cern.ch
 /// \author p.nowakowski@cern.ch
 
 #ifndef ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAINTERPRETERTPC_H
 #define ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAINTERPRETERTPC_H
-
 
 ///
 /// This class overrides DataInterpreter and implements method
@@ -24,23 +23,27 @@
 #include "EventVisualisationBase/DataInterpreter.h"
 #include "EventVisualisationBase/VisualisationConstants.h"
 
-namespace o2 {
-    namespace event_visualisation {
+namespace o2
+{
+namespace event_visualisation
+{
 
+class DataInterpreterTPC : public DataInterpreter
+{
+ private:
+  Int_t mTPCReadoutCycle = 100; // ms, provisional
 
-        class DataInterpreterTPC : public DataInterpreter {
-        public:
-            // Default constructor
-            DataInterpreterTPC();
+ public:
+  // Default constructor
+  DataInterpreterTPC();
 
-            // Default destructor
-            ~DataInterpreterTPC() final;
+  // Default destructor
+  ~DataInterpreterTPC() final;
 
-            //
-            std::unique_ptr<VisualisationEvent> interpretDataForType(TObject* data, EVisualisationDataType type) final;
-        };
+  std::unique_ptr<VisualisationEvent> interpretDataForType(TObject* data, EVisualisationDataType type) final;
+};
 
-    }
-}
+} // namespace event_visualisation
+} // namespace o2
 
-#endif //ALICE_O2_EVENTVISUALISATION_BASE_DATAINTERPRETERITS_H
+#endif //ALICE_O2_EVENTVISUALISATION_BASE_DATAINTERPRETERTPC_H

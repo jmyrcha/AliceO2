@@ -9,14 +9,12 @@
 // or submit itself to any jurisdiction.
 
 /// \file DataInterpreterVSD.h
-/// \brief converting VSD data to Event Visualisation primitives
+/// \brief Converting VSD data to Event Visualisation primitives
 /// \author julian.myrcha@cern.ch
 /// \author p.nowakowski@cern.ch
 
-
 #ifndef ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAINTERPRETERVSD_H
 #define ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAINTERPRETERVSD_H
-
 
 ///
 /// This class overrides DataInterpreter and implements method
@@ -25,43 +23,46 @@
 
 #include "EventVisualisationBase/DataInterpreter.h"
 #include "EventVisualisationBase/VisualisationConstants.h"
+
 #include <TEvePointSet.h>
 #include <TEveViewer.h>
 #include <TEveTrack.h>
 #include <TEveVSD.h>
 
-namespace o2 {
-namespace event_visualisation {
+namespace o2
+{
+namespace event_visualisation
+{
 
-
-class DataInterpreterVSD : public DataInterpreter {
-private:
-  void LoadClusters(TEvePointSet *&ps, const TString &det_name, Int_t det_id);
+class DataInterpreterVSD : public DataInterpreter
+{
+ private:
+  void LoadClusters(TEvePointSet*& ps, const TString& det_name, Int_t det_id);
   void AttachEvent();
 
-  TEveViewerList *mViewers = nullptr;  // for debug purpose
+  TEveViewerList* mViewers = nullptr; // for debug purpose
 
-  void LoadEsdTracks(VisualisationEvent &event);
-  TEveTrackList *mTrackList = nullptr;
-  TEvePointSet *mITSClusters = nullptr;
-  TEvePointSet *mTPCClusters = nullptr;
-  TEvePointSet *mTRDClusters = nullptr;
-  TEvePointSet *mTOFClusters = nullptr;
-  TDirectory *mDirectory = nullptr;
-  TEveVSD *mVSD = nullptr;       // Visualisation Summary Data
-public:
+  void LoadEsdTracks(VisualisationEvent& event);
+  TEveTrackList* mTrackList = nullptr;
+  TEvePointSet* mITSClusters = nullptr;
+  TEvePointSet* mTPCClusters = nullptr;
+  TEvePointSet* mTRDClusters = nullptr;
+  TEvePointSet* mTOFClusters = nullptr;
+  TDirectory* mDirectory = nullptr;
+  TEveVSD* mVSD = nullptr; // Visualisation Summary Data
+
+ public:
   void DropEvent();
-    // Default constructor
-    DataInterpreterVSD() = default;
+  // Default constructor
+  DataInterpreterVSD() = default;
 
-    // Default destructor
-    ~DataInterpreterVSD() final;
+  // Default destructor
+  ~DataInterpreterVSD() final;
 
-    //
-    std::unique_ptr<VisualisationEvent> interpretDataForType(TObject* data, EVisualisationDataType type) final;
+  std::unique_ptr<VisualisationEvent> interpretDataForType(TObject* data, EVisualisationDataType type) final;
 };
 
-}
-}
+} // namespace event_visualisation
+} // namespace o2
 
 #endif //ALICE_O2_EVENTVISUALISATION_BASE_DATAINTERPRETERVSD_H

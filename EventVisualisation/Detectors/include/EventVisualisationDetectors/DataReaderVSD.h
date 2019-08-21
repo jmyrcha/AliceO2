@@ -8,15 +8,16 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-/// \file DataReaderITS.h
+/// \file DataReaderVSD.h
 /// \brief VSD specific reading from file(s) (Visualisation Summary Data)
 /// \author julian.myrcha@cern.ch
 
 #ifndef ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAREADERVSD_H
 #define ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAREADERVSD_H
 
-#include <EventVisualisationBase/DataReader.h>
-#include <EventVisualisationBase/VisualisationConstants.h>
+#include "EventVisualisationBase/DataReader.h"
+#include "EventVisualisationBase/VisualisationConstants.h"
+
 #include <TString.h>
 #include <TEveTrack.h>
 #include <TEveViewer.h>
@@ -24,23 +25,27 @@
 
 class TKey;
 
-namespace o2  {
-namespace event_visualisation {
+namespace o2
+{
+namespace event_visualisation
+{
 
-class DataReaderVSD : public DataReader {
-    TFile *mFile;
-    std::vector<TKey*> mEvDirKeys;
-    Int_t mMaxEv, mCurEv;
+class DataReaderVSD : public DataReader
+{
+ private:
+  TFile* mFile;
+  std::vector<TKey*> mEvDirKeys;
+  Int_t mMaxEv, mCurEv;
 
-public:
-    int GetEventCount() override { return mEvDirKeys.size(); };
-    DataReaderVSD();
-    ~DataReaderVSD() override;
-    void open() override;
-    TObject* getEventData(int no) override;
+ public:
+  int GetEventCount() override { return mEvDirKeys.size(); };
+  DataReaderVSD();
+  ~DataReaderVSD() override;
+  void open() override;
+  TObject* getEventData(int eventNumber) override;
 };
 
+} // namespace event_visualisation
+} // namespace o2
 
-}
-}
-#endif
+#endif //ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAREADERVSD_H

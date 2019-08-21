@@ -18,9 +18,11 @@
 
 #include <TEnv.h>
 
-namespace o2  {
-namespace event_visualisation {
-    
+namespace o2
+{
+namespace event_visualisation
+{
+
 /// Configuration Manager allows an easy access to the config file.
 ///
 /// Configuration Manager is a singleton which assures an access to
@@ -29,14 +31,14 @@ namespace event_visualisation {
 
 class ConfigurationManager
 {
-public:
+ public:
   /// Returns an instance of ConfigurationManager
   static ConfigurationManager& getInstance();
-  
+
   /// Returns current event display configuration
-  void getConfig(TEnv &settings) const;
-  
-private:
+  void getConfig(TEnv& settings) const;
+
+ private:
   /// Default constructor
   ConfigurationManager() = default;
   /// Default destructor
@@ -46,8 +48,8 @@ private:
   /// Deleted assignment operator
   void operator=(ConfigurationManager const&) = delete;
 };
-  
-#endif
-    
-}
-}
+
+} // namespace event_visualisation
+} // namespace o2
+
+#endif //ALICE_O2_EVENTVISUALISATION_BASE_CONFIGURATIONMANAGER_H

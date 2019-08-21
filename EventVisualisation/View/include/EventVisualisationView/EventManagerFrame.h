@@ -17,6 +17,7 @@
 #define ALICE_O2_EVENTVISUALISATION_VIEW_EVENTMANAGERFRAME_H
 
 #include "EventVisualisationView/EventManager.h"
+
 #include <TGMdiMainFrame.h>
 
 class TGCheckButton;
@@ -25,40 +26,43 @@ class TGCompositeFrame;
 class TGNumberEntry;
 class TGLabel;
 
-namespace o2 {
-namespace event_visualisation {
+namespace o2
+{
+namespace event_visualisation
+{
 
-class EventManagerFrame : public TGMainFrame {
-private:
-    static TGTextButton* makeButton(TGCompositeFrame* p, const char* txt, Int_t width=0,
-                              Int_t lo=0, Int_t ro=0, Int_t to=0, Int_t bo=0);
+class EventManagerFrame : public TGMainFrame
+{
+ private:
+  static TGTextButton* makeButton(TGCompositeFrame* p, const char* txt, Int_t width = 0,
+                                  Int_t lo = 0, Int_t ro = 0, Int_t to = 0, Int_t bo = 0);
 
-    static TGCheckButton* makeCheckButton(TGCompositeFrame* p, const char* txt, Int_t width=0,
-                                  Int_t lo=0, Int_t ro=0, Int_t to=0, Int_t bo=0);
-protected:
-    o2::event_visualisation::EventManager   *mEventManager;            // Model object.
-    TGNumberEntry        *mEventId;               // Display/edit current event id
-    TGCheckButton        *mClusters;
+  static TGCheckButton* makeCheckButton(TGCompositeFrame* p, const char* txt, Int_t width = 0,
+                                        Int_t lo = 0, Int_t ro = 0, Int_t to = 0, Int_t bo = 0);
 
-public:
-    EventManagerFrame(o2::event_visualisation::EventManager& eventManager);
-    ~EventManagerFrame() override = default;
-    ClassDef(EventManagerFrame, 0); // GUI window for AliEveEventManager.
+ protected:
+  o2::event_visualisation::EventManager* mEventManager; // Model object.
+  TGNumberEntry* mEventId;                              // Display/edit current event id
+  TGCheckButton* mClusters;
 
-public: // slots
-    void DoFirstEvent();
-    void DoPrevEvent();
-    void DoNextEvent();
-    void DoLastEvent();
-    void DoSetEvent();
-    void DoScreenshot();
-    void DoR2Geometry();
-    void DoR3Geometry();
-    void DoClusters();
+ public:
+  EventManagerFrame(o2::event_visualisation::EventManager& eventManager);
+  ~EventManagerFrame() override = default;
+  ClassDef(EventManagerFrame, 0); // GUI window for AliEveEventManager.
+
+ public: // slots
+  void DoFirstEvent();
+  void DoPrevEvent();
+  void DoNextEvent();
+  void DoLastEvent();
+  void DoSetEvent();
+  void DoScreenshot();
+  void DoR2Geometry();
+  void DoR3Geometry();
+  void DoClusters();
 };
 
-
-}
-}
+} // namespace event_visualisation
+} // namespace o2
 
 #endif //ALICE_O2_EVENTVISUALISATION_EVENTMANAGERFRAME_H

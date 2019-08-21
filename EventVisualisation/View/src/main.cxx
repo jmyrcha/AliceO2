@@ -107,7 +107,8 @@ int main(int argc, char** argv)
     }
   }
 
-  // create ROOT application environment
+  // Create ROOT application environment
+  argc = 0; // Do not let ROOT interpret our command-line options
   TApplication* app = new TApplication("o2eve", &argc, argv);
   app->Connect("TEveBrowser", "CloseWindow()", "TApplication", app, "Terminate()");
 

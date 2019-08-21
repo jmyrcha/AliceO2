@@ -21,8 +21,10 @@
 #include <vector>
 #include <ctime>
 
-namespace o2  {
-    namespace event_visualisation {
+namespace o2
+{
+namespace event_visualisation
+{
 
 /// Minimalistic description of a cluster
 ///
@@ -30,24 +32,23 @@ namespace o2  {
 /// It stores simple information about clusters, which can be used for visualisation
 /// or exported for external applications.
 
-        class VisualisationCluster
-        {
-        public:
-            // Default constructor
-            VisualisationCluster(double XYZ[]);
+class VisualisationCluster
+{
+ public:
+  // Default constructor
+  VisualisationCluster(double XYZ[]);
 
-            double X() { return mCoordinates[0]; }
-            double Y() { return mCoordinates[1]; }
-            double Z() { return mCoordinates[2]; }
-        private:
-            void setCoordinates(double xyz[3]);
+  double X() { return mCoordinates[0]; }
+  double Y() { return mCoordinates[1]; }
+  double Z() { return mCoordinates[2]; }
 
-            double      mCoordinates[3];  /// Vector of cluster's coordinates
+ private:
+  void setCoordinates(double xyz[3]);
 
-        private:
-        };
+  double mCoordinates[3]; /// Vector of cluster's coordinates
+};
 
-#endif
+} // namespace event_visualisation
+} // namespace o2
 
-    }
-}
+#endif //ALICE_O2_DATACONVERTER_VISUALISATIONCLUSTER_H

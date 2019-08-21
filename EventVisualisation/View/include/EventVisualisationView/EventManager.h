@@ -17,15 +17,16 @@
 #ifndef ALICE_O2_EVENTVISUALISATION_VIEW_EVENTMANAGER_H
 #define ALICE_O2_EVENTVISUALISATION_VIEW_EVENTMANAGER_H
 
+#include "EventVisualisationDataConverter/VisualisationEvent.h"
+#include "EventVisualisationBase/DataInterpreter.h"
+#include "EventVisualisationBase/DataReader.h"
+
 #include "CCDB/Manager.h"
 
 #include <TEveElement.h>
 #include <TEveEventManager.h>
 
 #include <string>
-#include <EventVisualisationDataConverter/VisualisationEvent.h>
-#include <EventVisualisationBase/DataInterpreter.h>
-#include <EventVisualisationBase/DataReader.h>
 
 namespace o2
 {
@@ -43,74 +44,70 @@ class DataSource;
 
 class EventManager : public TEveEventManager
 {
-public:
-    enum EDataSource{
-      SourceOnline,   ///< Online reconstruction is a source of events
-      SourceOffline,  ///< Local files are the source of events
-      SourceHLT       ///< HLT reconstruction is a source of events
-    };
+ public:
+  enum EDataSource {
+    SourceOnline,  ///< Online reconstruction is a source of events
+    SourceOffline, ///< Local files are the source of events
+    SourceHLT      ///< HLT reconstruction is a source of events
+  };
 
-    /// Returns an instance of EventManager
-    static EventManager& getInstance();
+  /// Returns an instance of EventManager
+  static EventManager& getInstance();
 
-    /// Setter of the current data source type
-    inline void setDataSourceType(EDataSource source)   { mCurrentDataSourceType = source; }
+  /// Setter of the current data source type
+  inline void setDataSourceType(EDataSource source) { mCurrentDataSourceType = source; }
 
-    /// Sets the CDB path in CCDB Manager
-    inline void setCdbPath(const TString& path)  {
-      o2::ccdb::Manager::Instance()->setDefaultStorage(path.Data());
-    }
+  /// Sets the CDB path in CCDB Manager
+  inline void setCdbPath(const TString& path)
+  {
+    o2::ccdb::Manager::Instance()->setDefaultStorage(path.Data());
+  }
 
-    Int_t getCurrentEvent() const {return mCurrentEvent;}
-    DataSource *getDataSource() const {return mDataSource;}
+  Int_t getCurrentEvent() const { return mCurrentEvent; }
+  DataSource* getDataSource() const { return mDataSource; }
 
-    void setDataSource(DataSource *dataSource)          { this->mDataSource = dataSource; }
+  void setDataSource(DataSource* dataSource) { this->mDataSource = dataSource; }
 
-    void Open() override ;
-    void GotoEvent(Int_t /*event*/) override ;
-    void NextEvent() override ;
-    void PrevEvent() override ;
-    void Close() override ;
+  void Open() override;
+  void GotoEvent(Int_t /*event*/) override;
+  void NextEvent() override;
+  void PrevEvent() override;
+  void Close() override;
 
-    void AfterNewEventLoaded() override;
+  void AfterNewEventLoaded() override;
 
-    void AddNewEventCommand(const TString& cmd) override ;
-    void RemoveNewEventCommand(const TString& cmd) override ;
-    void ClearNewEventCommands() override ;
+  void AddNewEventCommand(const TString& cmd) override;
+  void RemoveNewEventCommand(const TString& cmd) override;
+  void ClearNewEventCommands() override;
 
-    void registerDetector(DataReader *reader, DataInterpreter *interpreter, EVisualisationGroup type);
+  void registerDetector(DataReader* reader, DataInterpreter* interpreter, EVisualisationGroup type);
 
-private:
-    static EventManager *mInstance;
-    DataInterpreter* mDataInterpreters[EVisualisationGroup::NvisualisationGroups];
-    DataReader* mDataReaders[EVisualisationGroup::NvisualisationGroups];
+ private:
+  static EventManager* mInstance;
+  DataInterpreter* mDataInterpreters[EVisualisationGroup::NvisualisationGroups];
+  DataReader* mDataReaders[EVisualisationGroup::NvisualisationGroups];
 
-    /// store lists of visualisation element in current event (row, clusters ...)
-    TEveElementList* mDataTypeLists[EVisualisationDataType::NdataTypes];
+  /// store lists of visualisation element in current event (row, clusters ...)
+  TEveElementList* mDataTypeLists[EVisualisationDataType::NdataTypes];
 
-    /// store user request to see data for given type  (row, clusters ...)
-    TEveElementList* mRequestedDataTypes[EVisualisationDataType::NdataTypes];
+  EDataSource mCurrentDataSourceType = EDataSource::SourceOffline;
+  DataSource* mDataSource = nullptr;
+  Int_t mCurrentEvent = 0;
 
-    EDataSource mCurrentDataSourceType = EDataSource::SourceOffline;
-    DataSource *mDataSource = nullptr;
-    Int_t mCurrentEvent = 0;
+  /// Default constructor
+  EventManager();
+  /// Default destructor
+  ~EventManager() final;
+  /// Deleted copy constructor
+  EventManager(EventManager const&) = delete;
+  /// Deleted assignemt operator
+  void operator=(EventManager const&) = delete;
 
-    /// Default constructor
-    EventManager();
-    /// Default destructor
-    ~EventManager() final;
-    /// Deleted copy constructor
-    EventManager(EventManager const&) = delete;
-    /// Deleted assignemt operator
-    void operator=(EventManager const&) = delete;
-
-    //Display visualisation event
-    void displayVisualisationEvent(VisualisationEvent &event, const std::string &detectorName);
+  //Display visualisation event
+  void displayVisualisationEvent(VisualisationEvent& event, const std::string& detectorName);
 };
 
-}
-}
+} // namespace event_visualisation
+} // namespace o2
 
-#endif
-
-
+#endif //ALICE_O2_EVENTVISUALISATION_VIEW_EVENTMANAGER_H

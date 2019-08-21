@@ -19,9 +19,11 @@
 
 #include <TEveElement.h>
 
-namespace o2  {
-namespace event_visualisation {
- 
+namespace o2
+{
+namespace event_visualisation
+{
+
 /// DataInterpreter is a template class for detector-specific visualisation classes.
 ///
 /// Each detector should override this template class, providing method(s)
@@ -30,18 +32,19 @@ namespace event_visualisation {
 
 class VisualisationEvent;
 
-class DataInterpreter {
-public:
+class DataInterpreter
+{
+ public:
   // Default constructor
   DataInterpreter();
   // Virtual destructor
   virtual ~DataInterpreter() = default;
-  
+
   // Should return visualisation objects for required data type
   virtual std::unique_ptr<VisualisationEvent> interpretDataForType(TObject* data, EVisualisationDataType type) = 0;
 };
-  
-}
-}
 
-#endif
+} // namespace event_visualisation
+} // namespace o2
+
+#endif //ALICE_O2_EVENTVISUALISATION_BASE_DATAINTERPRETER_H

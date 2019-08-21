@@ -12,29 +12,33 @@
 /// \brief ITS Detector-specific reading from file(s)
 /// \author julian.myrcha@cern.ch
 
-#ifndef O2EVE_EVENTVISUALISATION_DETECTORS_DATAREADERITS_H
-#define O2EVE_EVENTVISUALISATION_DETECTORS_DATAREADERITS_H
+#ifndef ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAREADERITS_H
+#define ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAREADERITS_H
 
-#include <TFile.h>
 #include "EventVisualisationBase/DataReader.h"
 
-namespace o2 {
-    namespace event_visualisation {
+#include <TFile.h>
 
+namespace o2
+{
+namespace event_visualisation
+{
 
-        class DataReaderITS : public DataReader {
-        private:
-            Int_t mMaxEv;
-            TFile *mClusFile;
-            TFile *mTracFile;
-        public:
-            DataReaderITS();
-            void open() override;
-            Int_t GetEventCount() override;
-            TObject* getEventData(int no) override;     /// returns a TList
-        };
+class DataReaderITS : public DataReader
+{
+ private:
+  Int_t mMaxEv;
+  TFile* mClusFile;
+  TFile* mTracFile;
 
-    }
-}
+ public:
+  DataReaderITS();
+  void open() override;
+  Int_t GetEventCount() override;
+  TObject* getEventData(int eventNumber) override;
+};
 
-#endif //O2EVE_DATAREADERITS_H
+} // namespace event_visualisation
+} // namespace o2
+
+#endif //ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAREADERITS_H

@@ -17,11 +17,12 @@
 #include "EventVisualisationView/EventManager.h"
 #include "EventVisualisationDataConverter/VisualisationEvent.h"
 #include "EventVisualisationBase/ConfigurationManager.h"
+#include "EventVisualisationView/MultiView.h"
 #include "EventVisualisationBase/DataSource.h"
 #include "EventVisualisationBase/DataInterpreter.h"
-#include <EventVisualisationBase/DataSourceOffline.h>
-#include <EventVisualisationDetectors/DataReaderVSD.h>
-#include <EventVisualisationDetectors/DataReaderITS.h>
+#include "EventVisualisationBase/DataSourceOffline.h"
+#include "EventVisualisationDetectors/DataReaderVSD.h"
+#include "EventVisualisationDetectors/DataReaderITS.h"
 
 #include <TEveManager.h>
 #include <TEveProjectionManager.h>
@@ -32,7 +33,6 @@
 #include <TGListTree.h>
 
 #include <iostream>
-#include <EventVisualisationView/MultiView.h>
 
 using namespace std;
 
@@ -73,45 +73,43 @@ void EventManager::Open()
         }
       }
       setDataSource(source);
-    }
-      break;
+    } break;
     case SourceHLT:
       break;
   }
 }
 
-void EventManager::GotoEvent(Int_t no) {
-    //-1 means last event
-    if(no == -1) {
-        no = getDataSource()->GetEventCount()-1;
-    }
+void EventManager::GotoEvent(Int_t no)
+{
+  //-1 means last event
+  if (no == -1) {
+    no = getDataSource()->GetEventCount() - 1;
+  }
 
-    this->mCurrentEvent = no;
+  this->mCurrentEvent = no;
 
-    MultiView::getInstance()->destroyAllEvents();
+  MultiView::getInstance()->destroyAllEvents();
 
-    for (int i = 0; i < EVisualisationDataType::NdataTypes; ++i)
-    {
-      mDataTypeLists[i] = new TEveElementList(gDataTypeNames[i].c_str());
-    }
+  for (int i = 0; i < EVisualisationDataType::NdataTypes; ++i) {
+    mDataTypeLists[i] = new TEveElementList(gDataTypeNames[i].c_str());
+  }
 
-    for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; ++i) {
-      for(int dataType = 0; dataType < EVisualisationDataType::NdataTypes; ++dataType) {
-        DataInterpreter* interpreter = mDataInterpreters[i];
-        if(interpreter) {
-            TObject *data = getDataSource()->getEventData(no, (EVisualisationGroup)i);
-            std::unique_ptr<VisualisationEvent> event = interpreter->interpretDataForType(data, (EVisualisationDataType)dataType);
-            displayVisualisationEvent(*event, gVisualisationGroupName[i]);
-        }
+  for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; ++i) {
+    for (int dataType = 0; dataType < EVisualisationDataType::NdataTypes; ++dataType) {
+      DataInterpreter* interpreter = mDataInterpreters[i];
+      if (interpreter) {
+        TObject* data = getDataSource()->getEventData(no, (EVisualisationGroup)i);
+        std::unique_ptr<VisualisationEvent> event = interpreter->interpretDataForType(data, (EVisualisationDataType)dataType);
+        displayVisualisationEvent(*event, gVisualisationGroupName[i]);
       }
     }
+  }
 
-    for (int i = 0; i < EVisualisationDataType::NdataTypes; ++i)
-    {
-        MultiView::getInstance()->registerElement(mDataTypeLists[i]);
-    }
+  for (int i = 0; i < EVisualisationDataType::NdataTypes; ++i) {
+    MultiView::getInstance()->registerElement(mDataTypeLists[i]);
+  }
 
-    MultiView::getInstance()->redraw3D();
+  MultiView::getInstance()->redraw3D();
 }
 
 void EventManager::NextEvent()
@@ -151,21 +149,22 @@ void EventManager::ClearNewEventCommands()
   TEveEventManager::ClearNewEventCommands();
 }
 
-EventManager::~EventManager() {
-    for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; i++)
-    {
-        if(mDataInterpreters[i] != nullptr) {
-            delete mDataInterpreters[i];
-            delete mDataReaders[i];
+EventManager::~EventManager()
+{
+  for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; i++) {
+    if (mDataInterpreters[i] != nullptr) {
+      delete mDataInterpreters[i];
+      delete mDataReaders[i];
 
-          mDataInterpreters[i] = nullptr;
-          mDataReaders[i] = nullptr;
-        }
+      mDataInterpreters[i] = nullptr;
+      mDataReaders[i] = nullptr;
     }
+  }
   mInstance = nullptr;
 }
 
-void EventManager::displayVisualisationEvent(VisualisationEvent &event, const std::string &detectorName) {
+void EventManager::displayVisualisationEvent(VisualisationEvent& event, const std::string& detectorName)
+{
   size_t trackCount = event.getTrackCount();
 
   auto* list = new TEveTrackList(detectorName.c_str());
@@ -214,6 +213,5 @@ void EventManager::registerDetector(DataReader* reader, DataInterpreter* interpr
   mDataInterpreters[type] = interpreter;
 }
 
-}
-}
-
+} // namespace event_visualisation
+} // namespace o2

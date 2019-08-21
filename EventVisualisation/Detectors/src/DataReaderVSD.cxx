@@ -13,8 +13,8 @@
 /// \author julian.myrcha@cern.ch
 /// \author p.nowakowski@cern.ch
 
+#include "EventVisualisationDetectors/DataReaderVSD.h"
 
-#include <EventVisualisationDetectors/DataReaderVSD.h>
 #include <TSystem.h>
 #include <TEveManager.h>
 #include <TFile.h>
@@ -22,55 +22,57 @@
 #include <TEveTrackPropagator.h>
 #include <TEveEventManager.h>
 
-
-namespace o2  {
-namespace event_visualisation {
+namespace o2
+{
+namespace event_visualisation
+{
 
 DataReaderVSD::DataReaderVSD()
-        : DataReader(),
-          mFile(nullptr),
-          mMaxEv(-1), mCurEv(-1) {
+  : DataReader(),
+    mFile(nullptr),
+    mMaxEv(-1),
+    mCurEv(-1)
+{
 }
 
-
-DataReaderVSD::~DataReaderVSD()  {
+DataReaderVSD::~DataReaderVSD()
+{
   delete mFile;
 }
 
+void DataReaderVSD::open()
+{
+  TString ESDFileName = "events_0.root";
+  Warning("GotoEvent", "OPEN");
+  mMaxEv = -1;
+  mCurEv = -1;
+  mFile = TFile::Open(ESDFileName);
+  if (!mFile) {
+    Error("VSD_Reader", "Can not open file '%s' ... terminating.",
+          ESDFileName.Data());
+    gSystem->Exit(1);
+  }
 
-void DataReaderVSD::open()  {
-    TString ESDFileName = "events_0.root";
-    Warning("GotoEvent", "OPEN");
-    mMaxEv = -1;
-    mCurEv = -1;
-    mFile = TFile::Open(ESDFileName);
-    if (!mFile) {
-        Error("VSD_Reader", "Can not open file '%s' ... terminating.",
-              ESDFileName.Data());
-        gSystem->Exit(1);
+  assert(mEvDirKeys.size() == 0);
+
+  TPMERegexp name_re("Event\\d+");
+  TObjLink* lnk = mFile->GetListOfKeys()->FirstLink();
+  while (lnk) {
+    if (name_re.Match(lnk->GetObject()->GetName())) {
+      mEvDirKeys.push_back((TKey*)lnk->GetObject());
     }
+    lnk = lnk->Next();
+  }
 
-    assert(mEvDirKeys.size() ==0);
-
-    TPMERegexp name_re("Event\\d+");
-    TObjLink *lnk = mFile->GetListOfKeys()->FirstLink();
-    while (lnk) {
-        if (name_re.Match(lnk->GetObject()->GetName())) {
-            mEvDirKeys.push_back((TKey *)lnk->GetObject());
-        }
-        lnk = lnk->Next();
-    }
-
-    mMaxEv = mEvDirKeys.size();
-    if (mMaxEv == 0) {
-        Error("VSD_Reader", "No events to show ... terminating.");
-        gSystem->Exit(1);
-    }
+  mMaxEv = mEvDirKeys.size();
+  if (mMaxEv == 0) {
+    Error("VSD_Reader", "No events to show ... terminating.");
+    gSystem->Exit(1);
+  }
 }
 
-
-
-TObject *DataReaderVSD::getEventData(int ev) {
+TObject* DataReaderVSD::getEventData(int ev)
+{
   if (ev < 0 || ev >= this->mMaxEv) {
     Warning("GotoEvent", "Invalid event id %d.", ev);
     return nullptr;
@@ -79,6 +81,5 @@ TObject *DataReaderVSD::getEventData(int ev) {
   return this->mEvDirKeys[this->mCurEv]->ReadObj();
 }
 
-}
-}
-
+} // namespace event_visualisation
+} // namespace o2

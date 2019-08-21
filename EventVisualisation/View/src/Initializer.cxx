@@ -38,7 +38,6 @@
 #include <TRegexp.h>
 #include <TSystem.h>
 #include <TSystemDirectory.h>
-#include <TROOT.h>
 #include <TEveWindowManager.h>
 #include <iostream>
 #include <TFile.h>
@@ -55,19 +54,19 @@ void Initializer::setup(const Options options, EventManager::EDataSource default
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);
 
-  const bool fullscreen = settings.GetValue("fullscreen.mode", false);       // hide left and bottom tabs
-  const string ocdbStorage = settings.GetValue("OCDB.default.path", "local://$ALICE_ROOT/OCDB");// default path to OCDB
+  const bool fullscreen = settings.GetValue("fullscreen.mode", false);                           // hide left and bottom tabs
+  const string ocdbStorage = settings.GetValue("OCDB.default.path", "local://$ALICE_ROOT/OCDB"); // default path to OCDB
   cout << "Initializer -- OCDB path:" << ocdbStorage << endl;
 
   auto& eventManager = EventManager::getInstance();
   eventManager.setDataSourceType(defaultDataSource);
   eventManager.setCdbPath(ocdbStorage);
 
-  if(options.vsd)
+  if (options.vsd)
     eventManager.registerDetector(new DataReaderVSD(), new DataInterpreterVSD(), EVisualisationGroup::VSD);
-  if(options.its)
+  if (options.its)
     eventManager.registerDetector(new DataReaderITS(), new DataInterpreterITS(), EVisualisationGroup::ITS);
-  if(options.tpc)
+  if (options.tpc)
     eventManager.registerDetector(new DataReaderTPC(), new DataInterpreterTPC(), EVisualisationGroup::TPC);
 
   eventManager.setDataSourceType(EventManager::EDataSource::SourceOffline);
@@ -89,8 +88,8 @@ void Initializer::setup(const Options options, EventManager::EDataSource default
   browser->StopEmbedding("EventCtrl");
 
   if (fullscreen) {
-    ((TGWindow*) gEve->GetBrowser()->GetTabLeft()->GetParent())->Resize(1, 0);
-    ((TGWindow*) gEve->GetBrowser()->GetTabBottom()->GetParent())->Resize(0, 1);
+    ((TGWindow*)gEve->GetBrowser()->GetTabLeft()->GetParent())->Resize(1, 0);
+    ((TGWindow*)gEve->GetBrowser()->GetTabBottom()->GetParent())->Resize(0, 1);
   }
   gEve->GetBrowser()->Layout();
   gSystem->ProcessEvents();
@@ -101,7 +100,7 @@ void Initializer::setup(const Options options, EventManager::EDataSource default
   // For the time being we draw single random event on startup.
   // Later this will be triggered by button, and finally moved to configuration.
   gEve->AddEvent(&EventManager::getInstance());
-//  MultiView::getInstance()->drawRandomEvent();
+  //  MultiView::getInstance()->drawRandomEvent();
   frame->DoFirstEvent();
 }
 
@@ -118,15 +117,13 @@ void Initializer::setupGeometry()
     EVisualisationGroup det = static_cast<EVisualisationGroup>(iDet);
     string detName = gVisualisationGroupName[det];
     if (settings.GetValue((detName + ".draw").c_str(), false)) {
-      if (detName == "TPC" || detName == "MCH" || detName == "MTR"
-          || detName == "MID" || detName == "MFT" || detName == "AD0"
-          || detName == "FMD") {// don't load MUON+MFT and AD and standard TPC to R-Phi view
+      if (detName == "TPC" || detName == "MCH" || detName == "MTR" || detName == "MID" || detName == "MFT" || detName == "AD0" || detName == "FMD") { // don't load MUON+MFT and AD and standard TPC to R-Phi view
 
         multiView->drawGeometryForDetector(detName, true, false);
-      } else if (detName == "RPH") {// special TPC geom from R-Phi view
+      } else if (detName == "RPH") { // special TPC geom from R-Phi view
 
         multiView->drawGeometryForDetector(detName, false, true, false);
-      } else {// default
+      } else { // default
         multiView->drawGeometryForDetector(detName);
       }
     }
@@ -176,5 +173,5 @@ void Initializer::setupBackground()
   }
 }
 
-}
-}
+} // namespace event_visualisation
+} // namespace o2

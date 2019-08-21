@@ -9,13 +9,12 @@
 // or submit itself to any jurisdiction.
 
 /// \file DataInterpreterITS.h
-/// \brief converting ITS data to Event Visualisation primitives
+/// \brief Converting ITS data to Event Visualisation primitives
 /// \author julian.myrcha@cern.ch
 /// \author p.nowakowski@cern.ch
 
 #ifndef ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAINTERPRETERITS_H
 #define ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAINTERPRETERITS_H
-
 
 ///
 /// This class overrides DataInterpreter and implements method
@@ -24,23 +23,24 @@
 #include "EventVisualisationBase/DataInterpreter.h"
 #include "EventVisualisationBase/VisualisationConstants.h"
 
-namespace o2 {
-    namespace event_visualisation {
+namespace o2
+{
+namespace event_visualisation
+{
 
+class DataInterpreterITS : public DataInterpreter
+{
+ public:
+  // Default constructor
+  DataInterpreterITS();
 
-        class DataInterpreterITS : public DataInterpreter {
-        public:
-            // Default constructor
-            DataInterpreterITS();
+  // Default destructor
+  ~DataInterpreterITS() final;
 
-            // Default destructor
-            ~DataInterpreterITS() final;
+  std::unique_ptr<VisualisationEvent> interpretDataForType(TObject* data, EVisualisationDataType type) final;
+};
 
-            //
-            std::unique_ptr<VisualisationEvent> interpretDataForType(TObject* data, EVisualisationDataType type) final;
-        };
-
-    }
-}
+} // namespace event_visualisation
+} // namespace o2
 
 #endif //ALICE_O2_EVENTVISUALISATION_BASE_DATAINTERPRETERITS_H

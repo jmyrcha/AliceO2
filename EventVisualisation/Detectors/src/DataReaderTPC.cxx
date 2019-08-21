@@ -14,46 +14,63 @@
 /// \author julian.myrcha@cern.ch
 /// \author p.nowakowski@cern.ch
 
+#include "DataFormatsTPC/TrackTPC.h"
 #include "EventVisualisationDetectors/DataReaderTPC.h"
+
 #include <TTree.h>
 #include <TVector2.h>
 #include <TError.h>
-#include "DataFormatsTPC/TrackTPC.h"
 
-namespace o2  {
-    namespace event_visualisation {
+namespace o2
+{
+namespace event_visualisation
+{
 
-        DataReaderTPC::DataReaderTPC() = default;
+DataReaderTPC::DataReaderTPC() = default;
 
-        void DataReaderTPC::open() {
-            TString clusterFile = "tpc-native-clusters.root";
-            TString trackFile = "tpctracks.root";
+void DataReaderTPC::open()
+{
+  TString clusterFile = "tpc-native-clusters.root";
+  TString trackFile = "tpctracks.root";
 
-            this->mTracFile = TFile::Open(trackFile);
-            this->mClusFile = TFile::Open(clusterFile);
+  this->mTracFile = TFile::Open(trackFile);
+  this->mClusFile = TFile::Open(clusterFile);
 
-            TTree* trec = static_cast<TTree*>(this->mTracFile->Get("tpcrec"));
-            std::vector<tpc::TrackTPC> *trackBuffer = nullptr;
+  TTree* trec = static_cast<TTree*>(this->mTracFile->Get("tpcrec"));
+  std::vector<tpc::TrackTPC>* trackBuffer = nullptr;
 
-            trec->SetBranchAddress("TPCTracks", &trackBuffer);
-            trec->GetEntry(0);
+  trec->SetBranchAddress("TPCTracks", &trackBuffer);
+  trec->GetEntry(0);
 
-          mMaxEv = trackBuffer->size();
-        }
-
-        Int_t DataReaderTPC::GetEventCount() {
-            return mMaxEv;
-        }
-
-        TObject *DataReaderTPC::getEventData(int no) {
-            /// FIXME: Redesign the data reader class
-            TList *list = new TList();
-            list->Add(this->mTracFile);   // firs el = otwarty plik z trackaaami
-            list->Add(this->mClusFile);   // second = otwarty plik z clustrami
-            TVector2 *v = new TVector2(no, 0); // który event chcemy wczytac
-
-            list->Add(v);
-            return list;
-        }
-    }
+  int time = 0;
+  for (int i = 0; i < trackBuffer->size(); i++) {
+    int trackTime = (*trackBuffer)[i].getTime0();
+    if (trackTime > time)
+      time = trackTime;
+  }
+  mMaxEv = time / (2 * mTPCReadoutCycle);
+  if (mMaxEv * 2 * mTPCReadoutCycle < time) {
+    mMaxEv++;
+  }
+  std::cout << "Setting max ev to: " << mMaxEv << " max time: " << time << std::endl;
 }
+
+Int_t DataReaderTPC::GetEventCount()
+{
+  return mMaxEv;
+}
+
+TObject* DataReaderTPC::getEventData(int eventNumber)
+{
+  /// FIXME: Redesign the data reader class
+  TList* list = new TList();
+  list->Add(this->mTracFile);
+  list->Add(this->mClusFile);
+  TVector2* v = new TVector2(eventNumber, 0);
+
+  list->Add(v);
+  return list;
+}
+
+} // namespace event_visualisation
+} // namespace o2

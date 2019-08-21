@@ -20,63 +20,67 @@
 #include <TError.h>
 #include "DataFormatsITSMFT/ROFRecord.h"
 
-namespace o2  {
-namespace event_visualisation {
+namespace o2
+{
+namespace event_visualisation
+{
 
-    DataReaderITS::DataReaderITS() = default;
+DataReaderITS::DataReaderITS() = default;
 
-    void DataReaderITS::open() {
-        TString clusterFile = "o2clus_its.root";
-        TString trackFile = "o2trac_its.root";
+void DataReaderITS::open()
+{
+  TString clusterFile = "o2clus_its.root";
+  TString trackFile = "o2trac_its.root";
 
-        this->mTracFile = TFile::Open(trackFile);
-        this->mClusFile = TFile::Open(clusterFile);
+  this->mTracFile = TFile::Open(trackFile);
+  this->mClusFile = TFile::Open(clusterFile);
 
-        TTree* roft = (TTree*)this->mTracFile->Get("ITSTracksROF");
-        TTree* rofc = (TTree*)this->mClusFile->Get("ITSClustersROF");
+  TTree* roft = (TTree*)this->mTracFile->Get("ITSTracksROF");
+  TTree* rofc = (TTree*)this->mClusFile->Get("ITSClustersROF");
 
-        if(roft != nullptr && rofc != nullptr) {
+  if (roft != nullptr && rofc != nullptr) {
 
-            //TTree *tracks = (TTree*)this->tracFile->Get("o2sim");
-            // temporary number of readout frames as number of events
-            TTree *tracksRof = (TTree*)this->mTracFile->Get("ITSTracksROF");
+    //TTree *tracks = (TTree*)this->tracFile->Get("o2sim");
+    // temporary number of readout frames as number of events
+    TTree* tracksRof = (TTree*)this->mTracFile->Get("ITSTracksROF");
 
-            //TTree *clusters = (TTree*)this->clusFile->Get("o2sim");
-            TTree *clustersRof = (TTree*)this->mClusFile->Get("ITSClustersROF");
+    //TTree *clusters = (TTree*)this->clusFile->Get("o2sim");
+    TTree* clustersRof = (TTree*)this->mClusFile->Get("ITSClustersROF");
 
-            //Read all track RO frames to a buffer to count number of elements
+    //Read all track RO frames to a buffer to count number of elements
 
-            std::vector<o2::itsmft::ROFRecord> *trackROFrames = nullptr;
-            tracksRof->SetBranchAddress("ITSTracksROF", &trackROFrames);
-            tracksRof->GetEntry(0);
+    std::vector<o2::itsmft::ROFRecord>* trackROFrames = nullptr;
+    tracksRof->SetBranchAddress("ITSTracksROF", &trackROFrames);
+    tracksRof->GetEntry(0);
 
-            //Read all cluster RO frames to a buffer
-            std::vector<o2::itsmft::ROFRecord> *clusterROFrames = nullptr;
-            clustersRof->SetBranchAddress("ITSClustersROF", &clusterROFrames);
-            clustersRof->GetEntry(0);
+    //Read all cluster RO frames to a buffer
+    std::vector<o2::itsmft::ROFRecord>* clusterROFrames = nullptr;
+    clustersRof->SetBranchAddress("ITSClustersROF", &clusterROFrames);
+    clustersRof->GetEntry(0);
 
-
-            if(trackROFrames->size() == clusterROFrames->size()) {
-              mMaxEv = trackROFrames->size();
-            } else {
-                Error("DataReaderITS", "Inconsistent number of readout frames in files");
-                exit(1);
-            }
-        }
+    if (trackROFrames->size() == clusterROFrames->size()) {
+      mMaxEv = trackROFrames->size();
+    } else {
+      Error("DataReaderITS", "Inconsistent number of readout frames in files");
+      exit(1);
     }
-
-    Int_t DataReaderITS::GetEventCount() {
-        return mMaxEv;
-    }
-
-    TObject *DataReaderITS::getEventData(int no) {
-        /// FIXME: Redesign the data reader class
-        TList *list = new TList();
-        list->Add(this->mTracFile);
-        list->Add(this->mClusFile);
-        TVector2 *v = new TVector2(no, 0);
-        list->Add(v);
-        return list;
-    }
+  }
 }
- }
+
+Int_t DataReaderITS::GetEventCount()
+{
+  return mMaxEv;
+}
+
+TObject* DataReaderITS::getEventData(int no)
+{
+  /// FIXME: Redesign the data reader class
+  TList* list = new TList();
+  list->Add(this->mTracFile);
+  list->Add(this->mClusFile);
+  TVector2* v = new TVector2(no, 0);
+  list->Add(v);
+  return list;
+}
+} // namespace event_visualisation
+} // namespace o2

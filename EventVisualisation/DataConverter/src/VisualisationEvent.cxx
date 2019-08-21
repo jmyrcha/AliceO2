@@ -18,35 +18,35 @@
 
 using namespace std;
 
-namespace o2  {
-namespace event_visualisation {
+namespace o2
+{
+namespace event_visualisation
+{
 
 /// Ctor -- set the minimalistic event up
-VisualisationEvent::VisualisationEvent( int eventNumber,
-                                      int runNumber,
-                                      double energy,
-                                      int multiplicity,
-                                      string collidingSystem,
-                                      time_t timeStamp
-                                     ) :
-mEventNumber(eventNumber),
-mRunNumber(runNumber),
-mEnergy(energy),
-mMultiplicity(multiplicity),
-mCollidingSystem(collidingSystem),
-mTimeStamp(timeStamp)
+VisualisationEvent::VisualisationEvent(int eventNumber,
+                                       int runNumber,
+                                       double energy,
+                                       int multiplicity,
+                                       string collidingSystem,
+                                       time_t timeStamp) : mEventNumber(eventNumber),
+                                                           mRunNumber(runNumber),
+                                                           mEnergy(energy),
+                                                           mMultiplicity(multiplicity),
+                                                           mCollidingSystem(collidingSystem),
+                                                           mTimeStamp(timeStamp)
 {
-  
 }
- 
+
 const VisualisationTrack& VisualisationEvent::getTrack(int i) const
 {
   return mTracks[i];
 }
 
-const VisualisationCluster &VisualisationEvent::getCluster(int i) const {
+const VisualisationCluster& VisualisationEvent::getCluster(int i) const
+{
   return mClusters[i];
 }
 
-}
-}
+} // namespace event_visualisation
+} // namespace o2

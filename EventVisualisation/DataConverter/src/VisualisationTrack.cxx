@@ -15,42 +15,42 @@
 ///
 
 #include "EventVisualisationDataConverter/VisualisationTrack.h"
+
 #include <iostream>
 
 using namespace std;
 
-namespace o2  {
-namespace event_visualisation {
-
+namespace o2
+{
+namespace event_visualisation
+{
 
 VisualisationTrack::VisualisationTrack() = default;
 
 VisualisationTrack::VisualisationTrack(
-                                     int charge,
-                                     double energy,
-                                     int ID,
-                                     int PID,
-                                     double mass,
-                                     double signedPT,
-                                     double startXYZ[],
-                                     double endXYZ[],
-                                     double pxpypz[],
-                                     int parentID,
-                                     double phi,
-                                     double theta,
-                                     double helixCurvature,
-                                     int type
-                                     )
-:
-mCharge(charge),
-mEnergy(energy),
-mParentID(parentID),
-mPID(PID),
-mSignedPT(signedPT),
-mMass(mass),
-mHelixCurvature(helixCurvature),
-mTheta(theta),
-mPhi(phi)
+  int charge,
+  double energy,
+  int ID,
+  int PID,
+  double mass,
+  double signedPT,
+  double startXYZ[],
+  double endXYZ[],
+  double pxpypz[],
+  int parentID,
+  double phi,
+  double theta,
+  double helixCurvature,
+  int type)
+  : mCharge(charge),
+    mEnergy(energy),
+    mParentID(parentID),
+    mPID(PID),
+    mSignedPT(signedPT),
+    mMass(mass),
+    mHelixCurvature(helixCurvature),
+    mTheta(theta),
+    mPhi(phi)
 {
   setMomentum(pxpypz);
   setStartCoordinates(startXYZ);
@@ -89,7 +89,7 @@ void VisualisationTrack::addPolyPoint(double x, double y, double z)
   mPolyZ.push_back(z);
 }
 
-void VisualisationTrack::addPolyPoint(double *xyz)
+void VisualisationTrack::addPolyPoint(double* xyz)
 {
   mPolyX.push_back(xyz[0]);
   mPolyY.push_back(xyz[1]);
@@ -100,6 +100,6 @@ void VisualisationTrack::setTrackType(ETrackType type)
 {
   mType = gTrackTypes[type];
 }
-    
-}
-}
+
+} // namespace event_visualisation
+} // namespace o2
