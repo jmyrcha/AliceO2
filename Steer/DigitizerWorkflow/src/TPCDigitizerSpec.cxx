@@ -112,16 +112,16 @@ class TPCDPLDigitizerTask
         hisSCDensity->SetDirectory(nullptr);
       }
       if (distortionType == SpaceCharge::SCDistortionType::SCDistortionsConstant) {
-        LOG(INFO) << "TPC: Using constant space-charge distortions." << FairLogger::endl;
+        LOG(INFO) << "TPC: Using constant space-charge distortions.";
         if (hisSCDensity == nullptr) {
-          LOG(FATAL) << "Constant space-charge distortions require an initial space-charge density histogram. Please provide the path to the root file (O2TPCSCDensityHisFilePath) and the histogram name (O2TPCSCDensityHisName) in your environment variables." << FairLogger::endl;
+          LOG(FATAL) << "Constant space-charge distortions require an initial space-charge density histogram. Please provide the path to the root file (O2TPCSCDensityHisFilePath) and the histogram name (O2TPCSCDensityHisName) in your environment variables.";
         }
       }
       if (distortionType == SpaceCharge::SCDistortionType::SCDistortionsRealistic) {
-        LOG(INFO) << "TPC: Using realistic space-charge distortions." << FairLogger::endl;
+        LOG(INFO) << "TPC: Using realistic space-charge distortions.";
       }
       if (hisSCDensity) {
-        LOG(INFO) << "TPC: Providing initial space-charge density histogram: " << hisSCDensity->GetName() << FairLogger::endl;
+        LOG(INFO) << "TPC: Providing initial space-charge density histogram: " << hisSCDensity->GetName();
       }
 
       mDigitizer.enableSCDistortions(distortionType, hisSCDensity.get(), gridSize[0], gridSize[1], gridSize[2]);
@@ -161,7 +161,7 @@ class TPCDPLDigitizerTask
     auto& cdb = o2::tpc::CDBInterface::instance();
     cdb.setUseDefaults();
     if (!gSystem->AccessPathName("GainMap.root")) {
-      LOG(INFO) << "TPC: Using gain map from 'GainMap.root'" << FairLogger::endl;
+      LOG(INFO) << "TPC: Using gain map from 'GainMap.root'";
       cdb.setGainMapFromFile("GainMap.root");
     }
 
@@ -179,6 +179,7 @@ class TPCDPLDigitizerTask
       LOG(INFO) << "TPC: Sending ROMode= " << (mDigitizer.isContinuousReadout() ? "Continuous" : "Triggered")
                 << " to GRPUpdater from channel " << mChannel;
       pc.outputs().snapshot(Output{"TPC", "ROMode", 0, Lifetime::Timeframe}, roMode);
+      mWriteGRP = false;
     }
 
     // extract which sector to treat
