@@ -38,10 +38,12 @@ class EventManagerFrame : public TGMainFrame
  protected:
   o2::event_visualisation::EventManager* mEventManager; // Model object.
   TGNumberEntry* mEventId;                              // Display/edit current event id
+
  public:
   EventManagerFrame(o2::event_visualisation::EventManager& eventManager);
   ~EventManagerFrame() override = default;
-  ClassDefOverride(EventManagerFrame, 0); // GUI window for AliEveEventManager.
+  ClassDefOverride(EventManagerFrame, 0); // GUI window for EventManager.
+  void setupGeometry(bool run2);
 
  public: // slots
   void DoFirstEvent();
@@ -50,6 +52,8 @@ class EventManagerFrame : public TGMainFrame
   void DoLastEvent();
   void DoSetEvent();
   void DoScreenshot();
+  void DoOldGeometry();
+  void DoNewGeometry();
 };
 
 } // namespace event_visualisation

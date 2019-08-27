@@ -29,6 +29,7 @@ enum EVisualisationGroup {
   EMC,
   HMP,
   MCH,
+  MID,
   PHS,
   RPH,
   SDD,
@@ -38,6 +39,7 @@ enum EVisualisationGroup {
   TPC,
   TRD,
   RND,
+  ITS,
   VSD,
   NvisualisationGroups
 };
@@ -47,6 +49,7 @@ const std::string gVisualisationGroupName[NvisualisationGroups] = {
   "EMC",
   "HMP",
   "MCH",
+  "MID",
   "PHS",
   "RPH",
   "SDD",
@@ -55,7 +58,10 @@ const std::string gVisualisationGroupName[NvisualisationGroups] = {
   "TOF",
   "TPC",
   "TRD",
-  "RND"};
+  "RND",
+  "ITS",
+  "VSD"
+};
 
 enum EVisualisationDataType {
   Raw,       ///< Raw data
@@ -75,7 +81,8 @@ const std::string gDataTypeNames[NdataTypes] = {
   "Clusters",
   "ESD",
   "AOD",
-  "NoData"};
+  "NoData"
+};
 
 } // namespace event_visualisation
 } // namespace o2

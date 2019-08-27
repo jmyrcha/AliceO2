@@ -40,6 +40,7 @@
 #include <TEveWindowManager.h>
 #include <iostream>
 #include <TFile.h>
+
 using namespace std;
 
 namespace o2
@@ -69,41 +70,38 @@ void Initializer::setup(const Options options, EventManager::EDataSource default
   eventManager.setDataSourceType(EventManager::EDataSource::SourceOffline);
   eventManager.Open();
 
-  //gEve->AddEvent(&eventManager);
-
-  setupGeometry();
-  gSystem->ProcessEvents();
-  gEve->Redraw3D(true);
-
   setupBackground();
 
   // Setup windows size, fullscreen and focus
   TEveBrowser* browser = gEve->GetBrowser();
   browser->GetTabRight()->SetTab(1);
   browser->MoveResize(0, 0, gClient->GetDisplayWidth(), gClient->GetDisplayHeight() - 32);
-
   browser->StartEmbedding(TRootBrowser::kBottom);
   EventManagerFrame* frame = new EventManagerFrame(eventManager);
-  browser->StopEmbedding("EventCtrl Balbinka");
+  browser->StopEmbedding("EventCtrl");
 
   if (fullscreen) {
-    ((TGWindow*)gEve->GetBrowser()->GetTabLeft()->GetParent())->Resize(1, 0);
-    ((TGWindow*)gEve->GetBrowser()->GetTabBottom()->GetParent())->Resize(0, 1);
+    ((TGWindow*)browser->GetTabLeft()->GetParent())->Resize(1, 0);
+    ((TGWindow*)browser->GetTabBottom()->GetParent())->Resize(0, 1);
   }
-  gEve->GetBrowser()->Layout();
-  gSystem->ProcessEvents();
+  browser->Layout();
 
   setupCamera();
 
   // Temporary:
   // For the time being we draw single random event on startup.
   // Later this will be triggered by button, and finally moved to configuration.
-  gEve->AddEvent(&EventManager::getInstance());
+  //gEve->AddEvent(&eventManager);
   //  MultiView::getInstance()->drawRandomEvent();
+  frame->setupGeometry(options.run2);
+
+  gEve->AddEvent(&eventManager);
   frame->DoFirstEvent();
+  gSystem->ProcessEvents();
+  gEve->Redraw3D(true);
 }
 
-void Initializer::setupGeometry()
+void Initializer::setupGeometry(bool run2)
 {
   // read path to geometry files from config file
   TEnv settings;
@@ -118,12 +116,12 @@ void Initializer::setupGeometry()
     if (settings.GetValue((detName + ".draw").c_str(), false)) {
       if (detName == "TPC" || detName == "MCH" || detName == "MTR" || detName == "MID" || detName == "MFT" || detName == "AD0" || detName == "FMD") { // don't load MUON+MFT and AD and standard TPC to R-Phi view
 
-        multiView->drawGeometryForDetector(detName, true, false);
+        multiView->drawGeometryForDetector(detName, run2, true, false);
       } else if (detName == "RPH") { // special TPC geom from R-Phi view
 
-        multiView->drawGeometryForDetector(detName, false, true, false);
+        multiView->drawGeometryForDetector(detName, run2, false, true, false);
       } else { // default
-        multiView->drawGeometryForDetector(detName);
+        multiView->drawGeometryForDetector(detName, run2);
       }
     }
   }

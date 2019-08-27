@@ -115,7 +115,7 @@ void MinimalisticTrack::fillWithRandomData()
   mMass = 1000 * (double)rand() / RAND_MAX + 0.5;
   mEnergy = mMass + 1000 * (double)rand() / RAND_MAX;
 
-  int PID[10] = {-2212, -321, -211, -13, -11, 11, 13, 211, 321, 2212};
+  int PID[10] = { -2212, -321, -211, -13, -11, 11, 13, 211, 321, 2212 };
   mPID = PID[(int)(rand() % 10)];
 }
 

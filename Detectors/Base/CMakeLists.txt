@@ -17,6 +17,7 @@ o2_add_library(DetectorsBase
                        src/MatLayerCylSet.cxx
                        src/Ray.cxx
                PUBLIC_LINK_LIBRARIES FairRoot::Base
+                                     O2::CCDB
                                      O2::CommonUtils
                                      O2::DetectorsCommonDataFormats
                                      O2::GPUCommon

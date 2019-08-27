@@ -33,9 +33,10 @@ using namespace o2::event_visualisation;
 std::string printOptions(Options* o)
 {
   std::string res;
-  res.append(std::string("randomTracks: ") + (o->randomTracks ? "true" : "false") + "\n");
-  res.append(std::string("vds         : ") + (o->vsd ? "true" : "false") + "\n");
-  res.append(std::string("itc         : ") + (o->itc ? "true" : "false") + "\n");
+  res.append(std::string("randomTracks : ") + (o->randomTracks ? "true" : "false") + "\n");
+  res.append(std::string("vds          : ") + (o->vsd ? "true" : "false") + "\n");
+  res.append(std::string("itc          : ") + (o->itc ? "true" : "false") + "\n");
+  res.append(std::string("run2 geometry: ") + (o->run2 ? "true" : "false") + "\n");
   return res;
 }
 
@@ -44,10 +45,8 @@ Options* processCommandLine(int argc, char* argv[])
   static Options options;
   int opt;
 
-  // put ':' in the starting of the
-  // string so that program can
-  //distinguish between '?' and ':'
-  while ((opt = getopt(argc, argv, ":if:rv")) != -1) {
+  // put ':' at the beginning of the string so that program can distinguish between '?' and ':'
+  while ((opt = getopt(argc, argv, ":i:rvg")) != -1) {
     switch (opt) {
       case 'r':
         options.randomTracks = true;
@@ -58,8 +57,8 @@ Options* processCommandLine(int argc, char* argv[])
       case 'v':
         options.vsd = true;
         break;
-      case 'f':
-        options.fileName = optarg;
+      case 'g':
+        options.run2 = true;
         break;
       case ':':
         printf("option needs a value\n");
@@ -92,8 +91,8 @@ int main(int argc, char** argv)
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);
 
-  std::array<const char*, 7> keys = {"Gui.DefaultFont", "Gui.MenuFont", "Gui.MenuHiFont",
-                                     "Gui.DocFixedFont", "Gui.DocPropFont", "Gui.IconFont", "Gui.StatusFont"};
+  std::array<const char*, 7> keys = { "Gui.DefaultFont", "Gui.MenuFont", "Gui.MenuHiFont",
+                                      "Gui.DocFixedFont", "Gui.DocPropFont", "Gui.IconFont", "Gui.StatusFont" };
   for (const auto& key : keys) {
     if (settings.Defined(key))
       gEnv->SetValue(key, settings.GetValue(key, ""));

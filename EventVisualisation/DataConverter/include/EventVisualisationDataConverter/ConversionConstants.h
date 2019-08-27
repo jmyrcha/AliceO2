@@ -71,7 +71,8 @@ const std::string gDetectorTypes[nDetectorTypes] = {
   "HMPID",
   "MUON",
   "EMCAL",
-  "LastLayer"};
+  "LastLayer"
+};
 
 const int nTrackTypes = 14;
 
@@ -93,6 +94,7 @@ const std::string gTrackTypes[nTrackTypes] = {
 
   "muon_matched",
   "muon_not_matched",
-  "muon_ghost"};
+  "muon_ghost"
+};
 
 #endif //ALIROOT_CONVERSIONCONSTANTS_H

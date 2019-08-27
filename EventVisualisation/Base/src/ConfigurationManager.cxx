@@ -32,19 +32,42 @@ ConfigurationManager& ConfigurationManager::getInstance()
   return instance;
 }
 
-void ConfigurationManager::getConfig(TEnv& settings) const
+void ConfigurationManager::getConfig(TEnv& settings, bool run2) const
 {
+  const std::string configName = run2 ? "eve_config" : "o2eve_config";
+  const std::string methodName = "ConfigurationManager::getConfig";
   // TODO:
   // we need a way to point to the O2 installation directory
   //
-  if (settings.ReadFile(Form("%s/.o2eve_config", gSystem->Getenv("HOME")), kEnvUser) < 0) {
-    if (settings.ReadFile(Form("%s/o2eve_config", gSystem->Getenv("HOME")), kEnvUser) < 0) {
-      cout << "WARNING -- could not find eve_config in home directory! Trying default one in O2/EventVisualisation/Base/" << endl;
-      if (settings.ReadFile(Form("%s/EventVisualisation/o2eve_config", gSystem->Getenv("ALICEO2_INSTALL_PATH")), kEnvUser) < 0) {
-        cout << "ERROR -- could not find eve_config file!." << endl;
-        exit(0);
+  if (settings.ReadFile(Form(".%s", configName.c_str()), kEnvUser) < 0) {
+    if (settings.ReadFile(Form("%s/.%s", gSystem->Getenv("HOME"), configName.c_str()), kEnvUser) < 0) {
+      if (settings.ReadFile(Form("%s/%s", gSystem->Getenv("HOME"), configName.c_str()), kEnvUser) < 0) {
+        std::cout << "WARNING: Could not find eve_config in home directory!\n";
+        if (run2) {
+          std::cout << "WARNING: Trying default one in $ALICE_ROOT/EVE/EveBase/\n";
+          if (settings.ReadFile(Form("%s/EVE/EveBase/eve_config",
+                                     gSystem->Getenv("ALICE_ROOT")),
+                                kEnvUser) < 0) {
+            std::cout << "ERROR: Could not find eve_config file!\n";
+            exit(0);
+          }
+        } else {
+          std::cout << "WARNING: Trying default one in $ALICEO2_INSTALL_PATH/EventVisualisation\n";
+          if (settings.ReadFile(Form("%s/EventVisualisation/o2eve_config",
+                                     gSystem->Getenv("ALICEO2_INSTALL_PATH")),
+                                kEnvUser) < 0) {
+            std::cout << "ERROR: Could not find o2eve_config file!\n";
+            exit(0);
+          }
+        }
+      } else {
+        std::cout << "INFO: Using config at: " << gSystem->Getenv("HOME") << "/" << configName.c_str() << '\n';
       }
+    } else {
+      std::cout << "INFO: Using config at: " << gSystem->Getenv("HOME") << "/." << configName.c_str() << '\n';
     }
+  } else {
+    std::cout << "INFO: Using config at: " << configName.c_str() << '\n';
   }
 }
 

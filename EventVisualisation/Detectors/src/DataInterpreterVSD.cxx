@@ -47,7 +47,7 @@ DataInterpreterVSD::~DataInterpreterVSD()
   }
 }
 
-TEveElement* DataInterpreterVSD::interpretDataForType(TObject* data, EVisualisationDataType /*type*/)
+TEveElement* DataInterpreterVSD::interpretDataForType(TObject* data, EVisualisationDataType type)
 {
   if (mVSD == nullptr)
     mVSD = new TEveVSD;

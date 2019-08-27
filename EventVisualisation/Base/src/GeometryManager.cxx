@@ -39,35 +39,39 @@ GeometryManager& GeometryManager::getInstance()
   return instance;
 }
 
-TEveGeoShape* GeometryManager::getGeometryForDetector(string detectorName)
+TEveGeoShape* GeometryManager::getGeometryForDetector(string detectorName, bool run2)
 {
   TEnv settings;
-  ConfigurationManager::getInstance().getConfig(settings);
+  ConfigurationManager::getInstance().getConfig(settings, run2);
 
   // read geometry path from config file
   string geomPath = settings.GetValue("simple.geom.path", "");
 
   // TODO:
   // we need a way to set O2 installation path here
-  //
-  const string o2basePathSpecifier = "${ALICE_ROOT}";
-  const string o2basePath = ""; //= gSystem->Getenv("ALICE_ROOT");
+  // TODO: Since no *.root files in O2 - do we need those at all?
+  const string o2basePathSpecifier = "${O2_ROOT}";
+  const string o2basePath = gSystem->Getenv("O2_ROOT");
   const size_t o2pos = geomPath.find(o2basePathSpecifier);
 
   if (o2pos != string::npos) {
     geomPath.replace(o2pos, o2pos + o2basePathSpecifier.size(), o2basePath);
   }
 
+  const string runPath = run2 ? "/run2" : "/run3";
+
   // load ROOT file with geometry
-  TFile* f = TFile::Open(Form("%s/simple_geom_%s.root", geomPath.c_str(), detectorName.c_str()));
+  TFile* f = TFile::Open(Form("%s%s/simple_geom_%s.root", geomPath.c_str(), runPath.c_str(), detectorName.c_str()));
+  cout << "GeometryManager::GetSimpleGeom opening geometry for: " << detectorName << endl;
   if (!f) {
     cout << "GeometryManager::GetSimpleGeom -- no file with geometry found for: " << detectorName << "!" << endl;
     return nullptr;
   }
 
-  TEveGeoShapeExtract* geomShapreExtract = static_cast<TEveGeoShapeExtract*>(f->Get(detectorName.c_str()));
-  TEveGeoShape* geomShape = TEveGeoShape::ImportShapeExtract(geomShapreExtract);
+  TEveGeoShapeExtract* geomShapeExtract = static_cast<TEveGeoShapeExtract*>(f->Get(detectorName.c_str()));
+  TEveGeoShape* geomShape = TEveGeoShape::ImportShapeExtract(geomShapeExtract);
   f->Close();
+  geomShape->SetName(detectorName.c_str());
 
   // tricks for different R-Phi geom of TPC:
   if (detectorName == "RPH") { // use all other parameters of regular TPC geom
@@ -75,7 +79,7 @@ TEveGeoShape* GeometryManager::getGeometryForDetector(string detectorName)
   }
 
   // prepare geometry to be drawn including all children
-  drawDeep(geomShape,
+  drawDeep(geomShape, run2,
            settings.GetValue(Form("%s.color", detectorName.c_str()), -1),
            settings.GetValue(Form("%s.trans", detectorName.c_str()), -1),
            settings.GetValue(Form("%s.line.color", detectorName.c_str()), -1));
@@ -85,12 +89,12 @@ TEveGeoShape* GeometryManager::getGeometryForDetector(string detectorName)
   return geomShape;
 }
 
-void GeometryManager::drawDeep(TEveGeoShape* geomShape, Color_t color, Char_t transparency, Color_t lineColor)
+void GeometryManager::drawDeep(TEveGeoShape* geomShape, bool run2, Color_t color, Char_t transparency, Color_t lineColor)
 {
   if (geomShape->HasChildren()) {
     geomShape->SetRnrSelf(false);
 
-    if (strcmp(geomShape->GetElementName(), "TPC_Drift_1") == 0) { // hack for TPC drift chamber
+    if (run2 && strcmp(geomShape->GetElementName(), "TPC_Drift_1") == 0) { // hack for TPC drift chamber
       geomShape->SetRnrSelf(kTRUE);
       if (color >= 0)
         geomShape->SetMainColor(color);
@@ -107,7 +111,7 @@ void GeometryManager::drawDeep(TEveGeoShape* geomShape, Color_t color, Char_t tr
     }
 
     for (TEveElement::List_i i = geomShape->BeginChildren(); i != geomShape->EndChildren(); ++i) {
-      drawDeep(static_cast<TEveGeoShape*>(*i), color, transparency, lineColor);
+      drawDeep(static_cast<TEveGeoShape*>(*i), run2, color, transparency, lineColor);
     }
   } else {
     geomShape->SetRnrSelf(true);
@@ -124,7 +128,7 @@ void GeometryManager::drawDeep(TEveGeoShape* geomShape, Color_t color, Char_t tr
       geomShape->SetMainTransparency(transparency);
     }
 
-    if (strcmp(geomShape->GetElementName(), "PHOS_5") == 0) { // hack for PHOS module which is not installed
+    if (run2 && strcmp(geomShape->GetElementName(), "PHOS_5") == 0) { // hack for PHOS module which is not installed
       geomShape->SetRnrSelf(false);
     }
   }

@@ -24,10 +24,10 @@ namespace event_visualisation
 {
 
 struct Options {
-  bool randomTracks;    // -r
-  bool vsd;             // -v
-  bool itc;             // -i
-  std::string fileName; // -f 'data.root'
+  bool randomTracks; // -r
+  bool vsd;          // -v
+  bool itc;          // -i
+  bool run2;         // -g
 };
 
 /// This class initializes a core of the visualisation system.
@@ -40,16 +40,17 @@ struct Options {
 class Initializer
 {
  public:
-  /// Default constructor
-  static void setup(const Options options, const EventManager::EDataSource defaultDataSource = EventManager::SourceOffline); // default data source will be moved to a config file
+  static void setup(const Options options, const EventManager::EDataSource defaultDataSource = EventManager::EDataSource::SourceOffline); // default data source will be moved to a config file
+
  private:
   /// Loads geometry for all detectors
-  static void setupGeometry();
+  static void setupGeometry(bool run2);
   /// Sets up background color
   static void setupBackground();
   /// Sets up camera position
   static void setupCamera();
 };
+
 } // namespace event_visualisation
 } // namespace o2
 
