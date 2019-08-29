@@ -25,4 +25,7 @@
 #pragma link C++ class o2::fdd::Hit + ;
 #pragma link C++ class vector < o2::fdd::Hit> + ;
 
+#pragma link C++ class o2::fdd::RecPoint + ;
+#pragma link C++ class vector < o2::fdd::RecPoint> + ;
+
 #endif
