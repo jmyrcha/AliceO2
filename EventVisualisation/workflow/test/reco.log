@@ -1,0 +1,183 @@
+[INFO] Using port range [21999, 22999]
+[WARN] Could not create GUI. Switching to batch mode. Do you have GLFW on your system?
+[INFO] Initialising O2 Data Processing Layer
+[INFO] O2 Data Processing Layer initialised. We brake for nobody.
+[INFO] Redeployment of configuration asked.
+[INFO] Starting internal-dpl-clock on pid 2552
+
+[INFO] Starting tpc-digit-reader on pid 2555
+
+[INFO] Starting tpc-digits-writer on pid 2556
+
+[INFO] Redeployment of configuration done.
+[2552]: [WARN] Could not create GUI. Switching to batch mode. Do you have GLFW on your system?
+[2552]: [INFO] Spawing new device internal-dpl-clock in process with pid 2552
+[2552]: catch-signals                                                     = 1                                                                                                    <int>            [default] 
+[2552]: channel-config                                                    = name=from_internal-dpl-clock_to_tpc-digit-reader,type=push,method=bind,address=tcp://*:22000,rateLogging=60   <vector<string>> [provided]
+[2552]: chans.from_internal-dpl-clock_to_tpc-digit-reader.0.address       = tcp://*:22000                                                                                        <string>         [provided]
+[2552]: chans.from_internal-dpl-clock_to_tpc-digit-reader.0.autoBind      = 1                                                                                                    <bool>           [provided]
+[2552]: chans.from_internal-dpl-clock_to_tpc-digit-reader.0.linger        = 500                                                                                                  <int>            [provided]
+[2552]: chans.from_internal-dpl-clock_to_tpc-digit-reader.0.method        = bind                                                                                                 <string>         [provided]
+[2552]: chans.from_internal-dpl-clock_to_tpc-digit-reader.0.portRangeMax  = 23000                                                                                                <int>            [provided]
+[2552]: chans.from_internal-dpl-clock_to_tpc-digit-reader.0.portRangeMin  = 22000                                                                                                <int>            [provided]
+[2552]: chans.from_internal-dpl-clock_to_tpc-digit-reader.0.rateLogging   = 60                                                                                                   <int>            [provided]
+[2552]: chans.from_internal-dpl-clock_to_tpc-digit-reader.0.rcvBufSize    = 1000                                                                                                 <int>            [provided]
+[2552]: chans.from_internal-dpl-clock_to_tpc-digit-reader.0.rcvKernelSize = 0                                                                                                    <int>            [provided]
+[2552]: chans.from_internal-dpl-clock_to_tpc-digit-reader.0.sndBufSize    = 1000                                                                                                 <int>            [provided]
+[2552]: chans.from_internal-dpl-clock_to_tpc-digit-reader.0.sndKernelSize = 0                                                                                                    <int>            [provided]
+[2552]: chans.from_internal-dpl-clock_to_tpc-digit-reader.0.transport     = default                                                                                              <string>         [provided]
+[2552]: chans.from_internal-dpl-clock_to_tpc-digit-reader.0.type          = push                                                                                                 <string>         [provided]
+[2552]: chans.from_internal-dpl-clock_to_tpc-digit-reader.numSockets      = 1                                                                                                    <int>            [provided]
+[2552]: color                                                             = 0                                                                                                    <bool>           [provided]
+[2552]: control                                                           = static                                                                                               <string>         [provided]
+[2552]: id                                                                = internal-dpl-clock                                                                                   <string>         [provided]
+[2552]: infologger-mode                                                   =                                                                                                      <string>         [default] 
+[2552]: infologger-severity                                               =                                                                                                      <string>         [default] 
+[2552]: initialization-timeout                                            = 120                                                                                                  <int>            [default] 
+[2552]: io-threads                                                        = 1                                                                                                    <int>            [default] 
+[2552]: log-to-file                                                       =                                                                                                      <string>         [default] 
+[2552]: max-run-time                                                      = 0                                                                                                    <std::size_t>    [default] 
+[2552]: monitoring-backend                                                = kafka://127.0.0.1:7654                                                                               <string>         [provided]
+[2552]: network-interface                                                 = default                                                                                              <string>         [default] 
+[2552]: rate                                                              = 0                                                                                                    <float>          [default] 
+[2552]: session                                                           = default                                                                                              <string>         [default] 
+[2552]: severity                                                          = debug                                                                                                <string>         [default] 
+[2552]: shm-monitor                                                       = 1                                                                                                    <bool>           [default] 
+[2552]: shm-segment-size                                                  = 2000000000                                                                                           <std::size_t>    [default] 
+[2552]: transport                                                         = zeromq                                                                                               <string>         [default] 
+[2552]: verbosity                                                         = medium                                                                                               <string>         [default] 
+[2552]: 
+[2552]: [13:37:03][INFO] 
+[2552]:       ______      _    _______  _________ 
+[2552]:      / ____/___ _(_)_______   |/  /_  __ \    version 1.4.2
+[2552]:     / /_  / __ `/ / ___/__  /|_/ /_  / / /    build RELWITHDEBINFO
+[2552]:    / __/ / /_/ / / /    _  /  / / / /_/ /     https://github.com/FairRootGroup/FairMQ
+[2552]:   /_/    \__,_/_/_/     /_/  /_/  \___\_\     LGPL-3.0  © 2012-2018 GSI
+[2552]: 
+[2552]: [13:37:03][ERROR] Unhandled exception reached the top of main: Kafka backend is not enabled, device shutting down.
+[2552]: [13:37:03][INFO] Process 2552 is exiting.
+[2555]: [WARN] Could not create GUI. Switching to batch mode. Do you have GLFW on your system?
+[2555]: [INFO] Spawing new device tpc-digit-reader in process with pid 2555
+[2555]: catch-signals                                                     = 1                                                                                                    <int>            [default] 
+[2555]: channel-config                                                    = name=from_tpc-digit-reader_to_tpc-digits-writer,type=push,method=bind,address=tcp://*:22001,rateLogging=60  name=from_internal-dpl-clock_to_tpc-digit-reader,type=pull,method=connect,address=tcp://127.0.0.1:22000,rateLogging=60   <vector<string>> [provided]
+[2555]: chans.from_internal-dpl-clock_to_tpc-digit-reader.0.address       = tcp://127.0.0.1:22000                                                                                <string>         [provided]
+[2555]: chans.from_internal-dpl-clock_to_tpc-digit-reader.0.autoBind      = 1                                                                                                    <bool>           [provided]
+[2555]: chans.from_internal-dpl-clock_to_tpc-digit-reader.0.linger        = 500                                                                                                  <int>            [provided]
+[2555]: chans.from_internal-dpl-clock_to_tpc-digit-reader.0.method        = connect                                                                                              <string>         [provided]
+[2555]: chans.from_internal-dpl-clock_to_tpc-digit-reader.0.portRangeMax  = 23000                                                                                                <int>            [provided]
+[2555]: chans.from_internal-dpl-clock_to_tpc-digit-reader.0.portRangeMin  = 22000                                                                                                <int>            [provided]
+[2555]: chans.from_internal-dpl-clock_to_tpc-digit-reader.0.rateLogging   = 60                                                                                                   <int>            [provided]
+[2555]: chans.from_internal-dpl-clock_to_tpc-digit-reader.0.rcvBufSize    = 1000                                                                                                 <int>            [provided]
+[2555]: chans.from_internal-dpl-clock_to_tpc-digit-reader.0.rcvKernelSize = 0                                                                                                    <int>            [provided]
+[2555]: chans.from_internal-dpl-clock_to_tpc-digit-reader.0.sndBufSize    = 1000                                                                                                 <int>            [provided]
+[2555]: chans.from_internal-dpl-clock_to_tpc-digit-reader.0.sndKernelSize = 0                                                                                                    <int>            [provided]
+[2555]: chans.from_internal-dpl-clock_to_tpc-digit-reader.0.transport     = default                                                                                              <string>         [provided]
+[2555]: chans.from_internal-dpl-clock_to_tpc-digit-reader.0.type          = pull                                                                                                 <string>         [provided]
+[2555]: chans.from_internal-dpl-clock_to_tpc-digit-reader.numSockets      = 1                                                                                                    <int>            [provided]
+[2555]: chans.from_tpc-digit-reader_to_tpc-digits-writer.0.address        = tcp://*:22001                                                                                        <string>         [provided]
+[2555]: chans.from_tpc-digit-reader_to_tpc-digits-writer.0.autoBind       = 1                                                                                                    <bool>           [provided]
+[2555]: chans.from_tpc-digit-reader_to_tpc-digits-writer.0.linger         = 500                                                                                                  <int>            [provided]
+[2555]: chans.from_tpc-digit-reader_to_tpc-digits-writer.0.method         = bind                                                                                                 <string>         [provided]
+[2555]: chans.from_tpc-digit-reader_to_tpc-digits-writer.0.portRangeMax   = 23000                                                                                                <int>            [provided]
+[2555]: chans.from_tpc-digit-reader_to_tpc-digits-writer.0.portRangeMin   = 22000                                                                                                <int>            [provided]
+[2555]: chans.from_tpc-digit-reader_to_tpc-digits-writer.0.rateLogging    = 60                                                                                                   <int>            [provided]
+[2555]: chans.from_tpc-digit-reader_to_tpc-digits-writer.0.rcvBufSize     = 1000                                                                                                 <int>            [provided]
+[2555]: chans.from_tpc-digit-reader_to_tpc-digits-writer.0.rcvKernelSize  = 0                                                                                                    <int>            [provided]
+[2555]: chans.from_tpc-digit-reader_to_tpc-digits-writer.0.sndBufSize     = 1000                                                                                                 <int>            [provided]
+[2555]: chans.from_tpc-digit-reader_to_tpc-digits-writer.0.sndKernelSize  = 0                                                                                                    <int>            [provided]
+[2555]: chans.from_tpc-digit-reader_to_tpc-digits-writer.0.transport      = default                                                                                              <string>         [provided]
+[2555]: chans.from_tpc-digit-reader_to_tpc-digits-writer.0.type           = push                                                                                                 <string>         [provided]
+[2555]: chans.from_tpc-digit-reader_to_tpc-digits-writer.numSockets       = 1                                                                                                    <int>            [provided]
+[2555]: color                                                             = 0                                                                                                    <bool>           [provided]
+[2555]: control                                                           = static                                                                                               <string>         [provided]
+[2555]: digitbranch                                                       = TPCDigit                                                                                             <string>         [provided]
+[2555]: end-value-enumeration                                             = -1                                                                                                   <int>            [provided]
+[2555]: id                                                                = tpc-digit-reader                                                                                     <string>         [provided]
+[2555]: infile                                                            = tpcdigits.root                                                                                       <string>         [provided]
+[2555]: infologger-mode                                                   =                                                                                                      <string>         [default] 
+[2555]: infologger-severity                                               =                                                                                                      <string>         [default] 
+[2555]: initialization-timeout                                            = 120                                                                                                  <int>            [default] 
+[2555]: io-threads                                                        = 1                                                                                                    <int>            [default] 
+[2555]: log-to-file                                                       =                                                                                                      <string>         [default] 
+[2555]: max-run-time                                                      = 0                                                                                                    <std::size_t>    [default] 
+[2555]: mcbranch                                                          = TPCDigitMCTruth                                                                                      <string>         [provided]
+[2555]: monitoring-backend                                                = kafka://127.0.0.1:7654                                                                               <string>         [provided]
+[2555]: network-interface                                                 = default                                                                                              <string>         [default] 
+[2555]: nevents                                                           = -1                                                                                                   <int>            [provided]
+[2555]: rate                                                              = 0                                                                                                    <float>          [default] 
+[2555]: session                                                           = default                                                                                              <string>         [default] 
+[2555]: severity                                                          = debug                                                                                                <string>         [default] 
+[2555]: shm-monitor                                                       = 1                                                                                                    <bool>           [default] 
+[2555]: shm-segment-size                                                  = 2000000000                                                                                           <std::size_t>    [default] 
+[2555]: start-value-enumeration                                           = 0                                                                                                    <int>            [provided]
+[2555]: step-value-enumeration                                            = 1                                                                                                    <int>            [provided]
+[2555]: terminate-on-eod                                                  = 1                                                                                                    <bool>           [provided]
+[2555]: transport                                                         = zeromq                                                                                               <string>         [default] 
+[2555]: treename                                                          = o2sim                                                                                                <string>         [provided]
+[2555]: verbosity                                                         = medium                                                                                               <string>         [default] 
+[2555]: 
+[2555]: [13:37:03][INFO] 
+[2555]:       ______      _    _______  _________ 
+[2555]:      / ____/___ _(_)_______   |/  /_  __ \    version 1.4.2
+[2555]:     / /_  / __ `/ / ___/__  /|_/ /_  / / /    build RELWITHDEBINFO
+[2555]:    / __/ / /_/ / / /    _  /  / / / /_/ /     https://github.com/FairRootGroup/FairMQ
+[2555]:   /_/    \__,_/_/_/     /_/  /_/  \___\_\     LGPL-3.0  © 2012-2018 GSI
+[2555]: 
+[2555]: [13:37:03][ERROR] Unhandled exception reached the top of main: Kafka backend is not enabled, device shutting down.
+[2555]: [13:37:03][INFO] Process 2555 is exiting.
+[2556]: [WARN] Could not create GUI. Switching to batch mode. Do you have GLFW on your system?
+[2556]: [INFO] Spawing new device tpc-digits-writer in process with pid 2556
+[2556]: catch-signals                                                    = 1                                                                                                    <int>            [default] 
+[2556]: channel-config                                                   = name=from_tpc-digit-reader_to_tpc-digits-writer,type=pull,method=connect,address=tcp://127.0.0.1:22001,rateLogging=60   <vector<string>> [provided]
+[2556]: chans.from_tpc-digit-reader_to_tpc-digits-writer.0.address       = tcp://127.0.0.1:22001                                                                                <string>         [provided]
+[2556]: chans.from_tpc-digit-reader_to_tpc-digits-writer.0.autoBind      = 1                                                                                                    <bool>           [provided]
+[2556]: chans.from_tpc-digit-reader_to_tpc-digits-writer.0.linger        = 500                                                                                                  <int>            [provided]
+[2556]: chans.from_tpc-digit-reader_to_tpc-digits-writer.0.method        = connect                                                                                              <string>         [provided]
+[2556]: chans.from_tpc-digit-reader_to_tpc-digits-writer.0.portRangeMax  = 23000                                                                                                <int>            [provided]
+[2556]: chans.from_tpc-digit-reader_to_tpc-digits-writer.0.portRangeMin  = 22000                                                                                                <int>            [provided]
+[2556]: chans.from_tpc-digit-reader_to_tpc-digits-writer.0.rateLogging   = 60                                                                                                   <int>            [provided]
+[2556]: chans.from_tpc-digit-reader_to_tpc-digits-writer.0.rcvBufSize    = 1000                                                                                                 <int>            [provided]
+[2556]: chans.from_tpc-digit-reader_to_tpc-digits-writer.0.rcvKernelSize = 0                                                                                                    <int>            [provided]
+[2556]: chans.from_tpc-digit-reader_to_tpc-digits-writer.0.sndBufSize    = 1000                                                                                                 <int>            [provided]
+[2556]: chans.from_tpc-digit-reader_to_tpc-digits-writer.0.sndKernelSize = 0                                                                                                    <int>            [provided]
+[2556]: chans.from_tpc-digit-reader_to_tpc-digits-writer.0.transport     = default                                                                                              <string>         [provided]
+[2556]: chans.from_tpc-digit-reader_to_tpc-digits-writer.0.type          = pull                                                                                                 <string>         [provided]
+[2556]: chans.from_tpc-digit-reader_to_tpc-digits-writer.numSockets      = 1                                                                                                    <int>            [provided]
+[2556]: color                                                            = 0                                                                                                    <bool>           [provided]
+[2556]: control                                                          = static                                                                                               <string>         [provided]
+[2556]: digit-branch-name                                                = TPCDigit                                                                                             <string>         [provided]
+[2556]: digitmc-branch-name                                              = TPCDigitMCTruth                                                                                      <string>         [provided]
+[2556]: id                                                               = tpc-digits-writer                                                                                    <string>         [provided]
+[2556]: infologger-mode                                                  =                                                                                                      <string>         [default] 
+[2556]: infologger-severity                                              =                                                                                                      <string>         [default] 
+[2556]: initialization-timeout                                           = 120                                                                                                  <int>            [default] 
+[2556]: io-threads                                                       = 1                                                                                                    <int>            [default] 
+[2556]: log-to-file                                                      =                                                                                                      <string>         [default] 
+[2556]: max-run-time                                                     = 0                                                                                                    <std::size_t>    [default] 
+[2556]: monitoring-backend                                               = kafka://127.0.0.1:7654                                                                               <string>         [provided]
+[2556]: network-interface                                                = default                                                                                              <string>         [default] 
+[2556]: nevents                                                          = -1                                                                                                   <int>            [provided]
+[2556]: outfile                                                          = tpc-filtered-digits.root                                                                             <string>         [provided]
+[2556]: rate                                                             = 0                                                                                                    <float>          [default] 
+[2556]: session                                                          = default                                                                                              <string>         [default] 
+[2556]: severity                                                         = debug                                                                                                <string>         [default] 
+[2556]: shm-monitor                                                      = 1                                                                                                    <bool>           [default] 
+[2556]: shm-segment-size                                                 = 2000000000                                                                                           <std::size_t>    [default] 
+[2556]: terminate                                                        = process                                                                                              <string>         [provided]
+[2556]: transport                                                        = zeromq                                                                                               <string>         [default] 
+[2556]: treename                                                         = o2sim                                                                                                <string>         [provided]
+[2556]: verbosity                                                        = medium                                                                                               <string>         [default] 
+[2556]: 
+[2556]: [13:37:03][INFO] 
+[2556]:       ______      _    _______  _________ 
+[2556]:      / ____/___ _(_)_______   |/  /_  __ \    version 1.4.2
+[2556]:     / /_  / __ `/ / ___/__  /|_/ /_  / / /    build RELWITHDEBINFO
+[2556]:    / __/ / /_/ / / /    _  /  / / / /_/ /     https://github.com/FairRootGroup/FairMQ
+[2556]:   /_/    \__,_/_/_/     /_/  /_/  \___\_\     LGPL-3.0  © 2012-2018 GSI
+[2556]: 
+[2556]: [13:37:03][ERROR] Unhandled exception reached the top of main: Kafka backend is not enabled, device shutting down.
+[2556]: [13:37:03][INFO] Process 2556 is exiting.
+[INFO] QUIT_REQUESTED
+
+[ERROR] Child 2552 had at least one message above severity ERROR: [13:37:03][ERROR] Unhandled exception reached the top of main: Kafka backend is not enabled, device shutting down.
+[INFO] Process 2541 is exiting.
