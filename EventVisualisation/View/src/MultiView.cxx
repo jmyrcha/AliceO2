@@ -211,5 +211,6 @@ void MultiView::redraw3D()
 {
   gEve->DoRedraw3D();
 }
+
 } // namespace event_visualisation
 } // namespace o2

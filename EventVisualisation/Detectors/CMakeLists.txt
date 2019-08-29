@@ -10,17 +10,29 @@
 
 o2_add_library(EventVisualisationDetectors
                SOURCES src/DataReaderVSD.cxx
+                       src/DataReaderAOD.cxx
                        src/DataReaderITS.cxx
                        src/DataReaderTPC.cxx
+                       src/DataInterpreterAOD.cxx
                        src/DataInterpreterITS.cxx
                        src/DataInterpreterTPC.cxx
                        src/DataInterpreterVSD.cxx
-               PUBLIC_LINK_LIBRARIES
-                        O2::EventVisualisationBase
-                        O2::DataFormatsITSMFT
-                        O2::DataFormatsITS
-                        O2::ITSBase
-                        O2::DataFormatsTPC
-                        O2::TPCBase
-                        )
+                       src/FillO2CDBEMCALPHOSMatrix.cxx
+               PUBLIC_LINK_LIBRARIES O2::EventVisualisationBase
+                                     O2::DataFormatsITSMFT
+                                     O2::DataFormatsITS
+                                     O2::ITSBase
+                                     O2::TPCBase
+                                     O2::EMCALBase
+                                     O2::PHOSBase
+                                     O2::DataFormatsTPC
+                                     O2::ReconstructionDataFormats
+                                     O2::CCDB
+               )
 
+o2_add_executable(fill-o2cdb-emcal-phos-matrix
+        SOURCES src/FillO2CDBEMCALPHOSMatrix.cxx
+        PUBLIC_LINK_LIBRARIES O2::CCDB
+                              O2::DetectorsBase
+                              O2::DetectorsCommonDataFormats
+        )

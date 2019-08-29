@@ -24,9 +24,11 @@
 #include "EventVisualisationBase/VisualisationConstants.h"
 #include "EventVisualisationView/EventManagerFrame.h"
 #include "EventVisualisationBase/DataSourceOffline.h"
+#include "EventVisualisationDetectors/DataReaderAOD.h"
 #include "EventVisualisationDetectors/DataReaderVSD.h"
 #include "EventVisualisationDetectors/DataReaderITS.h"
 #include "EventVisualisationDetectors/DataReaderTPC.h"
+#include "EventVisualisationDetectors/DataInterpreterAOD.h"
 #include "EventVisualisationDetectors/DataInterpreterVSD.h"
 #include "EventVisualisationDetectors/DataInterpreterITS.h"
 #include "EventVisualisationDetectors/DataInterpreterTPC.h"
@@ -41,6 +43,7 @@
 #include <TEveWindowManager.h>
 #include <iostream>
 #include <TFile.h>
+#include <TGeoManager.h>
 
 using namespace std;
 
@@ -68,6 +71,8 @@ void Initializer::setup(const Options options, EventManager::EDataSource default
     eventManager.registerDetector(new DataReaderITS(), new DataInterpreterITS(), EVisualisationGroup::ITS);
   if (options.tpc)
     eventManager.registerDetector(new DataReaderTPC(), new DataInterpreterTPC(), EVisualisationGroup::TPC);
+  if (options.aod)
+    eventManager.registerDetector(new DataReaderAOD(), new DataInterpreterAOD(), EVisualisationGroup::AOD);
 
   eventManager.setDataSourceType(EventManager::EDataSource::SourceOffline);
   eventManager.Open();

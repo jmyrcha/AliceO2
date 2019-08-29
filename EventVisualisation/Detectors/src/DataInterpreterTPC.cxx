@@ -84,7 +84,7 @@ std::unique_ptr<VisualisationEvent> DataInterpreterTPC::interpretDataForType(TOb
         ret_event->addCluster(cluster);
       }
     }
-  } else if (type == ESD) {
+  } else if (type == Tracks) {
     TFile* trackFile = (TFile*)list->At(0);
 
     TTree* tracks = (TTree*)trackFile->Get("tpcrec");

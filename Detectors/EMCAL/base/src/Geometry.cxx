@@ -189,7 +189,7 @@ Geometry* Geometry::GetInstance(const std::string_view name, const std::string_v
                                 const std::string_view mctitle)
 {
   if (!sGeom) {
-    if (name != std::string("")) { // get default geometry
+    if (name == std::string("")) { // get default geometry
       sGeom = new Geometry(DEFAULT_GEOMETRY, mcname, mctitle);
     } else {
       sGeom = new Geometry(name, mcname, mctitle);
@@ -1428,7 +1428,7 @@ const TGeoHMatrix* Geometry::GetMatrixForSuperModuleFromGeoManager(Int_t smod) c
   else
     LOG(ERROR) << "Unkown SM Type!!\n";
 
-  snprintf(path, buffersize, "/ALIC_1/XEN1_1/%s_%d", smName.Data(), smOrder);
+  snprintf(path, buffersize, "/cave_1/XEN1_1/%s_%d", smName.Data(), smOrder);
 
   if (!gGeoManager->cd(path))
     LOG(FATAL) << "Geo manager can not find path " << path << "!\n";
@@ -1449,7 +1449,7 @@ void Geometry::RecalculateTowerPosition(Float_t drow, Float_t dcol, const Int_t 
 
     const Int_t nSMod = mNumberOfSuperModules;
 
-    gGeoManager->cd("ALIC_1/XEN1_1");
+    gGeoManager->cd("cave_1/XEN1_1");
     TGeoNode* geoXEn1 = gGeoManager->GetCurrentNode();
     TGeoNodeMatrix* geoSM[nSMod];
     TGeoVolume* geoSMVol[nSMod];

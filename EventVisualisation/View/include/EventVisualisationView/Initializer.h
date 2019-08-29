@@ -28,6 +28,7 @@ struct Options {
   bool vsd;             // -v
   bool its;             // -i
   bool tpc;             // -t
+  bool aod;             // -a
   std::string fileName; // -f 'data.root'
 };
 

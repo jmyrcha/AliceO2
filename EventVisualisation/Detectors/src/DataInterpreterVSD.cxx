@@ -59,7 +59,7 @@ std::unique_ptr<VisualisationEvent> DataInterpreterVSD::interpretDataForType(TOb
   //        this->LoadClusters(this->fTPCClusters, "TPC", 1);
   //        this->LoadClusters(this->fTRDClusters, "TRD", 2);
   //        this->LoadClusters(this->fTOFClusters, "TOF", 3);
-  if (type == ESD) {
+  if (type == Tracks) {
     LoadEsdTracks(*ret_event);
   }
 

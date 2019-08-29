@@ -28,6 +28,9 @@ tracks.byType.kaon:                     400
 tracks.byType.proton:                   797
 tracks.byType.unknown:                  920
 
+MUON.show:								1
+EMCal.show:								1
+
 PHS.draw:                               1
 TPC.draw:                               1
 HMP.draw:                               1

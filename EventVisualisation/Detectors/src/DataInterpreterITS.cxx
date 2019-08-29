@@ -73,7 +73,6 @@ std::unique_ptr<VisualisationEvent> DataInterpreterITS::interpretDataForType(TOb
     std::vector<itsmft::ROFRecord>* clusterROFrames = nullptr;
     clustersRof->SetBranchAddress("ITSClustersROF", &clusterROFrames);
     clustersRof->GetEntry(0);
-
     auto currentClusterROF = clusterROFrames->at(event);
 
     int first, last;
@@ -89,7 +88,7 @@ std::unique_ptr<VisualisationEvent> DataInterpreterITS::interpretDataForType(TOb
 
       ret_event->addCluster(cluster);
     }
-  } else if (type == ESD) {
+  } else if (type == Tracks) {
     TFile* trackFile = (TFile*)list->At(0);
     TFile* clustFile = (TFile*)list->At(1);
 

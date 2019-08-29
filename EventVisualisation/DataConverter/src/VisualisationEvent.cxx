@@ -43,9 +43,19 @@ const VisualisationTrack& VisualisationEvent::getTrack(int i) const
   return mTracks[i];
 }
 
+const VisualisationTrack& VisualisationEvent::getMuonTrack(int i) const
+{
+  return mMuonTracks[i];
+}
+
 const VisualisationCluster& VisualisationEvent::getCluster(int i) const
 {
   return mClusters[i];
+}
+
+const VisualisationCaloCell& VisualisationEvent::getCaloCell(int i) const
+{
+  return mCaloCells[i];
 }
 
 } // namespace event_visualisation

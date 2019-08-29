@@ -25,6 +25,9 @@
 
 #include <TEveElement.h>
 #include <TEveEventManager.h>
+#include <TGeoMatrix.h>
+#include <TEveQuadSet.h>
+#include <TEveTrackPropagator.h>
 
 #include <string>
 
@@ -105,6 +108,14 @@ class EventManager : public TEveEventManager
 
   //Display visualisation event
   void displayVisualisationEvent(VisualisationEvent& event, const std::string& detectorName);
+  void displayTracks(VisualisationEvent& event, const std::string& detectorName);
+
+  void displayMuonTracks(VisualisationEvent& event);
+  void setupMuonTrackPropagator(TEveTrackPropagator* prop, Bool_t tracker, Bool_t trigger);
+  void displayCalo(VisualisationEvent& event);
+  void setCaloQuadSet(const Float_t quadSize, const TGeoHMatrix* matrix, TEveQuadSet* quadSet);
+
+  void displayClusters(VisualisationEvent& event, const std::string& detectorName);
 };
 
 } // namespace event_visualisation

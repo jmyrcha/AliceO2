@@ -16,8 +16,6 @@
 #ifndef ALICE_O2_DATACONVERTER_VISUALISATIONCLUSTER_H
 #define ALICE_O2_DATACONVERTER_VISUALISATIONCLUSTER_H
 
-#include "EventVisualisationDataConverter/VisualisationTrack.h"
-
 #include <vector>
 #include <ctime>
 

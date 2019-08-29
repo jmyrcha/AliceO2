@@ -36,6 +36,7 @@ enum EVisualisationGroup {
   TPC,
   TRD,
   VSD,
+  AOD,
   NvisualisationGroups
 };
 
@@ -50,7 +51,8 @@ const std::string gVisualisationGroupName[NvisualisationGroups] = {
   "TOF",
   "TPC",
   "TRD",
-  "VSD"
+  "VSD",
+  "AOD"
 };
 
 enum EVisualisationDataType {
@@ -58,8 +60,9 @@ enum EVisualisationDataType {
   Hits,      ///< Hits
   Digits,    ///< Digits
   Clusters,  ///< Reconstructed clusters (RecPoints)
-  ESD,       ///< Event Summary Data
-  AOD,       ///< Analysis Object Data
+  Tracks,    ///< Reconstructed tracks
+  Calo,      ///< Calorimeter cells (for AOD only)
+  Muon,      ///< Muon tracks (for AOD only)
   NoData,    ///< no data was loaded
   NdataTypes ///< number of supported data types
 };
@@ -69,8 +72,9 @@ const std::string gDataTypeNames[NdataTypes] = {
   "Hits",
   "Digits",
   "Clusters",
-  "ESD",
-  "AOD",
+  "Tracks",
+  "Calo",
+  "Muon",
   "NoData"
 };
 

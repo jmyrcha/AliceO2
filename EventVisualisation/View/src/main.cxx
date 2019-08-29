@@ -37,6 +37,7 @@ std::string printOptions(Options* o)
   res.append(std::string("vds         : ") + (o->vsd ? "true" : "false") + "\n");
   res.append(std::string("its         : ") + (o->its ? "true" : "false") + "\n");
   res.append(std::string("tpc         : ") + (o->tpc ? "true" : "false") + "\n");
+  res.append(std::string("aod         : ") + (o->aod ? "true" : "false") + "\n");
   return res;
 }
 
@@ -47,8 +48,8 @@ Options* processCommandLine(int argc, char* argv[])
 
   // put ':' in the starting of the
   // string so that program can
-  //distinguish between '?' and ':'
-  while ((opt = getopt(argc, argv, ":itf:rv")) != -1) {
+  // distinguish between '?' and ':'
+  while ((opt = getopt(argc, argv, ":itaf:rv")) != -1) {
     switch (opt) {
       case 'r':
         options.randomTracks = true;
@@ -58,6 +59,9 @@ Options* processCommandLine(int argc, char* argv[])
         break;
       case 't':
         options.tpc = true;
+        break;
+      case 'a':
+        options.aod = true;
         break;
       case 'v':
         options.vsd = true;
