@@ -222,7 +222,6 @@ void EventManager::displayTracks(VisualisationEvent& event, const std::string& d
 void EventManager::displayMuonTracks(VisualisationEvent& event)
 {
   size_t muonCount = event.getMuonTrackCount();
-  std::cout << "Number of muon tracks: " << muonCount << std::endl;
 
   auto* muonList = new TEveElementList("AOD Muon tracks");
   muonList->SetTitle(Form("N=%d", muonCount));
