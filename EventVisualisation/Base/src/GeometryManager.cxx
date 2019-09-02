@@ -58,10 +58,8 @@ TEveGeoShape* GeometryManager::getGeometryForDetector(string detectorName, bool 
     geomPath.replace(o2pos, o2pos + o2basePathSpecifier.size(), o2basePath);
   }
 
-  const string runPath = run2 ? "/run2" : "/run3";
-
   // load ROOT file with geometry
-  TFile* f = TFile::Open(Form("%s%s/simple_geom_%s.root", geomPath.c_str(), runPath.c_str(), detectorName.c_str()));
+  TFile* f = TFile::Open(Form("%s/simple_geom_%s.root", geomPath.c_str(), detectorName.c_str()));
   cout << "GeometryManager::GetSimpleGeom opening geometry for: " << detectorName << endl;
   if (!f) {
     cout << "GeometryManager::GetSimpleGeom -- no file with geometry found for: " << detectorName << "!" << endl;
