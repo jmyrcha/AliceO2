@@ -48,7 +48,7 @@ void DataReaderAOD::open()
   int numCaloEvents = calo->GetEntriesFast();
   int numMuonEvents = muon->GetEntriesFast();
 
-  for (int i = numTrackEvents - 1; i > 0; i--) {
+  for (int i = numTrackEvents - 1; i >= 0; i--) {
     trec->GetEntry(i);
     if (trackEventID > maxEventID)
       maxEventID = trackEventID;
@@ -57,7 +57,7 @@ void DataReaderAOD::open()
       break;
   }
 
-  for (int i = numCaloEvents - 1; i > 0; i--) {
+  for (int i = numCaloEvents - 1; i >= 0; i--) {
     calo->GetEntry(i);
     if (caloEventID > maxEventID)
       maxEventID = caloEventID;
@@ -66,7 +66,7 @@ void DataReaderAOD::open()
       break;
   }
 
-  for (int i = numMuonEvents - 1; i > 0; i--) {
+  for (int i = numMuonEvents - 1; i >= 0; i--) {
     muon->GetEntry(i);
     if (muonEventID > maxEventID)
       maxEventID = muonEventID;
@@ -76,8 +76,8 @@ void DataReaderAOD::open()
   }
 
   // TODO: Slow method. How to get events number?
-  std::cout << "Setting max ev to: " << maxEventID << std::endl;
-  fMaxEv = maxEventID;
+  std::cout << "Setting max ev to: " << maxEventID + 1<< std::endl;
+  fMaxEv = maxEventID + 1;
 }
 
 Int_t DataReaderAOD::GetEventCount()
