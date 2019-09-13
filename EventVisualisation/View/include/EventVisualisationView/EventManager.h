@@ -97,6 +97,8 @@ class EventManager : public TEveEventManager
   DataSource* mDataSource = nullptr;
   Int_t mCurrentEvent = 0;
 
+  Width_t mWidth;
+
   /// Default constructor
   EventManager();
   /// Default destructor
@@ -108,7 +110,9 @@ class EventManager : public TEveEventManager
 
   //Display visualisation event
   void displayVisualisationEvent(VisualisationEvent& event, const std::string& detectorName);
+
   void displayTracks(VisualisationEvent& event, const std::string& detectorName);
+  void displayTracksByPt(VisualisationEvent& event, const std::string& detectorName);
 
   void displayMuonTracks(VisualisationEvent& event);
   void setupMuonTrackPropagator(TEveTrackPropagator* prop, Bool_t tracker, Bool_t trigger);

@@ -78,6 +78,8 @@ class VisualisationTrack
   int getCharge() { return mCharge; }
   // PID (particle identification code) getter
   int getPID() { return mPID; }
+  // Signed transverse momentum getter
+  double getSignedPt() { return mSignedPT; }
 
   size_t getPointCount() { return mPolyX.size(); }
   std::array<double, 3> getPoint(size_t i) { return std::array<double, 3>{ mPolyX[i], mPolyY[i], mPolyZ[i] }; }

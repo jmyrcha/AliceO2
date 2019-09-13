@@ -74,6 +74,10 @@ EventManager::EventManager() : TEveEventManager("Event", "")
     mDataInterpreters[i] = nullptr;
     mDataReaders[i] = nullptr;
   }
+
+  TEnv settings;
+  ConfigurationManager::getInstance().getConfig(settings);
+  mWidth = settings.GetValue("tracks.width", 2);
 }
 
 void EventManager::Open()
@@ -182,19 +186,38 @@ EventManager::~EventManager()
 
 void EventManager::displayVisualisationEvent(VisualisationEvent& event, const std::string& detectorName)
 {
-  displayTracks(event, detectorName);
-  displayClusters(event, detectorName);
+  TEnv settings;
+  ConfigurationManager::getInstance().getConfig(settings);
+  if (settings.GetValue("tracks.show", false)) {
+    displayTracks(event, detectorName);
+  }
+  if (settings.GetValue("clusters.show", false)) {
+    displayClusters(event, detectorName);
+  }
   if (detectorName == "AOD") {
-    displayCalo(event);
-    displayMuonTracks(event);
+    if (settings.GetValue("calo.show", false)) {
+      displayCalo(event);
+    }
+    if (settings.GetValue("muon.show", false)) {
+      displayMuonTracks(event);
+    }
   }
 }
 
 void EventManager::displayTracks(VisualisationEvent& event, const std::string& detectorName)
 {
+  TEnv settings;
+  ConfigurationManager::getInstance().getConfig(settings);
+
+  if (settings.GetValue("tracks.byPt.show", false)) {
+    displayTracksByPt(event, detectorName);
+    return;
+  }
+
   size_t trackCount = event.getTrackCount();
   auto* list = new TEveTrackList(detectorName.c_str());
   list->IncDenyDestroy();
+  list->SetLineWidth(mWidth);
 
   for (size_t i = 0; i < trackCount; ++i) {
     VisualisationTrack track = event.getTrack(i);
@@ -203,7 +226,7 @@ void EventManager::displayTracks(VisualisationEvent& event, const std::string& d
     t.fP = { p[0], p[1], p[2] };
     t.fSign = track.getCharge() > 0 ? 1 : -1;
     auto* vistrack = new TEveTrack(&t, &TEveTrackPropagator::fgDefault);
-    vistrack->SetLineColor(kMagenta);
+    vistrack->SetMainColor(kMagenta);
     size_t pointCount = track.getPointCount();
     vistrack->Reset(pointCount);
 
@@ -219,6 +242,97 @@ void EventManager::displayTracks(VisualisationEvent& event, const std::string& d
   }
 }
 
+void EventManager::displayTracksByPt(VisualisationEvent& event, const std::string& detectorName)
+{
+  size_t trackCount = event.getTrackCount();
+  auto* trackList = new TEveElementList(Form("%s tracks by Pt", detectorName.c_str()));
+  trackList->IncDenyDestroy();
+
+  const Int_t nCont = 6;
+  const Float_t magF = 0.1 * 0.5; // FIXME: Get it from OCDB / event
+
+  TEveTrackList* tl[nCont];
+  Int_t tc[nCont];
+  Int_t count = 0;
+
+  Color_t colors[nCont];
+  // default color scheme by type:
+  colors[0] = kGreen;
+  colors[1] = kSpring + 10;
+  colors[2] = kYellow + 1;
+  colors[3] = kOrange;
+  colors[4] = kOrange - 3;
+  colors[5] = kRed;
+
+  tl[0] = new TEveTrackList("pt < 0.2");
+  tl[1] = new TEveTrackList("0.2 < pt < 0.4");
+  tl[2] = new TEveTrackList("0.4 < pt < 0.7");
+  tl[3] = new TEveTrackList("0.7 < pt < 1.1");
+  tl[4] = new TEveTrackList("1.1 < pt < 1.6");
+  tl[5] = new TEveTrackList("pt > 1.6");
+
+  for (int i = 0; i < nCont; i++) {
+    tc[i] = 0;
+    auto prop = tl[i]->GetPropagator();
+    prop->SetMagField(magF);
+    tl[i]->SetMainColor(colors[i]);
+    tl[i]->SetLineWidth(mWidth);
+    trackList->AddElement(tl[i]);
+  }
+
+  for (size_t i = 0; i < trackCount; ++i) {
+    VisualisationTrack track = event.getTrack(i);
+
+    int index;
+    double pt = abs(track.getSignedPt());
+
+    if (pt <= 0.2)
+      index = 0;
+    else if (pt > 0.2 && pt <= 0.4)
+      index = 1;
+    else if (pt > 0.4 && pt <= 0.7)
+      index = 2;
+    else if (pt > 0.7 && pt <= 1.1)
+      index = 3;
+    else if (pt > 1.1 && pt <= 1.6)
+      index = 4;
+    else
+      index = 5;
+
+    TEveTrackList* tlist = tl[index];
+    ++tc[index];
+    ++count;
+
+    TEveRecTrackD t;
+    double* p = track.getMomentum();
+    t.fP = { p[0], p[1], p[2] };
+    t.fSign = track.getCharge() > 0 ? 1 : -1;
+    auto* vistrack = new TEveTrack(&t, &TEveTrackPropagator::fgDefault);
+    size_t pointCount = track.getPointCount();
+    vistrack->Reset(pointCount);
+
+    for (size_t j = 0; j < pointCount; ++j) {
+      auto point = track.getPoint(j);
+      vistrack->SetNextPoint(point[0], point[1], point[2]);
+    }
+    vistrack->SetName(Form("Track no = %lu, pt = %f", i, pt));
+    vistrack->SetAttLineAttMarker(tlist);
+    tlist->AddElement(vistrack);
+  }
+
+  for (Int_t ti = 0; ti < nCont; ++ti) {
+    TEveTrackList* tlist = tl[ti];
+    tlist->SetName(Form("%s [%d]", tlist->GetName(), tlist->NumChildren()));
+    tlist->SetTitle(Form("N tracks = %d", tc[ti]));
+    tlist->MakeTracks();
+  }
+  trackList->SetTitle(Form("N all tracks = %d", count));
+
+  if (trackCount != 0) {
+    mDataTypeLists[EVisualisationDataType::Tracks]->AddElement(trackList);
+  }
+}
+
 void EventManager::displayMuonTracks(VisualisationEvent& event)
 {
   size_t muonCount = event.getMuonTrackCount();
@@ -231,7 +345,7 @@ void EventManager::displayMuonTracks(VisualisationEvent& event)
   match->IncDenyDestroy();
   match->SetRnrPoints(kFALSE);
   match->SetRnrLine(kTRUE);
-  match->SetLineColor(kGreen);
+  match->SetMainColor(kGreen);
   setupMuonTrackPropagator(match->GetPropagator(), kTRUE, kTRUE);
   muonList->AddElement(match);
 
@@ -239,7 +353,7 @@ void EventManager::displayMuonTracks(VisualisationEvent& event)
   nomatch->IncDenyDestroy();
   nomatch->SetRnrPoints(kFALSE);
   nomatch->SetRnrLine(kTRUE);
-  nomatch->SetLineColor(kGreen);
+  nomatch->SetMainColor(kGreen);
   setupMuonTrackPropagator(nomatch->GetPropagator(), kTRUE, kFALSE);
   muonList->AddElement(nomatch);
 
@@ -247,7 +361,7 @@ void EventManager::displayMuonTracks(VisualisationEvent& event)
   ghost->IncDenyDestroy();
   ghost->SetRnrPoints(kFALSE);
   ghost->SetRnrLine(kTRUE);
-  ghost->SetLineColor(kGreen);
+  ghost->SetMainColor(kGreen);
   setupMuonTrackPropagator(ghost->GetPropagator(), kFALSE, kTRUE);
   muonList->AddElement(ghost);
 

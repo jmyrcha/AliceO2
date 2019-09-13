@@ -76,7 +76,7 @@ void DataReaderAOD::open()
   }
 
   // TODO: Slow method. How to get events number?
-  std::cout << "Setting max ev to: " << maxEventID + 1<< std::endl;
+  std::cout << "Setting max ev to: " << maxEventID + 1 << std::endl;
   fMaxEv = maxEventID + 1;
 }
 

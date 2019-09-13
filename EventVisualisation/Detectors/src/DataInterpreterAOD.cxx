@@ -120,7 +120,6 @@ std::unique_ptr<VisualisationEvent> DataInterpreterAOD::interpretDataForType(TOb
 
 std::unique_ptr<VisualisationEvent> DataInterpreterAOD::interpretAODTracks(TFile* AODFile, Int_t event)
 {
-  auto ret_event = std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0);
   TTree* tracks = (TTree*)AODFile->Get("O2tracks");
 
   // Read all tracks parameters to buffers
@@ -141,6 +140,7 @@ std::unique_ptr<VisualisationEvent> DataInterpreterAOD::interpretAODTracks(TFile
   tracks->SetBranchAddress("fTgl", &trkTgl);
   tracks->SetBranchAddress("fSigned1Pt", &trkSigned1Pt);
 
+  auto ret_event = std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0);
   TEveTrackList* trackList = new TEveTrackList("tracks");
   trackList->IncDenyDestroy();
   auto prop = trackList->GetPropagator();
@@ -175,7 +175,7 @@ std::unique_ptr<VisualisationEvent> DataInterpreterAOD::interpretAODTracks(TFile
     double track_end[3] = { end.fX, end.fY, end.fZ };
     double track_p[3] = { p[0], p[1], p[2] };
 
-    VisualisationTrack track(rec.getSign(), 0.0, 0, 0, 0.0, 0.0, track_start, track_end, track_p, 0, 0.0, 0.0, 0.0, 0);
+    VisualisationTrack track(rec.getSign(), 0.0, trkID, 0, 0.0, trkSigned1Pt, track_start, track_end, track_p, 0, 0.0, 0.0, 0.0, 0);
 
     for (Int_t i = 0; i < eve_track->GetN(); ++i) {
       Float_t x, y, z;
