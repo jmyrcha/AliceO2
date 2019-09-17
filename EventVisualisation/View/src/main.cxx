@@ -18,6 +18,8 @@
 #include "EventVisualisationBase/ConfigurationManager.h"
 #include "EventVisualisationBase/DataInterpreter.h"
 
+#include "FairLogger.h"
+
 #include <TApplication.h>
 #include <TEveBrowser.h>
 #include <TEveManager.h>
@@ -25,7 +27,6 @@
 
 #include <unistd.h>
 #include <ctime>
-#include <iostream>
 
 using namespace std;
 using namespace o2::event_visualisation;
@@ -35,7 +36,7 @@ std::string printOptions(Options* o)
   std::string res;
   res.append(std::string("randomTracks: ") + (o->randomTracks ? "true" : "false") + "\n");
   res.append(std::string("vds         : ") + (o->vsd ? "true" : "false") + "\n");
-  res.append(std::string("itc         : ") + (o->itc ? "true" : "false") + "\n");
+  res.append(std::string("its         : ") + (o->its ? "true" : "false") + "\n");
   return res;
 }
 
@@ -47,13 +48,16 @@ Options* processCommandLine(int argc, char* argv[])
   // put ':' in the starting of the
   // string so that program can
   //distinguish between '?' and ':'
-  while ((opt = getopt(argc, argv, ":if:rv")) != -1) {
+  while ((opt = getopt(argc, argv, ":itf:rv")) != -1) {
     switch (opt) {
       case 'r':
         options.randomTracks = true;
         break;
       case 'i':
-        options.itc = true;
+        options.its = true;
+        break;
+      case 't':
+        options.tpc = true;
         break;
       case 'v':
         options.vsd = true;
@@ -82,7 +86,7 @@ Options* processCommandLine(int argc, char* argv[])
 
 int main(int argc, char** argv)
 {
-  cout << "Welcome in O2 event visualisation tool" << endl;
+  LOG(INFO) << "Welcome in O2 event visualisation tool";
   Options* options = processCommandLine(argc, argv);
   if (options == nullptr)
     exit(-1);
@@ -103,9 +107,9 @@ int main(int argc, char** argv)
   TApplication* app = new TApplication("o2eve", &argc, argv);
   app->Connect("TEveBrowser", "CloseWindow()", "TApplication", app, "Terminate()");
 
-  cout << "Initializing TEveManager" << endl;
+  LOG(INFO) << "Initializing TEveManager";
   if (!TEveManager::Create(kTRUE, "FI")) {
-    cout << "FATAL -- Could not create TEveManager!!" << endl;
+    LOG(FATAL) << "Could not create TEveManager!!";
     exit(0);
   }
 
@@ -115,10 +119,10 @@ int main(int argc, char** argv)
   // Start the application
   app->Run(kTRUE);
 
-  DataInterpreter::removeInstances();
   // Terminate application
   TEveManager::Terminate();
   app->Terminate(0);
 
+  LOG(INFO) << "O2 event visualisation tool terminated properly";
   return 0;
 }

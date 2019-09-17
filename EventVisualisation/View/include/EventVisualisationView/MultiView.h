@@ -11,11 +11,12 @@
 ///
 /// \file    MultiView.h
 /// \author  Jeremi Niedziela
+/// \author julian.myrcha@cern.ch
+/// \author p.nowakowski@cern.ch
 
-#ifndef ALICE_O2_EVENTVISUALISATION_BASE_MULTIVIEW_H
-#define ALICE_O2_EVENTVISUALISATION_BASE_MULTIVIEW_H
+#ifndef ALICE_O2_EVENTVISUALISATION_VIEW_MULTIVIEW_H
+#define ALICE_O2_EVENTVISUALISATION_VIEW_MULTIVIEW_H
 
-#include <EventVisualisationBase/EventRegistration.h>
 #include <TGLViewer.h>
 #include <TEveGeoShape.h>
 #include <TEveScene.h>
@@ -35,7 +36,7 @@ namespace event_visualisation
 /// or remove simplified geometries. One can also register visualisation objects for
 /// drawing in the MultiView, which will be imported to 3D view and projections.
 
-class MultiView : public EventRegistration
+class MultiView
 {
  public:
   enum EViews {
@@ -50,7 +51,7 @@ class MultiView : public EventRegistration
     Scene3dEvent,   ///< 3D scene of event
     SceneRPhiGeom,  ///< R-Phi scene of geometry
     SceneZrhoGeom,  ///< Z-Pho scene of geometry
-    SceneRphiEvent, ///< R-Phi scene of event
+    SceneRPhiEvent, ///< R-Phi scene of event
     SceneZrhoEvent, ///< Z-Rho scene of event
     NumberOfScenes  ///< Total number of scenes
   };
@@ -78,18 +79,18 @@ class MultiView : public EventRegistration
   void drawGeometryForDetector(std::string detectorName, bool threeD = true, bool rPhi = true, bool zRho = true);
   /// Registers geometry to be drawn in appropriate views
   void registerGeometry(TEveGeoShape* geom, bool threeD = true, bool rPhi = true, bool zRho = true);
+
   /// Removes all geometries
-  void destroyAllGeometries();
+  //void destroyAllGeometries();
 
   /// Registers an element to be drawn
-  void registerElement(TEveElement* event) override;
+  void registerElement(TEveElement* event);
 
   ///
   void registerEvent(TEveElement* event) { return registerElement(event); }
-  /// Removes all shapes representing current event
-  void destroyAllEvents() override;
+  void destroyAllEvents();
 
-  void drawRandomEvent();
+  void redraw3D();
 
  private:
   /// Default constructor
@@ -121,4 +122,4 @@ class MultiView : public EventRegistration
 } // namespace event_visualisation
 } // namespace o2
 
-#endif
+#endif // ALICE_O2_EVENTVISUALISATION_VIEW_MULTIVIEW_H

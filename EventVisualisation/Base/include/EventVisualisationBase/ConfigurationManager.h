@@ -49,6 +49,7 @@ class ConfigurationManager
   void operator=(ConfigurationManager const&) = delete;
 };
 
+} // namespace event_visualisation
+} // namespace o2
+
 #endif
-}
-}

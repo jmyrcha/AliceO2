@@ -13,8 +13,8 @@
 /// \author  Jeremi Niedziela
 ///
 
-#ifndef ALICE_O2_EVENTVISUALISATION_BASE_INITIALIZER_H
-#define ALICE_O2_EVENTVISUALISATION_BASE_INITIALIZER_H
+#ifndef ALICE_O2_EVENTVISUALISATION_VIEW_INITIALIZER_H
+#define ALICE_O2_EVENTVISUALISATION_VIEW_INITIALIZER_H
 
 #include "EventVisualisationView/EventManager.h"
 
@@ -26,7 +26,8 @@ namespace event_visualisation
 struct Options {
   bool randomTracks;    // -r
   bool vsd;             // -v
-  bool itc;             // -i
+  bool its;             // -i
+  bool tpc;             // -t
   std::string fileName; // -f 'data.root'
 };
 
@@ -53,4 +54,4 @@ class Initializer
 } // namespace event_visualisation
 } // namespace o2
 
-#endif
+#endif // ALICE_O2_EVENTVISUALISATION_VIEW_INITIALIZER_H

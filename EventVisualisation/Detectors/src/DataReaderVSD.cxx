@@ -15,12 +15,9 @@
 
 #include <EventVisualisationDetectors/DataReaderVSD.h>
 #include <TSystem.h>
-#include <TEveManager.h>
 #include <TFile.h>
 #include <TPRegexp.h>
-#include <TEveTrackPropagator.h>
 #include <TEveEventManager.h>
-#include <EventVisualisationBase/EventRegistration.h>
 
 namespace o2
 {
