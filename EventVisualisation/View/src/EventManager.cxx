@@ -11,13 +11,14 @@
 ///
 /// \file    EventManager.cxx
 /// \author  Jeremi Niedziela
+/// \author julian.myrcha@cern.ch
+/// \author p.nowakowski@cern.ch
 
 #include "EventVisualisationView/EventManager.h"
 #include "EventVisualisationDataConverter/VisualisationEvent.h"
 #include "EventVisualisationBase/ConfigurationManager.h"
 #include "EventVisualisationBase/DataSource.h"
 #include "EventVisualisationBase/DataInterpreter.h"
-#include "EventVisualisationBase/EventRegistration.h"
 #include <EventVisualisationBase/DataSourceOffline.h>
 #include <EventVisualisationDetectors/DataReaderVSD.h>
 #include <EventVisualisationView/MultiView.h>

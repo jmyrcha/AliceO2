@@ -23,10 +23,10 @@ namespace o2
 namespace event_visualisation
 {
 
-class EventRegistration
+class xEventRegistration
 {
  private:
-  static EventRegistration* instance;
+  static xEventRegistration* instance;
 
  public:
   /// Registers an element to be drawn
@@ -35,8 +35,8 @@ class EventRegistration
   /// Removes all shapes representing current event
   virtual void destroyAllEvents() = 0;
 
-  static EventRegistration* getInstance() { return instance; }
-  static void setInstance(EventRegistration* instance) { EventRegistration::instance = instance; }
+  static xEventRegistration* getInstance() { return instance; }
+  static void setInstance(xEventRegistration* instance) { xEventRegistration::instance = instance; }
 };
 
 } // namespace event_visualisation

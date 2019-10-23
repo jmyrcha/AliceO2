@@ -12,6 +12,8 @@
 /// \file    VisualisationEvent.h
 /// \author  Jeremi Niedziela
 /// \author  Maciej Grochowicz
+/// \author julian.myrcha@cern.ch
+/// \author p.nowakowski@cern.ch
 ///
 
 #ifndef ALICE_O2_DATACONVERTER_VISUALISATIONEVENT_H

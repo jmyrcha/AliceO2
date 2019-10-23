@@ -12,6 +12,8 @@
 /// \file    MinimalisticTrack.cxx
 /// \author  Jeremi Niedziela
 /// \author  Maciej Grochowicz
+/// \author julian.myrcha@cern.ch
+/// \author p.nowakowski@cern.ch
 ///
 
 #include "EventVisualisationDataConverter/VisualisationTrack.h"

@@ -11,6 +11,8 @@
 ///
 /// \file    MultiView.cxx
 /// \author  Jeremi Niedziela
+/// \author julian.myrcha@cern.ch
+/// \author p.nowakowski@cern.ch
 
 #include "EventVisualisationView/MultiView.h"
 
