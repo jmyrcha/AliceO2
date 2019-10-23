@@ -31,16 +31,19 @@ namespace event_visualisation
 /// to interpret detector-specific data (such as hits, digits, clusters)
 /// as a set of visualisation objects (points, lines, boxes).
 
+class VisualisationEvent;
+
 class DataInterpreter
 {
  private:
-  static DataInterpreter* instance[EVisualisationGroup::NvisualisationGroups];
+  //static DataInterpreter* instance[EVisualisationGroup::NvisualisationGroups];
 
  public:
   // Default constructor
   DataInterpreter();
   // Virtual destructor
   virtual ~DataInterpreter() = default;
+  /*
   static void removeInstances()
   {
     for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; i++)
@@ -49,12 +52,15 @@ class DataInterpreter
         instance[i] = nullptr;
       }
   }
+   */
 
   // Should return visualisation objects for required data type
-  virtual TEveElement* interpretDataForType(TObject* data, EVisualisationDataType type);
+  //virtual TEveElement* interpretDataForType(TObject* data, EVisualisationDataType type);
+  virtual std::unique_ptr<VisualisationEvent> interpretDataForType(TObject* data, EVisualisationDataType type) = 0;
 
-  static DataInterpreter* getInstance(EVisualisationGroup type) { return instance[type]; }
-  static void setInstance(DataInterpreter* instance, EVisualisationGroup type) { DataInterpreter::instance[type] = instance; }
+  //static DataInterpreter* getInstance(EVisualisationGroup type) { return instance[type]; }
+
+  //static void setInstance(DataInterpreter* instance, EVisualisationGroup type) { DataInterpreter::instance[type] = instance; }
 };
 
 } // namespace event_visualisation

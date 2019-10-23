@@ -25,6 +25,9 @@
 #include <TQObject.h>
 
 #include <string>
+#include <EventVisualisationDataConverter/VisualisationEvent.h>
+#include <EventVisualisationBase/DataInterpreter.h>
+#include <EventVisualisationBase/DataReader.h>
 
 namespace o2
 {
@@ -59,9 +62,9 @@ class EventManager : public TEveEventManager, public TQObject
   /// Sets the CDB path in CCDB Manager
   inline void setCdbPath(const TString& path)
   {
+    //o2::ccdb::Manager::Instance()->setDefaultStorage(path.Data());
     ccdbApi.init(path.Data());
   }
-
   Int_t getCurrentEvent() { return currentEvent; }
   DataSource* getDataSource() { return dataSource; }
   void setDataSource(DataSource* dataSource) { this->dataSource = dataSource; }
@@ -78,11 +81,14 @@ class EventManager : public TEveEventManager, public TQObject
   void RemoveNewEventCommand(const TString& cmd) override;
   void ClearNewEventCommands() override;
 
-  void DropEvent();
+  void registerDetector(DataReader* reader, DataInterpreter* interpreter, EVisualisationGroup type);
 
  private:
   static EventManager* instance;
   o2::ccdb::CcdbApi ccdbApi;
+  DataInterpreter* dataInterpreters[EVisualisationGroup::NvisualisationGroups];
+  DataReader* dataReaders[EVisualisationGroup::NvisualisationGroups];
+  TEveElementList* dataTypeLists[EVisualisationDataType::NdataTypes];
   EDataSource mCurrentDataSourceType = EDataSource::SourceOffline;
   DataSource* dataSource = nullptr;
   TString dataPath = "";
@@ -96,6 +102,9 @@ class EventManager : public TEveEventManager, public TQObject
   EventManager(EventManager const&) = delete;
   /// Deleted assignemt operator
   void operator=(EventManager const&) = delete;
+
+  //Display visualisation event
+  void displayVisualisationEvent(VisualisationEvent& event, const std::string& detectorName);
 };
 
 } // namespace event_visualisation

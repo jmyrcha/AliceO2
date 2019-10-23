@@ -36,7 +36,7 @@ std::string printOptions(Options* o)
   std::string res;
   res.append(std::string("randomTracks: ") + (o->randomTracks ? "true" : "false") + "\n");
   res.append(std::string("vds         : ") + (o->vsd ? "true" : "false") + "\n");
-  res.append(std::string("itc         : ") + (o->itc ? "true" : "false") + "\n");
+  res.append(std::string("its         : ") + (o->its ? "true" : "false") + "\n");
   return res;
 }
 
@@ -48,13 +48,16 @@ Options* processCommandLine(int argc, char* argv[])
   // put ':' in the starting of the
   // string so that program can
   //distinguish between '?' and ':'
-  while ((opt = getopt(argc, argv, ":if:rv")) != -1) {
+  while ((opt = getopt(argc, argv, ":itf:rv")) != -1) {
     switch (opt) {
       case 'r':
         options.randomTracks = true;
         break;
       case 'i':
-        options.itc = true;
+        options.its = true;
+        break;
+      case 't':
+        options.tpc = true;
         break;
       case 'v':
         options.vsd = true;
@@ -116,7 +119,6 @@ int main(int argc, char** argv)
   // Start the application
   app->Run(kTRUE);
 
-  DataInterpreter::removeInstances();
   // Terminate application
   TEveManager::Terminate();
   app->Terminate(0);

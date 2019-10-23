@@ -12,8 +12,8 @@
 /// \file    MultiView.h
 /// \author  Jeremi Niedziela
 
-#ifndef ALICE_O2_EVENTVISUALISATION_BASE_MULTIVIEW_H
-#define ALICE_O2_EVENTVISUALISATION_BASE_MULTIVIEW_H
+#ifndef ALICE_O2_EVENTVISUALISATION_VIEW_MULTIVIEW_H
+#define ALICE_O2_EVENTVISUALISATION_VIEW_MULTIVIEW_H
 
 #include <EventVisualisationBase/EventRegistration.h>
 #include <TGLViewer.h>
@@ -48,9 +48,9 @@ class MultiView : public EventRegistration
   enum EScenes {
     Scene3dGeom,    ///< 3D scene of geometry
     Scene3dEvent,   ///< 3D scene of event
-    SceneRphiGeom,  ///< R-Phi scene of geometry
+    SceneRPhiGeom,  ///< R-Phi scene of geometry
     SceneZrhoGeom,  ///< Z-Pho scene of geometry
-    SceneRphiEvent, ///< R-Phi scene of event
+    SceneRPhiEvent, ///< R-Phi scene of event
     SceneZrhoEvent, ///< Z-Rho scene of event
     NumberOfScenes  ///< Total number of scenes
   };
@@ -80,22 +80,20 @@ class MultiView : public EventRegistration
   void registerGeometry(TEveGeoShape* geom, bool threeD = true, bool rPhi = true, bool zRho = true);
   /// Removes all geometries
   void destroyAllGeometries();
-
   /// Registers an element to be drawn
-  void registerElement(TEveElement* event) override;
+  void registerElement(TEveElement* event);
 
   ///
   void registerEvent(TEveElement* event) { return registerElement(event); }
-  /// Removes all shapes representing current event
   void destroyAllEvents() override;
 
-  void drawRandomEvent();
+  void redraw3D();
 
  private:
   /// Default constructor
   MultiView();
   /// Default destructor
-  ~MultiView();
+  ~MultiView() = default;
 
   static MultiView* sInstance; ///< Single instance of the multiview
 
@@ -115,7 +113,7 @@ class MultiView : public EventRegistration
   ///
   /// This is used just to know what to remove
   /// when destroying of all geometries is requested
-  //std::vector<TEveGeoShape*> mGeomVector;
+  std::vector<TEveGeoShape*> mGeomVector;
 };
 
 } // namespace event_visualisation
