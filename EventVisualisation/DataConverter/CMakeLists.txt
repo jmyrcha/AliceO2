@@ -11,5 +11,5 @@
 o2_add_library(EventVisualisationDataConverter
                SOURCES src/VisualisationEvent.cxx
                        src/VisualisationTrack.cxx
-                       src/VisualisationCluser.cxx
+                       src/VisualisationCluster.cxx
         )
