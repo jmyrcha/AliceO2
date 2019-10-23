@@ -81,7 +81,7 @@ class MultiView
   /// Registers geometry to be drawn in appropriate views
   void registerGeometry(TEveGeoShape* geom, bool threeD = true, bool rPhi = true, bool zRho = true);
   /// Removes all geometries
-  void destroyAllGeometries();
+  //void destroyAllGeometries();
   /// Registers an element to be drawn
   void registerElement(TEveElement* event);
 
