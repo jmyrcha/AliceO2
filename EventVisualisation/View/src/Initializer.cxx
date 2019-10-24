@@ -15,7 +15,6 @@
 /// \author  p.nowakowski@cern.ch
 ///
 
-#include "EventVisualisationView/Initializer.h"
 
 #include "EventVisualisationBase/ConfigurationManager.h"
 #include "EventVisualisationBase/GeometryManager.h"
@@ -27,6 +26,10 @@
 #include "EventVisualisationBase/DataSourceOffline.h"
 #include "EventVisualisationDetectors/DataReaderVSD.h"
 #include "EventVisualisationDetectors/DataInterpreterVSD.h"
+#include "EventVisualisationView/Initializer.h"
+#include "EventVisualisationView/MultiView.h"
+#include "EventVisualisationView/EventManager.h"
+#include "EventVisualisationView/EventManagerFrame.h"
 #include "FairLogger.h"
 
 #include <TGTab.h>

@@ -24,7 +24,7 @@
 #include "EventVisualisationBase/DataInterpreter.h"
 #include "EventVisualisationBase/VisualisationConstants.h"
 #include <TEvePointSet.h>
-#include <TEveViewer.h>
+#include <TEveViewer.h>EventVisualisation/Detectors/include/EventVisualisationDetectors/DataInterpreterVSD.h
 #include <TEveTrack.h>
 #include <TEveVSD.h>
 
@@ -64,4 +64,4 @@ class DataInterpreterVSD : public DataInterpreter
 } // namespace event_visualisation
 } // namespace o2
 
-#endif //ALICE_O2_EVENTVISUALISATION_BASE_DATAINTERPRETERVSD_H
+

@@ -76,3 +76,4 @@ class VisualisationEvent
 } // namespace o2
 
 #endif
+

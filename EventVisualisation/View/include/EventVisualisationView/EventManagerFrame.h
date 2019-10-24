@@ -13,8 +13,8 @@
 /// \author julian.myrcha@cern.ch
 /// \author p.nowakowski@cern.ch
 
-#ifndef ALICE_O2_EVENTVISUALISATION_EVENTMANAGERFRAME_H
-#define ALICE_O2_EVENTVISUALISATION_EVENTMANAGERFRAME_H
+#ifndef ALICE_O2_EVENTVISUALISATION_VIEW_EVENTMANAGERFRAME_H
+#define ALICE_O2_EVENTVISUALISATION_VIEW_EVENTMANAGERFRAME_H
 
 #include "EventVisualisationView/EventManager.h"
 #include <TGMdiMainFrame.h>
@@ -55,4 +55,4 @@ class EventManagerFrame : public TGMainFrame
 } // namespace event_visualisation
 } // namespace o2
 
-#endif //ALICE_O2_EVENTVISUALISATION_EVENTMANAGERFRAME_H
+#endif //ALICE_O2_EVENTVISUALISATION_VIEW_EVENTMANAGERFRAME_H

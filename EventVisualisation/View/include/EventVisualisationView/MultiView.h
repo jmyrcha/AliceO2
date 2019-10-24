@@ -17,7 +17,6 @@
 #ifndef ALICE_O2_EVENTVISUALISATION_VIEW_MULTIVIEW_H
 #define ALICE_O2_EVENTVISUALISATION_VIEW_MULTIVIEW_H
 
-
 #include <TGLViewer.h>
 #include <TEveGeoShape.h>
 #include <TEveScene.h>
@@ -80,14 +79,20 @@ class MultiView
   void drawGeometryForDetector(std::string detectorName, bool threeD = true, bool rPhi = true, bool zRho = true);
   /// Registers geometry to be drawn in appropriate views
   void registerGeometry(TEveGeoShape* geom, bool threeD = true, bool rPhi = true, bool zRho = true);
+
   /// Removes all geometries
   //void destroyAllGeometries();
+
   /// Registers an element to be drawn
   void registerElement(TEveElement* event);
 
   ///
   void registerEvent(TEveElement* event) { return registerElement(event); }
+<<<<<<< HEAD
   void destroyAllEvents() ;
+=======
+  void destroyAllEvents();
+>>>>>>> 05314eb4a7d72088b5bbcc56b6bb9058fd532dee
 
   void redraw3D();
 
@@ -121,4 +126,4 @@ class MultiView
 } // namespace event_visualisation
 } // namespace o2
 
-#endif
+#endif // ALICE_O2_EVENTVISUALISATION_VIEW_MULTIVIEW_H

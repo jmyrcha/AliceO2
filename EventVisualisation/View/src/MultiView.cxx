@@ -161,7 +161,6 @@ void MultiView::registerGeometry(TEveGeoShape* geom, bool threeD, bool rPhi, boo
     cout << "MultiView::registerGeometry -- geometry is NULL!" << endl;
     return;
   }
-  mGeomVector.push_back(geom);
 
   TEveProjectionManager* projection;
 
@@ -182,18 +181,7 @@ void MultiView::registerGeometry(TEveGeoShape* geom, bool threeD, bool rPhi, boo
   }
 }
 
-/*
-void MultiView::destroyAllGeometries()
-{
-  for (unsigned int i = 0; i < mGeomVector.size(); ++i) {
-    if (mGeomVector[i]) {
-      mGeomVector[i]->DestroyElements();
-      gEve->RemoveElement(mGeomVector[i], getScene(Scene3dGeom));
-      mGeomVector[i] = nullptr;
-    }
-  }
-}
-*/
+
 
 void MultiView::registerElement(TEveElement* event)
 {

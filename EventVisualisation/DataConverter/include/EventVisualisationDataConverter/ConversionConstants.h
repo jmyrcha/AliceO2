@@ -19,6 +19,11 @@
 
 #include <string>
 
+namespace o2
+{
+namespace event_visualisation
+{
+
 enum ETrackType {
   Standard,
 
@@ -94,5 +99,8 @@ const std::string gTrackTypes[nTrackTypes] = {
   "muon_matched",
   "muon_not_matched",
   "muon_ghost"};
+
+} // namespace event_visualisation
+} // namespace o2
 
 #endif //ALIROOT_CONVERSIONCONSTANTS_H

@@ -14,8 +14,8 @@
 /// \author julian.myrcha@cern.ch
 /// \author p.nowakowski@cern.ch
 
-#ifndef ALICE_O2_EVENTVISUALISATION_BASE_EVENTMANAGER_H
-#define ALICE_O2_EVENTVISUALISATION_BASE_EVENTMANAGER_H
+#ifndef ALICE_O2_EVENTVISUALISATION_VIEW_EVENTMANAGER_H
+#define ALICE_O2_EVENTVISUALISATION_VIEW_EVENTMANAGER_H
 
 #include "CCDB/BasicCCDBManager.h"
 #include "CCDB/CcdbApi.h"

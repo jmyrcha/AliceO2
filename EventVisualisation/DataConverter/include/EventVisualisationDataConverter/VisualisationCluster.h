@@ -50,6 +50,10 @@ class VisualisationCluster
  private:
 };
 
+
+} // namespace event_visualisation
+} // namespace o2
+
 #endif
-}
-}
+
+

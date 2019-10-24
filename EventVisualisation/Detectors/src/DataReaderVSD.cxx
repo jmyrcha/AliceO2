@@ -19,7 +19,6 @@
 #include <TPRegexp.h>
 #include <TEveEventManager.h>
 
-
 namespace o2
 {
 namespace event_visualisation

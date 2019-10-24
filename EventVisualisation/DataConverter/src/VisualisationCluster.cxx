@@ -36,3 +36,4 @@ void VisualisationCluster::setCoordinates(double xyz[3])
 
 } // namespace event_visualisation
 } // namespace o2
+

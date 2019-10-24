@@ -52,3 +52,4 @@ const VisualisationCluster& VisualisationEvent::getCluster(int i) const
 
 } // namespace event_visualisation
 } // namespace o2
+
