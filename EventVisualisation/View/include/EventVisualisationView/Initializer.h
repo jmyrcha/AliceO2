@@ -54,4 +54,4 @@ class Initializer
 } // namespace event_visualisation
 } // namespace o2
 
-#endif // ALICE_O2_EVENTVISUALISATION_VIEW_INITIALIZER_H
+#endif 

@@ -88,12 +88,7 @@ class MultiView
 
   ///
   void registerEvent(TEveElement* event) { return registerElement(event); }
-<<<<<<< HEAD
   void destroyAllEvents() ;
-=======
-  void destroyAllEvents();
->>>>>>> 05314eb4a7d72088b5bbcc56b6bb9058fd532dee
-
   void redraw3D();
 
  private:
