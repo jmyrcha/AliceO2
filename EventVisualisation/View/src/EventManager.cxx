@@ -77,7 +77,7 @@ EventManager::EventManager() : TEveEventManager("Event", "")
 
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);
-  mWidth = settings.GetValue("tracks.width", 2);
+  mWidth = settings.GetValue("tracks.width", 1);
 }
 
 void EventManager::Open()
@@ -464,38 +464,10 @@ void EventManager::displayCalo(VisualisationEvent& event)
 
   // 3D calorimeter histogram
   double pi = TMath::Pi();
-  TEveCaloDataHist* data = new TEveCaloDataHist();
   TH2F* histoEM = new TH2F("histoEMcell", "EMCal Cell #eta vs #phi vs E",
                            100, -1.5, 1.5, 80, -pi, pi);
   TH2F* histoPH = new TH2F("histoPHcell", "PHOS Cell #eta vs #phi vs E",
                            100, -1.5, 1.5, 80, -pi, pi);
-  data->AddHistogram(histoEM);
-  data->RefSliceInfo(0).Setup("EMCell:", 0, kOrange + 7);
-  data->AddHistogram(histoPH);
-  data->RefSliceInfo(1).Setup("PHCell:", 0, kYellow);
-
-  data->GetEtaBins()->SetTitleFont(120);
-  data->GetEtaBins()->SetTitle("h");
-  data->GetPhiBins()->SetTitleFont(120);
-  data->GetPhiBins()->SetTitle("f");
-  data->IncDenyDestroy();
-
-  TEveCalo3D* calo3d = new TEveCalo3D(data);
-  calo3d->SetBarrelRadius(600);
-  calo3d->SetEndCapPos(550);
-  calo3d->SetMaxTowerH(300);
-  calo3d->SetFrameTransparency(100);
-  gEve->AddElement(calo3d, caloList);
-
-  // Version with TEveCalo3D as separate top node on the list (outside 'Event' and 'EMCAL').
-  // Warning: the elements are not properly removed when moving to next / prev event
-
-  //TEveScene* g_histo2d_s2 = gEve->SpawnNewScene("3D Histogram", "3D Histogram");
-  //gEve->GetDefaultViewer()->AddScene(g_histo2d_s2);
-  //MultiView::getInstance()->getView(MultiView::EViews::View3d)->AddScene(g_histo2d_s2);
-  //g_histo2d_s2->SetElementName("3D Histogram Scene");
-  //g_histo2d_s2->AddElement(calo3d);
-  //MultiView::getInstance()->registerElement(calo3d);
 
   // Warning: Geometries need to be initialised before
   // We assume that they were initialised in AOD interpreter
@@ -528,7 +500,7 @@ void EventManager::displayCalo(VisualisationEvent& event)
 
     // TODO: Setting PHOS matrices once it will be possible
 
-    setCaloQuadSet(quadSizeEMCAL, new TGeoHMatrix, phosQuads[mod]);
+    setCaloQuadSet(quadSizePHOS, new TGeoHMatrix, phosQuads[mod]);
     gEve->AddElement(phosQuads[mod], phosList);
   }
 
@@ -537,19 +509,61 @@ void EventManager::displayCalo(VisualisationEvent& event)
 
     // Cells = blue quads
     int module = caloCell.getModule();
-    if (emcalQuads[module]) {
-      emcalQuads[module]->AddQuad(caloCell.Y(), caloCell.Z());
-      emcalQuads[module]->QuadValue(caloCell.getAmplitude() * 1000);
+    if(caloCell.getType() == 1) {
+      if (emcalQuads[module]) {
+        emcalQuads[module]->AddQuad(caloCell.Y(), caloCell.Z());
+        emcalQuads[module]->QuadValue(caloCell.getAmplitude() * 1000);
+      }
     }
+    // TODO: PHOS Geometry not set yet, so not possible to use
+//    else {
+//      if(phosQuads[module]) {
+//        phosQuads[module]->AddQuad(caloCell.X(), caloCell.Z());
+//        phosQuads[module]->QuadValue(caloCell.getAmplitude() * 1000);
+//      }
+//    }
 
     // Histogram = orange boxes
     float eta = caloCell.getEta();
     if (TMath::Abs(eta) < 0.7) {
-      // FIXME: Scale - looks almost flat, but in AliRoot there is the same amplitude value in the histogram??
       histoEM->Fill(eta, caloCell.getPhi(), caloCell.getAmplitude());
-      //      std::cout << "Histo for cell: " << caloCell.getAbsID() << " eta: " << eta << " phi: " << caloCell.getPhi() << " energy: " << caloCell.getAmplitude() << std::endl;
+//      printf("\t CaloCell %d, energy %2.2f,eta %2.2f, phi %2.2f\n",
+//             caloCell.getAbsID(), caloCell.getAmplitude(), caloCell.getEta(), caloCell.getPhi()*TMath::RadToDeg());
+    }
+    else {
+      LOG(WARNING) <<"Wrong eta value for calorimeter cell, active workaround!!!";
+
     }
   }
+
+  TEveCaloDataHist* data = new TEveCaloDataHist();
+  data->AddHistogram(histoEM);
+  data->RefSliceInfo(0).Setup("EMCell:", 0, kOrange + 7);
+  data->AddHistogram(histoPH);
+  data->RefSliceInfo(1).Setup("PHCell:", 0, kYellow);
+
+  data->GetEtaBins()->SetTitleFont(120);
+  data->GetEtaBins()->SetTitle("h");
+  data->GetPhiBins()->SetTitleFont(120);
+  data->GetPhiBins()->SetTitle("f");
+  data->IncDenyDestroy();
+
+  TEveCalo3D* calo3d = new TEveCalo3D(data);
+  calo3d->SetBarrelRadius(600);
+  calo3d->SetEndCapPos(550);
+  calo3d->SetMaxTowerH(300);
+  calo3d->SetFrameTransparency(100);
+  gEve->AddElement(calo3d, caloList);
+
+  // Version with TEveCalo3D as separate top node on the list (outside 'Event' and 'EMCAL').
+  // Warning: the elements are not properly removed when moving to next / prev event
+
+  //TEveScene* g_histo2d_s2 = gEve->SpawnNewScene("3D Histogram", "3D Histogram");
+  //gEve->GetDefaultViewer()->AddScene(g_histo2d_s2);
+  //MultiView::getInstance()->getView(MultiView::EViews::View3d)->AddScene(g_histo2d_s2);
+  //g_histo2d_s2->SetElementName("3D Histogram Scene");
+  //g_histo2d_s2->AddElement(calo3d);
+  //MultiView::getInstance()->registerElement(calo3d);
 
   mDataTypeLists[EVisualisationDataType::Calo]->AddElement(caloList);
   mDataTypeLists[EVisualisationDataType::Calo]->AddElement(emcalList);
