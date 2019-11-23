@@ -126,6 +126,11 @@ void EventManager::GotoEvent(Int_t no)
   }
 
   MultiView::getInstance()->redraw3D();
+
+  TEnv settings;
+  ConfigurationManager::getInstance().getConfig(settings);
+  if (settings.GetValue("tracks.animate", false))
+    animateTracks();
 }
 
 void EventManager::NextEvent()
@@ -502,6 +507,39 @@ bool EventManager::trackSelected(const VisualisationTrack& track)
     return track.isRecoFlagSet(kTPCrefit) && track.isRecoFlagSet(kITSrefit);
   }
   return true;
+}
+
+void EventManager::animateTracks()
+{
+  TEnv settings;
+  ConfigurationManager::getInstance().getConfig(settings);
+
+  for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; ++i) {
+    if (mDataInterpreters[i]) {
+      TEveElementList* tracks = (TEveElementList*)mDataTypeLists[EVisualisationDataType::Tracks]->FindChild(Form("%s tracks by type", gVisualisationGroupName[i].c_str()));
+      if (tracks) {
+        vector<TEveTrackPropagator*> propagators;
+
+        for (TEveElement::List_i i = tracks->BeginChildren(); i != tracks->EndChildren(); i++) {
+          TEveTrackList* trkList = ((TEveTrackList*)*i);
+          TEveTrackPropagator* prop = trkList->GetPropagator();
+          propagators.push_back(prop);
+        }
+        int animationSpeed = settings.GetValue("tracks.animation.speed", 10);
+        for (int R = 0; R <= 520; R += animationSpeed) {
+          animationSpeed -= 10;
+          if (animationSpeed < 10)
+            animationSpeed = 10;
+          for (int propIter = 0; propIter < propagators.size(); propIter++) {
+            propagators[propIter]->SetMaxR(R);
+          }
+
+          gSystem->ProcessEvents();
+          gEve->FullRedraw3D();
+        }
+      }
+    }
+  }
 }
 
 void EventManager::displayMuonTracks(VisualisationEvent& event)

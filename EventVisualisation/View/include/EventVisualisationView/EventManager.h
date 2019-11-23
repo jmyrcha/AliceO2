@@ -115,6 +115,7 @@ class EventManager : public TEveEventManager
   void displayTracksByPt(VisualisationEvent& event, const std::string& detectorName);
   void displayTracksByType(VisualisationEvent& event, const std::string& detectorName);
   bool trackSelected(const VisualisationTrack& track);
+  void animateTracks();
 
   void displayMuonTracks(VisualisationEvent& event);
   void setupMuonTrackPropagator(TEveTrackPropagator* prop, Bool_t tracker, Bool_t trigger);
