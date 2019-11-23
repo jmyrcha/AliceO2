@@ -50,6 +50,16 @@ class EventManagerFrame : public TGMainFrame
   ~EventManagerFrame() override = default;
   ClassDef(EventManagerFrame, 0); // GUI window for AliEveEventManager.
 
+  /// Loads geometry for all detectors
+  void setupGeometry();
+  /// Sets up background color
+  void setupBackground();
+  /// Sets up camera position
+  void setupCamera();
+  /// Clears and draws everything anew, used also by Initializer on startup
+  void refresh(bool firstTime);
+  ;
+
  public: // slots
   void DoFirstEvent();
   void DoPrevEvent();
@@ -57,9 +67,9 @@ class EventManagerFrame : public TGMainFrame
   void DoLastEvent();
   void DoSetEvent();
   void DoScreenshot();
+  void DoRefresh();
   void DoR2Geometry();
   void DoR3Geometry();
-  void DoClusters();
 };
 
 } // namespace event_visualisation
