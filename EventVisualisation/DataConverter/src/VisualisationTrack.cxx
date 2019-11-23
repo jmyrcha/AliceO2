@@ -31,7 +31,7 @@ VisualisationTrack::VisualisationTrack(
   int charge,
   double energy,
   int ID,
-  int PID,
+  o2::track::PID PID,
   double mass,
   double signedPT,
   double startXYZ[],
@@ -41,8 +41,10 @@ VisualisationTrack::VisualisationTrack(
   double phi,
   double theta,
   double helixCurvature,
-  int type)
-  : mCharge(charge),
+  int type,
+  unsigned long long flags)
+  : mID(ID),
+    mCharge(charge),
     mEnergy(energy),
     mParentID(parentID),
     mPID(PID),
@@ -50,12 +52,12 @@ VisualisationTrack::VisualisationTrack(
     mMass(mass),
     mHelixCurvature(helixCurvature),
     mTheta(theta),
-    mPhi(phi)
+    mPhi(phi),
+    mFlags(flags)
 {
   setMomentum(pxpypz);
   setStartCoordinates(startXYZ);
   setEndCoordinates(endXYZ);
-  mID = ID;
   mType = gTrackTypes[type];
 }
 

@@ -51,10 +51,10 @@ class DataInterpreterAOD : public DataInterpreter
   std::unique_ptr<VisualisationEvent> interpretMuonTracks(TFile* AODFile, Int_t eventID);
 
   Bool_t cutCell(std::vector<Float_t> caloAmplitudes, std::vector<Int_t> caloAbsIds, int caloCount,
-    Float_t amplitude, Char_t caloType, Float_t maxCellEnergy, Int_t maxCellEnergyAbsId);
+                 Float_t amplitude, Char_t caloType, Float_t maxCellEnergy, Int_t maxCellEnergyAbsId);
   std::tuple<Int_t, Int_t, Int_t> getModuleNumberColAndRow(Int_t absId, Char_t caloType);
   Float_t getECross(std::vector<Float_t>& caloAmplitudes, std::vector<Int_t>& caloAbsIds,
-    Char_t caloType, Int_t imod, Int_t icol, Int_t irow);
+                    Char_t caloType, Int_t imod, Int_t icol, Int_t irow);
   Float_t getCaloCellAmplitude(std::vector<Float_t> caloAmplitudes, std::vector<Int_t> caloAbsIds, Int_t absId);
 
   // Calorimeter geometries

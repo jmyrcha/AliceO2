@@ -16,7 +16,6 @@
 /// \author Maja Kabus
 
 #include "EventVisualisationView/EventManager.h"
-#include "EventVisualisationBase/GeometryManager.h"
 #include "EventVisualisationDataConverter/VisualisationEvent.h"
 #include "EventVisualisationBase/ConfigurationManager.h"
 #include "EventVisualisationView/MultiView.h"
@@ -25,14 +24,13 @@
 #include "EventVisualisationBase/DataSourceOffline.h"
 #include "EventVisualisationDetectors/DataReaderVSD.h"
 #include "EventVisualisationDetectors/DataReaderITS.h"
-#include "EventVisualisationDetectors/CaloMatrix.h"
+#include "ReconstructionDataFormats/PID.h"
 #include "EMCALBase/Geometry.h"
 #include "PHOSBase/Geometry.h"
 
 #include <FairLogger.h>
 
 #include <TEveManager.h>
-#include <TEveProjectionManager.h>
 #include <TEveTrackPropagator.h>
 #include <TSystem.h>
 #include <TEnv.h>
@@ -43,13 +41,10 @@
 #include <TGeoNode.h>
 #include <TGeoManager.h>
 #include <TGeoMatrix.h>
-#include <TEveTrans.h>
 #include <TStyle.h>
 #include <TEveCalo.h>
 #include <TEveCaloData.h>
 #include <TH2.h>
-
-#include <iostream>
 
 using namespace std;
 
@@ -212,12 +207,24 @@ void EventManager::displayTracks(VisualisationEvent& event, const std::string& d
   if (settings.GetValue("tracks.byPt.show", false)) {
     displayTracksByPt(event, detectorName);
     return;
+  } else if (settings.GetValue("tracks.byType.show", false)) {
+    displayTracksByType(event, detectorName);
+    return;
   }
 
   size_t trackCount = event.getTrackCount();
+  if (trackCount == 0)
+    return;
+
   auto* list = new TEveTrackList(detectorName.c_str());
   list->IncDenyDestroy();
   list->SetLineWidth(mWidth);
+
+  const Float_t magF = 0.1 * 5; // FIXME: Get it from OCDB / event
+  const Float_t maxR = settings.GetValue("tracks.animate", false) ? 0 : 520;
+  auto prop = list->GetPropagator();
+  prop->SetMagField(magF);
+  prop->SetMaxR(maxR);
 
   for (size_t i = 0; i < trackCount; ++i) {
     VisualisationTrack track = event.getTrack(i);
@@ -225,7 +232,7 @@ void EventManager::displayTracks(VisualisationEvent& event, const std::string& d
     double* p = track.getMomentum();
     t.fP = { p[0], p[1], p[2] };
     t.fSign = track.getCharge() > 0 ? 1 : -1;
-    auto* vistrack = new TEveTrack(&t, &TEveTrackPropagator::fgDefault);
+    auto* vistrack = new TEveTrack(&t, prop);
     vistrack->SetMainColor(kMagenta);
     size_t pointCount = track.getPointCount();
     vistrack->Reset(pointCount);
@@ -237,19 +244,24 @@ void EventManager::displayTracks(VisualisationEvent& event, const std::string& d
     list->AddElement(vistrack);
   }
 
-  if (trackCount != 0) {
-    mDataTypeLists[EVisualisationDataType::Tracks]->AddElement(list);
-  }
+  mDataTypeLists[EVisualisationDataType::Tracks]->AddElement(list);
 }
 
 void EventManager::displayTracksByPt(VisualisationEvent& event, const std::string& detectorName)
 {
   size_t trackCount = event.getTrackCount();
+  if (trackCount == 0)
+    return;
+
+  TEnv settings;
+  ConfigurationManager::getInstance().getConfig(settings);
+
   auto* trackList = new TEveElementList(Form("%s tracks by Pt", detectorName.c_str()));
   trackList->IncDenyDestroy();
 
   const Int_t nCont = 6;
-  const Float_t magF = 0.1 * 0.5; // FIXME: Get it from OCDB / event
+  const Float_t magF = 0.1 * 5; // FIXME: Get it from OCDB / event
+  const Float_t maxR = settings.GetValue("tracks.animate", false) ? 0 : 520;
 
   TEveTrackList* tl[nCont];
   Int_t tc[nCont];
@@ -275,6 +287,7 @@ void EventManager::displayTracksByPt(VisualisationEvent& event, const std::strin
     tc[i] = 0;
     auto prop = tl[i]->GetPropagator();
     prop->SetMagField(magF);
+    prop->SetMaxR(maxR);
     tl[i]->SetMainColor(colors[i]);
     tl[i]->SetLineWidth(mWidth);
     trackList->AddElement(tl[i]);
@@ -307,7 +320,7 @@ void EventManager::displayTracksByPt(VisualisationEvent& event, const std::strin
     double* p = track.getMomentum();
     t.fP = { p[0], p[1], p[2] };
     t.fSign = track.getCharge() > 0 ? 1 : -1;
-    auto* vistrack = new TEveTrack(&t, &TEveTrackPropagator::fgDefault);
+    auto* vistrack = new TEveTrack(&t, tlist->GetPropagator());
     size_t pointCount = track.getPointCount();
     vistrack->Reset(pointCount);
 
@@ -328,9 +341,167 @@ void EventManager::displayTracksByPt(VisualisationEvent& event, const std::strin
   }
   trackList->SetTitle(Form("N all tracks = %d", count));
 
-  if (trackCount != 0) {
-    mDataTypeLists[EVisualisationDataType::Tracks]->AddElement(trackList);
+  mDataTypeLists[EVisualisationDataType::Tracks]->AddElement(trackList);
+}
+
+void EventManager::displayTracksByType(VisualisationEvent& event, const std::string& detectorName)
+{
+  size_t trackCount = event.getTrackCount();
+  if (trackCount == 0)
+    return;
+
+  TEnv settings;
+  ConfigurationManager::getInstance().getConfig(settings);
+
+  auto* trackList = new TEveElementList(Form("%s tracks by type", detectorName.c_str()));
+  trackList->IncDenyDestroy();
+
+  const Int_t nCont = 15;
+  const Float_t magF = 0.1 * 5; // FIXME: Get it from OCDB / event
+  const Float_t maxR = settings.GetValue("tracks.animate", false) ? 0 : 520;
+
+  TEveTrackList* tl[nCont];
+  Int_t tc[nCont];
+  Int_t count = 0;
+
+  Color_t colors[15];
+  // default color scheme by type:
+  colors[0] = settings.GetValue("tracks.byType.electron", 600);
+  colors[1] = settings.GetValue("tracks.byType.muon", 416);
+  colors[2] = settings.GetValue("tracks.byType.pion", 632);
+  colors[3] = settings.GetValue("tracks.byType.kaon", 400);
+  colors[4] = settings.GetValue("tracks.byType.proton", 797);
+  colors[5] = settings.GetValue("tracks.byType.deuteron", 797);
+  colors[6] = settings.GetValue("tracks.byType.triton", 797);
+  colors[7] = settings.GetValue("tracks.byType.he3", 797);
+  colors[8] = settings.GetValue("tracks.byType.alpha", 403);
+  colors[9] = settings.GetValue("tracks.byType.photon", 0);
+  colors[10] = settings.GetValue("tracks.byType.pi0", 616);
+  colors[11] = settings.GetValue("tracks.byType.neutron", 900);
+  colors[12] = settings.GetValue("tracks.byType.kaon0", 801);
+  colors[13] = settings.GetValue("tracks.byType.elecon", 920);
+  colors[14] = settings.GetValue("tracks.byType.unknown", 920);
+
+  tl[0] = new TEveTrackList("Electrons");
+  tl[1] = new TEveTrackList("Muons");
+  tl[2] = new TEveTrackList("Pions");
+  tl[3] = new TEveTrackList("Kaons");
+  tl[4] = new TEveTrackList("Protons");
+  tl[5] = new TEveTrackList("Deuterons");
+  tl[6] = new TEveTrackList("Tritons");
+  tl[7] = new TEveTrackList("He3");
+  tl[8] = new TEveTrackList("Alpha");
+  tl[9] = new TEveTrackList("Photons");
+  tl[10] = new TEveTrackList("Pi0");
+  tl[11] = new TEveTrackList("Neutrons");
+  tl[12] = new TEveTrackList("Kaon0");
+  tl[13] = new TEveTrackList("EleCon");
+  tl[14] = new TEveTrackList("Unknown");
+
+  for (int i = 0; i < nCont; i++) {
+    tc[i] = 0;
+    auto prop = tl[i]->GetPropagator();
+    prop->SetMagField(magF);
+    prop->SetMaxR(maxR);
+    tl[i]->SetMainColor(colors[i]);
+    tl[i]->SetLineWidth(mWidth);
+    trackList->AddElement(tl[i]);
   }
+
+  bool shading = true;
+  int shade = -3;
+  VisualisationTrack firstTrack = event.getTrack(0);
+  int firstPid = firstTrack.getPID().getID();
+
+  // Check if all tracks have the same PID. If no, turn off shading
+  for (size_t i = 1; i < trackCount; ++i) {
+    const VisualisationTrack& track = event.getTrack(i);
+    if (track.getPID().getID() != firstPid) {
+      shading = false;
+      break;
+    }
+  }
+
+  for (size_t i = 0; i < trackCount; ++i) {
+    VisualisationTrack track = event.getTrack(i);
+
+    if (!trackSelected(track))
+      continue;
+
+    int pid = track.getPID().getID();
+
+    TEveTrackList* tlist = tl[pid];
+    ++tc[pid];
+    ++count;
+
+    TEveRecTrackD t;
+    double* p = track.getMomentum();
+    t.fP = { p[0], p[1], p[2] };
+    t.fSign = track.getCharge() > 0 ? 1 : -1;
+    auto* vistrack = new TEveTrack(&t, tlist->GetPropagator());
+    size_t pointCount = track.getPointCount();
+    vistrack->Reset(pointCount);
+
+    for (size_t j = 0; j < pointCount; ++j) {
+      auto point = track.getPoint(j);
+      vistrack->SetNextPoint(point[0], point[1], point[2]);
+    }
+
+    if (shading) {
+      if ((kGreen + shade) < 0) {
+        shade = 0;
+      }
+      vistrack->SetMainColor(kGreen + shade);
+      shade++;
+      if (shade > 3)
+        shade = -3;
+    } else {
+      vistrack->SetAttLineAttMarker(tlist);
+    }
+
+    vistrack->SetName(Form("Track no = %lu, PID = %d", i, pid));
+    tlist->AddElement(vistrack);
+  }
+
+  for (Int_t ti = 0; ti < nCont; ++ti) {
+    TEveTrackList* tlist = tl[ti];
+    tlist->SetName(Form("%s [%d]", tlist->GetName(), tlist->NumChildren()));
+    tlist->SetTitle(Form("N tracks = %d", tc[ti]));
+    tlist->MakeTracks();
+  }
+  trackList->SetTitle(Form("N all tracks = %d", count));
+
+  mDataTypeLists[EVisualisationDataType::Tracks]->AddElement(trackList);
+}
+
+bool EventManager::trackSelected(const VisualisationTrack& track)
+{
+  // TODO: No reconstruction flag constants available yet??
+  //  Remove the enum below once it is done
+  enum {
+    kITSin = 0x1,
+    kITSrefit = 0x4,
+    kTPCin = 0x10,
+    kTPCrefit = 0x40,
+    kITSpureSA = 0x10000000
+  };
+  TEnv settings;
+  ConfigurationManager::getInstance().getConfig(settings);
+  string trackSelection = settings.GetValue("tracks.selection", "");
+
+  if (trackSelection == "ITSin_noTPCin") {
+    return track.isRecoFlagSet(kITSin) && !track.isRecoFlagSet(kTPCin);
+  }
+  if (trackSelection == "noTISpureSA") {
+    return !track.isRecoFlagSet(kITSpureSA);
+  }
+  if (trackSelection == "TPCrefit") {
+    return track.isRecoFlagSet(kTPCrefit);
+  }
+  if (trackSelection == "TPCrefit_ITSrefit") {
+    return track.isRecoFlagSet(kTPCrefit) && track.isRecoFlagSet(kITSrefit);
+  }
+  return true;
 }
 
 void EventManager::displayMuonTracks(VisualisationEvent& event)
@@ -384,7 +555,7 @@ void EventManager::displayMuonTracks(VisualisationEvent& event)
     ghost->AddElement(vistrack);
   }
 
-  if (muonCount != 0 || muonCount != 0) {
+  if (muonCount != 0) {
     mDataTypeLists[EVisualisationDataType::Muon]->AddElement(muonList);
   }
 }
@@ -509,30 +680,28 @@ void EventManager::displayCalo(VisualisationEvent& event)
 
     // Cells = blue quads
     int module = caloCell.getModule();
-    if(caloCell.getType() == 1) {
+    if (caloCell.getType() == 1) {
       if (emcalQuads[module]) {
         emcalQuads[module]->AddQuad(caloCell.Y(), caloCell.Z());
         emcalQuads[module]->QuadValue(caloCell.getAmplitude() * 1000);
       }
     }
     // TODO: PHOS Geometry not set yet, so not possible to use
-//    else {
-//      if(phosQuads[module]) {
-//        phosQuads[module]->AddQuad(caloCell.X(), caloCell.Z());
-//        phosQuads[module]->QuadValue(caloCell.getAmplitude() * 1000);
-//      }
-//    }
+    //    else {
+    //      if(phosQuads[module]) {
+    //        phosQuads[module]->AddQuad(caloCell.X(), caloCell.Z());
+    //        phosQuads[module]->QuadValue(caloCell.getAmplitude() * 1000);
+    //      }
+    //    }
 
     // Histogram = orange boxes
     float eta = caloCell.getEta();
     if (TMath::Abs(eta) < 0.7) {
       histoEM->Fill(eta, caloCell.getPhi(), caloCell.getAmplitude());
-//      printf("\t CaloCell %d, energy %2.2f,eta %2.2f, phi %2.2f\n",
-//             caloCell.getAbsID(), caloCell.getAmplitude(), caloCell.getEta(), caloCell.getPhi()*TMath::RadToDeg());
-    }
-    else {
-      LOG(WARNING) <<"Wrong eta value for calorimeter cell, active workaround!!!";
-
+      //      printf("\t CaloCell %d, energy %2.2f,eta %2.2f, phi %2.2f\n",
+      //             caloCell.getAbsID(), caloCell.getAmplitude(), caloCell.getEta(), caloCell.getPhi()*TMath::RadToDeg());
+    } else {
+      LOG(WARNING) << "Wrong eta value for calorimeter cell, active workaround!!!";
     }
   }
 

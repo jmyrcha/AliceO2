@@ -13,5 +13,6 @@ o2_add_library(EventVisualisationDataConverter
                        src/VisualisationTrack.cxx
                        src/VisualisationCaloCell.cxx
                        src/VisualisationCluster.cxx
-               PUBLIC_LINK_LIBRARIES ROOT::Eve
+               PUBLIC_LINK_LIBRARIES O2::ReconstructionDataFormats
+                                     ROOT::Eve
 )

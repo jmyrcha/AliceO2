@@ -147,7 +147,7 @@ std::unique_ptr<VisualisationEvent> DataInterpreterITS::interpretDataForType(TOb
       double track_end[3] = { end.fX, end.fY, end.fZ };
       double track_p[3] = { p[0], p[1], p[2] };
 
-      VisualisationTrack track(rec.getSign(), 0.0, 0, 0, 0.0, 0.0, track_start, track_end, track_p, 0, 0.0, 0.0, 0.0, 0);
+      VisualisationTrack track(rec.getSign(), 0.0, 0, 0, 0.0, 0.0, track_start, track_end, track_p, 0, 0.0, 0.0, 0.0, 0, 0);
 
       for (Int_t i = 0; i < eve_track->GetN(); ++i) {
         Float_t x, y, z;

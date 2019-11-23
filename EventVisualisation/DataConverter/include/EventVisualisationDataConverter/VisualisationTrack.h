@@ -18,6 +18,7 @@
 #define ALICE_O2_DATACONVERTER_VISUALISATIONTRACK_H
 
 #include "ConversionConstants.h"
+#include "ReconstructionDataFormats/PID.h"
 
 #include <iosfwd>
 #include <string>
@@ -47,7 +48,7 @@ class VisualisationTrack
     int charge,
     double energy,
     int ID,
-    int PID,
+    o2::track::PID PID,
     double mass,
     double signedPT,
     double startXYZ[],
@@ -57,7 +58,8 @@ class VisualisationTrack
     double phi,
     double theta,
     double helixCurvature,
-    int type);
+    int type,
+    unsigned long long flags);
 
   // Add child particle (coming from decay of this particle)
   void addChild(int childID);
@@ -73,13 +75,17 @@ class VisualisationTrack
   // Momentum vector getter
   double* getMomentum() { return mMomentum; }
   // Beta (velocity) getter
-  double getBeta() { return sqrt(1 - std::pow(mMass / mEnergy, 2)); }
+  double getBeta() const { return sqrt(1 - std::pow(mMass / mEnergy, 2)); }
   // Charge getter
-  int getCharge() { return mCharge; }
+  int getCharge() const { return mCharge; }
   // PID (particle identification code) getter
-  int getPID() { return mPID; }
+  o2::track::PID getPID() const { return mPID; }
   // Signed transverse momentum getter
-  double getSignedPt() { return mSignedPT; }
+  double getSignedPt() const { return mSignedPT; }
+  // Reconstruction flags getter
+  unsigned long long getFlags() const { return mFlags; }
+  // Checks if there was specific flag set for reconstruction
+  bool isRecoFlagSet(unsigned long long mask) const { return (mFlags & mask & 0xffff) > 0; }
 
   size_t getPointCount() { return mPolyX.size(); }
   std::array<double, 3> getPoint(size_t i) { return std::array<double, 3>{ mPolyX[i], mPolyY[i], mPolyZ[i] }; }
@@ -97,7 +103,7 @@ class VisualisationTrack
   int mCharge;                 /// Charge of the particle
   double mEnergy;              /// Energy of the particle
   int mParentID;               /// ID of the parent-track (-1 means no parent)
-  int mPID;                    /// PDG code of the particle
+  o2::track::PID mPID;         /// PDG code of the particle
   double mSignedPT;            /// Signed transverse momentum
   double mMass;                /// Mass of the particle
   double mMomentum[3];         /// Momentum vector
@@ -106,6 +112,7 @@ class VisualisationTrack
   double mHelixCurvature;      /// Helix curvature of the trajectory
   double mTheta;               /// An angle from Z-axis to the radius vector pointing to the particle
   double mPhi;                 /// An angle from X-axis to the radius vector pointing to the particle
+  unsigned long long mFlags;   /// Reconstruction status flags - track quality parameters
 
   std::vector<int> mChildrenIDs; /// Uniqe IDs of children particles
 

@@ -17,6 +17,7 @@
 #include "EventVisualisationDataConverter/VisualisationEvent.h"
 #include "EventVisualisationDetectors/CaloMatrix.h"
 #include "ReconstructionDataFormats/Track.h"
+#include "ReconstructionDataFormats/PID.h"
 #include "EMCALBase/Geometry.h"
 #include "PHOSBase/Geometry.h"
 #include "DataFormatsEMCAL/Constants.h"
@@ -37,7 +38,6 @@
 #include <TGeoManager.h>
 #include <TClonesArray.h>
 
-#include <iostream>
 #include <gsl/span>
 
 using namespace std;
@@ -56,22 +56,22 @@ DataInterpreterAOD::DataInterpreterAOD()
 
   // Version 1: EMCAL alignment matrices from O2CDB
   // Use o2-fill-o2cdb-emcal-phos-matrix to put ideal alignment matrices into O2CDB.
-//  LOG(INFO) << "Loading matrices from OCDB";
-//  IdPath path("EMCAL", "Align", "Data");
-//  Condition* cond = o2::ccdb::Manager::Instance()->getCondition(path, 1);
-//  if (!cond) {
-//    LOG(FATAL) << "Couldn't load EMCAL alignment matrices from CDB!";
-//  }
-//  cond->setOwner(0);
-//  TClonesArray* array = (TClonesArray*)cond->getObject();
-//  TClonesArray& alobj = *array;
-//
-//  for (int mod = 0; mod < mEMCALGeom->GetNumberOfSuperModules(); mod++) {
-//    if (!mEMCALGeom->GetMatrixForSuperModuleFromArray(mod)) {
-//      TGeoHMatrix* matrix = (TGeoHMatrix*)alobj[mod];
-//      mEMCALGeom->SetMisalMatrix(matrix, mod);
-//    }
-//  }
+  //  LOG(INFO) << "Loading matrices from OCDB";
+  //  IdPath path("EMCAL", "Align", "Data");
+  //  Condition* cond = o2::ccdb::Manager::Instance()->getCondition(path, 1);
+  //  if (!cond) {
+  //    LOG(FATAL) << "Couldn't load EMCAL alignment matrices from CDB!";
+  //  }
+  //  cond->setOwner(0);
+  //  TClonesArray* array = (TClonesArray*)cond->getObject();
+  //  TClonesArray& alobj = *array;
+  //
+  //  for (int mod = 0; mod < mEMCALGeom->GetNumberOfSuperModules(); mod++) {
+  //    if (!mEMCALGeom->GetMatrixForSuperModuleFromArray(mod)) {
+  //      TGeoHMatrix* matrix = (TGeoHMatrix*)alobj[mod];
+  //      mEMCALGeom->SetMisalMatrix(matrix, mod);
+  //    }
+  //  }
 
   // Version 2: EMCAL hardcoded matrices from sample ESD (for visual comparison)
   LOG(INFO) << "Loading hardcoded matrices";
@@ -133,6 +133,8 @@ std::unique_ptr<VisualisationEvent> DataInterpreterAOD::interpretAODTracks(TFile
   Float_t trkSnp;       // fP[2] local sine of the track momentum azimuthal angle
   Float_t trkTgl;       // fP[3] tangent of the track momentum dip angle
   Float_t trkSigned1Pt; // fP[4] 1/pt (1/(GeV/c))
+  o2::track::PID trkPID;
+  ULong64_t trkFlags; // Reconstruction status flags - track quality parameters
   tracks->SetBranchAddress("fID4Tracks", &trkID);
   tracks->SetBranchAddress("fX", &trkX);
   tracks->SetBranchAddress("fAlpha", &trkAlpha);
@@ -141,6 +143,8 @@ std::unique_ptr<VisualisationEvent> DataInterpreterAOD::interpretAODTracks(TFile
   tracks->SetBranchAddress("fSnp", &trkSnp);
   tracks->SetBranchAddress("fTgl", &trkTgl);
   tracks->SetBranchAddress("fSigned1Pt", &trkSigned1Pt);
+  tracks->SetBranchAddress("fPID", &trkPID);
+  tracks->SetBranchAddress("fFlags", &trkFlags);
 
   auto ret_event = std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0);
   TEveTrackList* trackList = new TEveTrackList("tracks");
@@ -149,7 +153,6 @@ std::unique_ptr<VisualisationEvent> DataInterpreterAOD::interpretAODTracks(TFile
   prop->SetMagField(0.5);
 
   int tracksCount = tracks->GetEntriesFast();
-
   for (int i = 0; i < tracksCount; i++) {
     tracks->GetEntry(i);
 
@@ -177,7 +180,7 @@ std::unique_ptr<VisualisationEvent> DataInterpreterAOD::interpretAODTracks(TFile
     double track_end[3] = { end.fX, end.fY, end.fZ };
     double track_p[3] = { p[0], p[1], p[2] };
 
-    VisualisationTrack track(rec.getSign(), 0.0, trkID, 0, 0.0, trkSigned1Pt, track_start, track_end, track_p, 0, 0.0, 0.0, 0.0, 0);
+    VisualisationTrack track(rec.getSign(), 0.0, trkID, trkPID, 0.0, trkSigned1Pt, track_start, track_end, track_p, 0, 0.0, 0.0, 0.0, 0, trkFlags);
 
     for (Int_t i = 0; i < eve_track->GetN(); ++i) {
       Float_t x, y, z;
@@ -226,7 +229,7 @@ std::unique_ptr<VisualisationEvent> DataInterpreterAOD::interpretAODCaloCells(TF
     if (caloID != eventID)
       continue;
 
-    if(caloAmplitude > maxCellEnergy) {
+    if (caloAmplitude > maxCellEnergy) {
       maxCellEnergy = caloAmplitude;
       maxCellEnergyAbsId = caloCellNumber;
     }
@@ -240,7 +243,7 @@ std::unique_ptr<VisualisationEvent> DataInterpreterAOD::interpretAODCaloCells(TF
   for (int i = 0; i < caloCount; i++) {
     // Cell rejected
     if (cutCell(caloAmplitudes, caloAbsIds, caloCount, caloAmplitudes[i], caloTypes[i],
-      maxCellEnergy, maxCellEnergyAbsId))
+                maxCellEnergy, maxCellEnergyAbsId))
       continue;
 
     if (caloTypes[i] == 0) {
@@ -260,7 +263,7 @@ std::unique_ptr<VisualisationEvent> DataInterpreterAOD::interpretEMCALCell(Int_t
   // It should not happen, but in case the OCDB file is not the correct one.
   if (iSupMod >= mEMCALGeom->GetNumberOfSuperModules()) {
     LOG(WARNING) << "iSupMod: " << iSupMod << " bigger than EMCAL modules number: "
-              << mEMCALGeom->GetNumberOfSuperModules();
+                 << mEMCALGeom->GetNumberOfSuperModules();
     return event;
   }
 
@@ -304,12 +307,13 @@ std::unique_ptr<VisualisationEvent> DataInterpreterAOD::interpretPHOSCell(Int_t 
 
 // TODO: Provisional cuts for all cells - in AliRoot cuts were applied for each cluster separately
 Bool_t DataInterpreterAOD::cutCell(std::vector<Float_t> caloAmplitudes, std::vector<Int_t> caloAbsIds,
-  int caloCount, Float_t amplitude, Char_t caloType, Float_t maxCellEnergy, Int_t maxCellEnergyAbsId)
+                                   int caloCount, Float_t amplitude, Char_t caloType, Float_t maxCellEnergy, Int_t maxCellEnergyAbsId)
 {
-//  if(caloCount < mNumMinCellsCut[caloType]) return kTRUE;
-//  if(caloCount > mNumMaxCellsCut[caloType]) return kTRUE;
+  //  if(caloCount < mNumMinCellsCut[caloType]) return kTRUE;
+  //  if(caloCount > mNumMaxCellsCut[caloType]) return kTRUE;
 
-  if(amplitude < mEnergyCut[caloType] / 2.0) return kTRUE;
+  if (amplitude < mEnergyCut[caloType] / 2.0)
+    return kTRUE;
 
   //  if(fCaloCluster->GetM02()    < m02lowCut[caloType]) return kTRUE ;
   //  if(fCaloCluster->GetM02()    > m02higCut[caloType]) return kTRUE ;
@@ -319,11 +323,11 @@ Bool_t DataInterpreterAOD::cutCell(std::vector<Float_t> caloAmplitudes, std::vec
     return kTRUE;
   }
 
-//  auto [ism, irow, icol] = getModuleNumberColAndRow(amplitude, caloType);
-//  Float_t eCross = getECross(caloAmplitudes, caloAbsIds, caloType, ism, icol, irow);
-//  if (1 - eCross / maxCellEnergy > mExoCut) {
-//    return kTRUE;
-//  }
+  //  auto [ism, irow, icol] = getModuleNumberColAndRow(amplitude, caloType);
+  //  Float_t eCross = getECross(caloAmplitudes, caloAbsIds, caloType, ism, icol, irow);
+  //  if (1 - eCross / maxCellEnergy > mExoCut) {
+  //    return kTRUE;
+  //  }
 
   return kFALSE;
 }
@@ -337,22 +341,22 @@ Bool_t DataInterpreterAOD::cutCell(std::vector<Float_t> caloAmplitudes, std::vec
 std::tuple<Int_t, Int_t, Int_t> DataInterpreterAOD::getModuleNumberColAndRow(Int_t absId, Char_t caloType)
 {
   Int_t iSM = -1, irow = -1, icol = -1;
-  if ( absId < 0) return std::make_tuple(-1, -1, -1);
+  if (absId < 0)
+    return std::make_tuple(-1, -1, -1);
 
-  if (caloType == 1)
-  {
+  if (caloType == 1) {
     auto [iSupMod, iTower, iIphi, iIeta] = mEMCALGeom->GetCellIndex(absId);
     if (iSupMod >= mEMCALGeom->GetNumberOfSuperModules())
       return std::make_tuple(-1, -1, -1);
     std::tie(irow, icol) = mEMCALGeom->GetCellPhiEtaIndexInSModule(iSupMod, iTower, iIphi, iIeta);
-  } // EMCAL
+  }    // EMCAL
   else // PHOS
   {
-    Int_t    relId[4];
-    mPHOSGeom->AbsToRelNumbering(absId,relId);
+    Int_t relId[4];
+    mPHOSGeom->AbsToRelNumbering(absId, relId);
     irow = relId[2];
     icol = relId[3];
-    iSM  = relId[0] - 1;
+    iSM = relId[0] - 1;
   } // PHOS
   return std::make_tuple(iSM, irow, icol);
 }
@@ -366,75 +370,76 @@ std::tuple<Int_t, Int_t, Int_t> DataInterpreterAOD::getModuleNumberColAndRow(Int
 /// \param irow reference cell row
 ///
 Float_t DataInterpreterAOD::getECross(std::vector<Float_t>& caloAmplitudes, std::vector<Int_t>& caloAbsIds,
-  Char_t caloType, Int_t imod, Int_t icol, Int_t irow)
+                                      Char_t caloType, Int_t imod, Int_t icol, Int_t irow)
 {
-  Float_t  ecell1 =  0, ecell2  = 0, ecell3  = 0, ecell4  = 0;
-  Int_t  absId1 = -1, absId2 = -1, absId3 = -1, absId4 = -1;
+  Float_t ecell1 = 0, ecell2 = 0, ecell3 = 0, ecell4 = 0;
+  Int_t absId1 = -1, absId2 = -1, absId3 = -1, absId4 = -1;
 
-  if ( caloType == 1)
-  {
+  if (caloType == 1) {
     // Get close cells index, energy and time, not in corners
     Int_t rowMax = mEMCALGeom->GetNPhi() * 2; // AliEMCALGeoParams::fgkEMCALRows;
     Int_t colMax = mEMCALGeom->GetNEta() * 2; // AliEMCALGeoParams::fgkEMCALCols;
 
-    if(imod == 11 || imod == 10 || imod == 18 || imod == 19)
+    if (imod == 11 || imod == 10 || imod == 18 || imod == 19)
       rowMax /= 3;
-      // rowMax = AliEMCALGeoParams::fgkEMCALRows/3;
+    // rowMax = AliEMCALGeoParams::fgkEMCALRows/3;
 
-    if(imod > 12 && imod < 18)
+    if (imod > 12 && imod < 18)
       colMax = colMax * 2 / 3;
-      // colMax = AliEMCALGeoParams::fgkEMCALCols*2/3;
+    // colMax = AliEMCALGeoParams::fgkEMCALCols*2/3;
 
-    if( irow < rowMax) absId1 = mEMCALGeom->GetAbsCellIdFromCellIndexes(imod, irow+1, icol);
-    if( irow > 0     ) absId2 = mEMCALGeom->GetAbsCellIdFromCellIndexes(imod, irow-1, icol);
+    if (irow < rowMax)
+      absId1 = mEMCALGeom->GetAbsCellIdFromCellIndexes(imod, irow + 1, icol);
+    if (irow > 0)
+      absId2 = mEMCALGeom->GetAbsCellIdFromCellIndexes(imod, irow - 1, icol);
 
-    if( icol < colMax-1 )
-      absId3 = mEMCALGeom->GetAbsCellIdFromCellIndexes(imod, irow, icol+1);
-    if( icol > 0 )
-      absId4 = mEMCALGeom->GetAbsCellIdFromCellIndexes(imod, irow, icol-1);
+    if (icol < colMax - 1)
+      absId3 = mEMCALGeom->GetAbsCellIdFromCellIndexes(imod, irow, icol + 1);
+    if (icol > 0)
+      absId4 = mEMCALGeom->GetAbsCellIdFromCellIndexes(imod, irow, icol - 1);
 
     // In case of cell in eta = 0 border, depending on SM shift the cross cell index
-    if(imod > 11 && imod < 18)
-    {
-      if (icol == colMax - 1 && !(imod % 2))
-      {
-        absId3 = mEMCALGeom->GetAbsCellIdFromCellIndexes(imod+1, irow, 0);
-        absId4 = mEMCALGeom->GetAbsCellIdFromCellIndexes(imod  , irow, icol-1);
-      }
-      else if(icol == 0 && imod % 2)
-      {
-        absId3 = mEMCALGeom->GetAbsCellIdFromCellIndexes(imod  , irow, icol+1);
-        absId4 = mEMCALGeom->GetAbsCellIdFromCellIndexes(imod-1, irow, colMax-1);
+    if (imod > 11 && imod < 18) {
+      if (icol == colMax - 1 && !(imod % 2)) {
+        absId3 = mEMCALGeom->GetAbsCellIdFromCellIndexes(imod + 1, irow, 0);
+        absId4 = mEMCALGeom->GetAbsCellIdFromCellIndexes(imod, irow, icol - 1);
+      } else if (icol == 0 && imod % 2) {
+        absId3 = mEMCALGeom->GetAbsCellIdFromCellIndexes(imod, irow, icol + 1);
+        absId4 = mEMCALGeom->GetAbsCellIdFromCellIndexes(imod - 1, irow, colMax - 1);
       }
     }
   }
-//  else // PHOS
-//  {
-//    Int_t relId1[] = { imod+1, 0, irow+1, icol   };
-//    Int_t relId2[] = { imod+1, 0, irow-1, icol   };
-//    Int_t relId3[] = { imod+1, 0, irow  , icol+1 };
-//    Int_t relId4[] = { imod+1, 0, irow  , icol-1 };
-//
-//    // TODO: RelToAbsNumbering() not implemented yet in PHOS!
-//    mPHOSGeom->RelToAbsNumbering(relId1, absId1);
-//    mPHOSGeom->RelToAbsNumbering(relId2, absId2);
-//    mPHOSGeom->RelToAbsNumbering(relId3, absId3);
-//    mPHOSGeom->RelToAbsNumbering(relId4, absId4);
-//  }
+  //  else // PHOS
+  //  {
+  //    Int_t relId1[] = { imod+1, 0, irow+1, icol   };
+  //    Int_t relId2[] = { imod+1, 0, irow-1, icol   };
+  //    Int_t relId3[] = { imod+1, 0, irow  , icol+1 };
+  //    Int_t relId4[] = { imod+1, 0, irow  , icol-1 };
+  //
+  //    // TODO: RelToAbsNumbering() not implemented yet in PHOS!
+  //    mPHOSGeom->RelToAbsNumbering(relId1, absId1);
+  //    mPHOSGeom->RelToAbsNumbering(relId2, absId2);
+  //    mPHOSGeom->RelToAbsNumbering(relId3, absId3);
+  //    mPHOSGeom->RelToAbsNumbering(relId4, absId4);
+  //  }
 
-  if(absId1 > 0 ) ecell1 = getCaloCellAmplitude(caloAmplitudes, caloAbsIds, absId1);
-  if(absId2 > 0 ) ecell2 = getCaloCellAmplitude(caloAmplitudes, caloAbsIds, absId2);
-  if(absId3 > 0 ) ecell3 = getCaloCellAmplitude(caloAmplitudes, caloAbsIds, absId3);
-  if(absId4 > 0 ) ecell4 = getCaloCellAmplitude(caloAmplitudes, caloAbsIds, absId4);
+  if (absId1 > 0)
+    ecell1 = getCaloCellAmplitude(caloAmplitudes, caloAbsIds, absId1);
+  if (absId2 > 0)
+    ecell2 = getCaloCellAmplitude(caloAmplitudes, caloAbsIds, absId2);
+  if (absId3 > 0)
+    ecell3 = getCaloCellAmplitude(caloAmplitudes, caloAbsIds, absId3);
+  if (absId4 > 0)
+    ecell4 = getCaloCellAmplitude(caloAmplitudes, caloAbsIds, absId4);
 
   return ecell1 + ecell2 + ecell3 + ecell4;
 }
 
 Float_t DataInterpreterAOD::getCaloCellAmplitude(std::vector<Float_t> caloAmplitudes,
-  std::vector<Int_t> caloAbsIds, Int_t absId)
+                                                 std::vector<Int_t> caloAbsIds, Int_t absId)
 {
   auto it = std::find_if(caloAbsIds.begin(), caloAbsIds.end(), [absId](int id) { return id == absId; });
-  if(it == caloAbsIds.end()) {
+  if (it == caloAbsIds.end()) {
     LOG(WARNING) << "getCaloCellAmplitude: No cell of given abs ID!" << std::endl;
     return 0.0;
   }
@@ -539,7 +544,7 @@ std::unique_ptr<VisualisationEvent> DataInterpreterAOD::interpretMuonTracks(TFil
     double track_end[3] = { end.fX, end.fY, end.fZ };
     double track_p[3] = { 0.0, 0.0, 0.0 }; // { p[0], p[1], p[2] };
 
-    VisualisationTrack visTrack(recTrack.fSign, 0.0, 0, 0, 0.0, 0.0, track_start, track_end, track_p, 0, 0.0, 0.0, 0.0, 0);
+    VisualisationTrack visTrack(recTrack.fSign, 0.0, 0, o2::track::PID::Muon, 0.0, 0.0, track_start, track_end, track_p, 0, 0.0, 0.0, 0.0, 0, 0);
 
     for (Int_t i = 0; i < track->GetN(); ++i) {
       Float_t x, y, z;
