@@ -74,7 +74,6 @@ void Initializer::setup(const Options options, EventManager::EDataSource default
   if (options.aod)
     eventManager.registerDetector(new DataReaderAOD(), new DataInterpreterAOD(), EVisualisationGroup::AOD);
 
-  eventManager.setDataSourceType(EventManager::EDataSource::SourceOffline);
   eventManager.Open();
 
   // Setup windows size, fullscreen and focus

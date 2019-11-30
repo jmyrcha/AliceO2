@@ -14,11 +14,15 @@
 /// \author julian.myrcha@cern.ch
 /// \author p.nowakowski@cern.ch
 
+#include "DataFormatsITSMFT/ROFRecord.h"
 #include "EventVisualisationDetectors/DataReaderITS.h"
+
+#include <FairLogger.h>
+
+#include <TSystem.h>
 #include <TTree.h>
 #include <TVector2.h>
 #include <TError.h>
-#include "DataFormatsITSMFT/ROFRecord.h"
 
 namespace o2
 {
@@ -33,7 +37,15 @@ void DataReaderITS::open()
   TString trackFile = "o2trac_its.root";
 
   this->mTracFile = TFile::Open(trackFile);
+  if (!this->mTracFile) {
+    LOG(ERROR) << "There is no " << trackFile.Data() << " file in current directory!";
+    gSystem->Exit(1);
+  }
   this->mClusFile = TFile::Open(clusterFile);
+  if (!this->mClusFile) {
+    LOG(ERROR) << "There is no " << clusterFile.Data() << " file in current directory!";
+    gSystem->Exit(1);
+  }
 
   TTree* roft = (TTree*)this->mTracFile->Get("ITSTracksROF");
   TTree* rofc = (TTree*)this->mClusFile->Get("ITSClustersROF");
@@ -61,7 +73,7 @@ void DataReaderITS::open()
     if (trackROFrames->size() == clusterROFrames->size()) {
       mMaxEv = trackROFrames->size();
     } else {
-      Error("DataReaderITS", "Inconsistent number of readout frames in files");
+      LOG(ERROR) << "DataReaderITS: Inconsistent number of readout frames in files";
       exit(1);
     }
   }

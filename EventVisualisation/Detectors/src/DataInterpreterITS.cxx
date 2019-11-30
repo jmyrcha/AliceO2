@@ -50,12 +50,10 @@ DataInterpreterITS::DataInterpreterITS()
 
 DataInterpreterITS::~DataInterpreterITS() = default;
 
-std::unique_ptr<VisualisationEvent> DataInterpreterITS::interpretDataForType(TObject* data, EVisualisationDataType type)
+void DataInterpreterITS::interpretDataForType(TObject* data, EVisualisationDataType type, VisualisationEvent& event)
 {
   TList* list = (TList*)data;
-  Int_t event = ((TVector2*)list->At(2))->X();
-
-  auto ret_event = std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0);
+  Int_t eventId = ((TVector2*)list->At(2))->X();
 
   if (type == Clusters) {
     its::GeometryTGeo* gman = its::GeometryTGeo::Instance();
@@ -73,7 +71,7 @@ std::unique_ptr<VisualisationEvent> DataInterpreterITS::interpretDataForType(TOb
     std::vector<itsmft::ROFRecord>* clusterROFrames = nullptr;
     clustersRof->SetBranchAddress("ITSClustersROF", &clusterROFrames);
     clustersRof->GetEntry(0);
-    auto currentClusterROF = clusterROFrames->at(event);
+    auto currentClusterROF = clusterROFrames->at(eventId);
 
     int first, last;
     first = currentClusterROF.getROFEntry().getIndex();
@@ -85,8 +83,7 @@ std::unique_ptr<VisualisationEvent> DataInterpreterITS::interpretDataForType(TOb
       const auto& gloC = c.getXYZGloRot(*gman);
       double xyz[3] = { gloC.X(), gloC.Y(), gloC.Z() };
       VisualisationCluster cluster(xyz);
-
-      ret_event->addCluster(cluster);
+      event.addCluster(cluster);
     }
   } else if (type == Tracks) {
     TFile* trackFile = (TFile*)list->At(0);
@@ -124,7 +121,7 @@ std::unique_ptr<VisualisationEvent> DataInterpreterITS::interpretDataForType(TOb
     prop->SetMagField(0.5);
     prop->SetMaxR(50.);
 
-    auto currentTrackROF = trackROFrames->at(event);
+    auto currentTrackROF = trackROFrames->at(eventId);
 
     int first, last;
     first = currentTrackROF.getROFEntry().getIndex();
@@ -165,11 +162,10 @@ std::unique_ptr<VisualisationEvent> DataInterpreterITS::interpretDataForType(TOb
       //                        tpoints->SetNextPoint(gloC.X(), gloC.Y(), gloC.Z());
       //                    }
 
-      ret_event->addTrack(track);
+      event.addTrack(track);
     }
     delete trackList;
   }
-  return ret_event;
 }
 
 } // namespace event_visualisation

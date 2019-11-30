@@ -37,7 +37,7 @@ class DataInterpreterITS : public DataInterpreter
   // Default destructor
   ~DataInterpreterITS() final;
 
-  std::unique_ptr<VisualisationEvent> interpretDataForType(TObject* data, EVisualisationDataType type) final;
+  void interpretDataForType(TObject* data, EVisualisationDataType type, VisualisationEvent& event) final;
 };
 
 } // namespace event_visualisation

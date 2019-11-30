@@ -196,15 +196,18 @@ void MultiView::registerElement(TEveElement* event)
   gEve->GetCurrentEvent()->AddElement(event);
   getProjection(ProjectionRphi)->ImportElements(event, getScene(SceneRphiEvent));
   getProjection(ProjectionZrho)->ImportElements(event, getScene(SceneZrhoEvent));
-
-  redraw3D();
 }
 
 void MultiView::destroyAllEvents()
 {
-  gEve->GetCurrentEvent()->DestroyElements();
-  getScene(SceneRphiEvent)->DestroyElements();
-  getScene(SceneZrhoEvent)->DestroyElements();
+  TEveEventManager* event = gEve->GetCurrentEvent();
+  if (event) {
+    event->DestroyElements();
+  }
+  if (mScenes[SceneRphiEvent])
+    mScenes[SceneRphiEvent]->DestroyElements();
+  if (mScenes[SceneZrhoEvent])
+    mScenes[SceneZrhoEvent]->DestroyElements();
 }
 
 void MultiView::redraw3D()

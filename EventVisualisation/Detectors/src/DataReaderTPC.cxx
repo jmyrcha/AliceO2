@@ -17,6 +17,9 @@
 #include "DataFormatsTPC/TrackTPC.h"
 #include "EventVisualisationDetectors/DataReaderTPC.h"
 
+#include <FairLogger.h>
+
+#include <TSystem.h>
 #include <TTree.h>
 #include <TVector2.h>
 #include <TError.h>
@@ -34,7 +37,15 @@ void DataReaderTPC::open()
   TString trackFile = "tpctracks.root";
 
   this->mTracFile = TFile::Open(trackFile);
+  if (!this->mTracFile) {
+    LOG(ERROR) << "There is no " << trackFile.Data() << " file in current directory!";
+    gSystem->Exit(1);
+  }
   this->mClusFile = TFile::Open(clusterFile);
+  if (!this->mClusFile) {
+    LOG(ERROR) << "There is no " << clusterFile.Data() << " file in current directory!";
+    gSystem->Exit(1);
+  }
 
   TTree* trec = static_cast<TTree*>(this->mTracFile->Get("tpcrec"));
   std::vector<tpc::TrackTPC>* trackBuffer = nullptr;

@@ -39,7 +39,7 @@ DataInterpreterVSD::~DataInterpreterVSD()
   }
 }
 
-std::unique_ptr<VisualisationEvent> DataInterpreterVSD::interpretDataForType(TObject* data, EVisualisationDataType type)
+void DataInterpreterVSD::interpretDataForType(TObject* data, EVisualisationDataType type, VisualisationEvent& event)
 {
   if (mVSD == nullptr)
     mVSD = new TEveVSD;
@@ -51,8 +51,6 @@ std::unique_ptr<VisualisationEvent> DataInterpreterVSD::interpretDataForType(TOb
 
   this->AttachEvent();
 
-  auto ret_event = std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0);
-
   // Load event data into visualization structures.
 
   //        this->LoadClusters(this->fITSClusters, "ITS", 0);
@@ -60,10 +58,8 @@ std::unique_ptr<VisualisationEvent> DataInterpreterVSD::interpretDataForType(TOb
   //        this->LoadClusters(this->fTRDClusters, "TRD", 2);
   //        this->LoadClusters(this->fTOFClusters, "TOF", 3);
   if (type == Tracks) {
-    LoadEsdTracks(*ret_event);
+    LoadEsdTracks(event);
   }
-
-  return ret_event;
 }
 
 void DataInterpreterVSD::LoadClusters(TEvePointSet*& ps, const TString& det_name, Int_t det_id)

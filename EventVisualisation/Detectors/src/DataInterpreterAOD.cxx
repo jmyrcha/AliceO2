@@ -104,23 +104,22 @@ DataInterpreterAOD::DataInterpreterAOD()
 
 DataInterpreterAOD::~DataInterpreterAOD() = default;
 
-std::unique_ptr<VisualisationEvent> DataInterpreterAOD::interpretDataForType(TObject* data, EVisualisationDataType type)
+void DataInterpreterAOD::interpretDataForType(TObject* data, EVisualisationDataType type, VisualisationEvent& event)
 {
   TList* list = (TList*)data;
-  Int_t event = ((TVector2*)list->At(1))->X();
+  Int_t eventId = ((TVector2*)list->At(1))->X();
   TFile* AODFile = (TFile*)list->At(0);
 
   if (type == Tracks) {
-    return this->interpretAODTracks(AODFile, event);
+    interpretAODTracks(AODFile, eventId, event);
   } else if (type == Calo) {
-    return this->interpretAODCaloCells(AODFile, event);
+    interpretAODCaloCells(AODFile, eventId, event);
   } else if (type == Muon) {
-    return this->interpretMuonTracks(AODFile, event);
+    interpretMuonTracks(AODFile, eventId, event);
   }
-  return std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0);
 }
 
-std::unique_ptr<VisualisationEvent> DataInterpreterAOD::interpretAODTracks(TFile* AODFile, Int_t event)
+void DataInterpreterAOD::interpretAODTracks(TFile* AODFile, Int_t eventId, VisualisationEvent& event)
 {
   TTree* tracks = (TTree*)AODFile->Get("O2tracks");
 
@@ -146,7 +145,6 @@ std::unique_ptr<VisualisationEvent> DataInterpreterAOD::interpretAODTracks(TFile
   tracks->SetBranchAddress("fPID", &trkPID);
   tracks->SetBranchAddress("fFlags", &trkFlags);
 
-  auto ret_event = std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0);
   TEveTrackList* trackList = new TEveTrackList("tracks");
   trackList->IncDenyDestroy();
   auto prop = trackList->GetPropagator();
@@ -158,9 +156,9 @@ std::unique_ptr<VisualisationEvent> DataInterpreterAOD::interpretAODTracks(TFile
 
     // TODO: This is provisional.
     //  AOD is supposed to contain references from primary vertex to elements from given collision.
-    if (trkID > event + 10)
+    if (trkID > eventId + 10)
       break; // End event search
-    if (trkID != event)
+    if (trkID != eventId)
       continue;
 
     o2::track::TrackPar rec(trkX, trkAlpha, { trkY, trkZ, trkSnp, trkTgl, trkSigned1Pt });
@@ -189,16 +187,13 @@ std::unique_ptr<VisualisationEvent> DataInterpreterAOD::interpretAODTracks(TFile
     }
     delete eve_track;
 
-    ret_event->addTrack(track);
+    event.addTrack(track);
   }
   delete trackList;
-  return ret_event;
 }
 
-std::unique_ptr<VisualisationEvent> DataInterpreterAOD::interpretAODCaloCells(TFile* AODFile, Int_t eventID)
+void DataInterpreterAOD::interpretAODCaloCells(TFile* AODFile, Int_t eventId, VisualisationEvent& event)
 {
-  auto ret_event = std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0);
-
   TTree* calo = (TTree*)AODFile->Get("O2calo");
   Int_t caloID;           // The index of the collision vertex, to which the cell is attached
   Short_t caloCellNumber; // Cell absolute Id. number
@@ -224,9 +219,9 @@ std::unique_ptr<VisualisationEvent> DataInterpreterAOD::interpretAODCaloCells(TF
 
     // TODO: This is provisional.
     //  AOD is supposed to contain references from primary vertex to elements from given collision.
-    if (caloID > eventID + 10)
+    if (caloID > eventId + 10)
       break; // End event search
-    if (caloID != eventID)
+    if (caloID != eventId)
       continue;
 
     if (caloAmplitude > maxCellEnergy) {
@@ -247,24 +242,23 @@ std::unique_ptr<VisualisationEvent> DataInterpreterAOD::interpretAODCaloCells(TF
       continue;
 
     if (caloTypes[i] == 0) {
-      ret_event = interpretPHOSCell(caloAbsIds[i], caloAmplitudes[i], std::move(ret_event));
+      interpretPHOSCell(caloAbsIds[i], caloAmplitudes[i], event);
     } else if (caloTypes[i] == 1) {
-      ret_event = interpretEMCALCell(caloAbsIds[i], caloAmplitudes[i], std::move(ret_event));
+      interpretEMCALCell(caloAbsIds[i], caloAmplitudes[i], event);
     } else {
       LOG(FATAL) << "Wrong calorimeter type";
     }
   }
-  return ret_event;
 }
 
-std::unique_ptr<VisualisationEvent> DataInterpreterAOD::interpretEMCALCell(Int_t absId, Float_t amplitude, std::unique_ptr<VisualisationEvent> event)
+void DataInterpreterAOD::interpretEMCALCell(Int_t absId, Float_t amplitude, VisualisationEvent& event)
 {
   auto [iSupMod, iTower, iIphi, iIeta] = mEMCALGeom->GetCellIndex(absId);
   // It should not happen, but in case the OCDB file is not the correct one.
   if (iSupMod >= mEMCALGeom->GetNumberOfSuperModules()) {
     LOG(WARNING) << "iSupMod: " << iSupMod << " bigger than EMCAL modules number: "
                  << mEMCALGeom->GetNumberOfSuperModules();
-    return event;
+    return;
   }
 
   // Gives label of cell in eta-phi position per each supermodule
@@ -276,11 +270,10 @@ std::unique_ptr<VisualisationEvent> DataInterpreterAOD::interpretEMCALCell(Int_t
 
   VisualisationCaloCell cell(absId, iSupMod, posArr, amplitude, 1, phi, eta);
 
-  event->addCaloCell(cell);
-  return event;
+  event.addCaloCell(cell);
 }
 
-std::unique_ptr<VisualisationEvent> DataInterpreterAOD::interpretPHOSCell(Int_t absId, Float_t amplitude, std::unique_ptr<VisualisationEvent> event)
+void DataInterpreterAOD::interpretPHOSCell(Int_t absId, Float_t amplitude, VisualisationEvent& event)
 {
   TVector3 xyz;
   Int_t relId[3];
@@ -301,13 +294,11 @@ std::unique_ptr<VisualisationEvent> DataInterpreterAOD::interpretPHOSCell(Int_t 
   //  printf("\t SM %d iEta %d,  iPhi %d, x %3.3f, y %3.3f, z %3.3f \n",
   //         iSupMod, ieta, iphi, pos.X(), pos.Y(), pos.Z());
 
-  event->addCaloCell(cell);
-  return event;
+  event.addCaloCell(cell);
 }
 
-// TODO: Provisional cuts for all cells - in AliRoot cuts were applied for each cluster separately
-Bool_t DataInterpreterAOD::cutCell(std::vector<Float_t> caloAmplitudes, std::vector<Int_t> caloAbsIds,
-                                   int caloCount, Float_t amplitude, Char_t caloType, Float_t maxCellEnergy, Int_t maxCellEnergyAbsId)
+// TODO: Provisional cuts for all cells - in AliRoot cuts were applied for each cluster separately.
+Bool_t DataInterpreterAOD::cutCell(std::vector<Float_t> caloAmplitudes, std::vector<Int_t> caloAbsIds, int caloCount, Float_t amplitude, Char_t caloType, Float_t maxCellEnergy, Int_t maxCellEnergyAbsId)
 {
   //  if(caloCount < mNumMinCellsCut[caloType]) return kTRUE;
   //  if(caloCount > mNumMaxCellsCut[caloType]) return kTRUE;
@@ -319,15 +310,15 @@ Bool_t DataInterpreterAOD::cutCell(std::vector<Float_t> caloAmplitudes, std::vec
   //  if(fCaloCluster->GetM02()    > m02higCut[caloType]) return kTRUE ;
   //  if(fCaloCluster->GetM20()    < m20lowCut[caloType]) return kTRUE ;
 
-  if (maxCellEnergy < mEnergyCut[caloType] / 2.0 || maxCellEnergyAbsId < 0) {
-    return kTRUE;
-  }
-
-  //  auto [ism, irow, icol] = getModuleNumberColAndRow(amplitude, caloType);
-  //  Float_t eCross = getECross(caloAmplitudes, caloAbsIds, caloType, ism, icol, irow);
-  //  if (1 - eCross / maxCellEnergy > mExoCut) {
+  //  if (maxCellEnergy < mEnergyCut[caloType] / 2.0 || maxCellEnergyAbsId < 0) {
   //    return kTRUE;
   //  }
+
+  //    auto [ism, irow, icol] = getModuleNumberColAndRow(amplitude, caloType);
+  //    Float_t eCross = getECross(caloAmplitudes, caloAbsIds, caloType, ism, icol, irow);
+  //    if (1 - eCross / maxCellEnergy > mExoCut) {
+  //      return kTRUE;
+  //    }
 
   return kFALSE;
 }
@@ -447,9 +438,8 @@ Float_t DataInterpreterAOD::getCaloCellAmplitude(std::vector<Float_t> caloAmplit
   return caloAmplitudes[ind];
 }
 
-std::unique_ptr<VisualisationEvent> DataInterpreterAOD::interpretMuonTracks(TFile* AODFile, Int_t eventID)
+void DataInterpreterAOD::interpretMuonTracks(TFile* AODFile, Int_t eventId, VisualisationEvent& event)
 {
-  auto ret_event = std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0);
   TTree* muon = (TTree*)AODFile->Get("O2mu");
 
   Int_t muonID;                       // The index of the collision vertex, to which the muon is attached
@@ -498,9 +488,9 @@ std::unique_ptr<VisualisationEvent> DataInterpreterAOD::interpretMuonTracks(TFil
 
     // TODO: This is provisional.
     //  AOD is supposed to contain references from primary vertex to elements from given collision.
-    if (muonID > eventID + 10)
+    if (muonID > eventId + 10)
       break; // End event search
-    if (muonID != eventID)
+    if (muonID != eventId)
       continue;
 
     //recTrack.fIndex = muonID;
@@ -553,10 +543,9 @@ std::unique_ptr<VisualisationEvent> DataInterpreterAOD::interpretMuonTracks(TFil
     }
 
     delete track;
-    ret_event->addMuonTrack(visTrack);
+    event.addMuonTrack(visTrack);
   }
   delete ghostList;
-  return ret_event;
 }
 
 } // namespace event_visualisation

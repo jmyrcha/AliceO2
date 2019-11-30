@@ -113,11 +113,12 @@ void EventManager::GotoEvent(Int_t no)
   for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; ++i) {
     DataInterpreter* interpreter = mDataInterpreters[i];
     if (interpreter) {
+      TObject* data = getDataSource()->getEventData(no, (EVisualisationGroup)i);
+      std::unique_ptr<VisualisationEvent> event = std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0);
       for (int dataType = 0; dataType < EVisualisationDataType::NdataTypes; ++dataType) {
-        TObject* data = getDataSource()->getEventData(no, (EVisualisationGroup)i);
-        std::unique_ptr<VisualisationEvent> event = interpreter->interpretDataForType(data, (EVisualisationDataType)dataType);
-        displayVisualisationEvent(*event, gVisualisationGroupName[i]);
+        interpreter->interpretDataForType(data, (EVisualisationDataType)dataType, *event);
       }
+      displayVisualisationEvent(*event, gVisualisationGroupName[i]);
     }
   }
 
@@ -175,9 +176,10 @@ EventManager::~EventManager()
   for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; i++) {
     if (mDataInterpreters[i] != nullptr) {
       delete mDataInterpreters[i];
-      delete mDataReaders[i];
-
       mDataInterpreters[i] = nullptr;
+    }
+    if (mDataReaders[i] != nullptr) {
+      delete mDataReaders[i];
       mDataReaders[i] = nullptr;
     }
   }
@@ -194,6 +196,7 @@ void EventManager::displayVisualisationEvent(VisualisationEvent& event, const st
   if (settings.GetValue("clusters.show", false)) {
     displayClusters(event, detectorName);
   }
+
   if (detectorName == "AOD") {
     if (settings.GetValue("calo.show", false)) {
       displayCalo(event);
@@ -546,17 +549,12 @@ void EventManager::displayMuonTracks(VisualisationEvent& event)
 {
   size_t muonCount = event.getMuonTrackCount();
 
-  auto* muonList = new TEveElementList("AOD Muon tracks");
-  muonList->SetTitle(Form("N=%d", muonCount));
-  muonList->IncDenyDestroy();
-
   auto* match = new TEveTrackList("Matched");
   match->IncDenyDestroy();
   match->SetRnrPoints(kFALSE);
   match->SetRnrLine(kTRUE);
   match->SetMainColor(kGreen);
   setupMuonTrackPropagator(match->GetPropagator(), kTRUE, kTRUE);
-  muonList->AddElement(match);
 
   auto* nomatch = new TEveTrackList("Not matched");
   nomatch->IncDenyDestroy();
@@ -564,7 +562,6 @@ void EventManager::displayMuonTracks(VisualisationEvent& event)
   nomatch->SetRnrLine(kTRUE);
   nomatch->SetMainColor(kGreen);
   setupMuonTrackPropagator(nomatch->GetPropagator(), kTRUE, kFALSE);
-  muonList->AddElement(nomatch);
 
   auto* ghost = new TEveTrackList("Ghost");
   ghost->IncDenyDestroy();
@@ -572,9 +569,7 @@ void EventManager::displayMuonTracks(VisualisationEvent& event)
   ghost->SetRnrLine(kTRUE);
   ghost->SetMainColor(kGreen);
   setupMuonTrackPropagator(ghost->GetPropagator(), kFALSE, kTRUE);
-  muonList->AddElement(ghost);
 
-  //int muonCount = event.getMuonTrackCount();
   for (size_t i = 0; i < muonCount; ++i) {
     VisualisationTrack track = event.getMuonTrack(i);
     TEveRecTrackD t;
@@ -594,7 +589,9 @@ void EventManager::displayMuonTracks(VisualisationEvent& event)
   }
 
   if (muonCount != 0) {
-    mDataTypeLists[EVisualisationDataType::Muon]->AddElement(muonList);
+    mDataTypeLists[EVisualisationDataType::Muon]->AddElement(match);
+    mDataTypeLists[EVisualisationDataType::Muon]->AddElement(nomatch);
+    mDataTypeLists[EVisualisationDataType::Muon]->AddElement(ghost);
   }
 }
 
@@ -761,16 +758,6 @@ void EventManager::displayCalo(VisualisationEvent& event)
   calo3d->SetMaxTowerH(300);
   calo3d->SetFrameTransparency(100);
   gEve->AddElement(calo3d, caloList);
-
-  // Version with TEveCalo3D as separate top node on the list (outside 'Event' and 'EMCAL').
-  // Warning: the elements are not properly removed when moving to next / prev event
-
-  //TEveScene* g_histo2d_s2 = gEve->SpawnNewScene("3D Histogram", "3D Histogram");
-  //gEve->GetDefaultViewer()->AddScene(g_histo2d_s2);
-  //MultiView::getInstance()->getView(MultiView::EViews::View3d)->AddScene(g_histo2d_s2);
-  //g_histo2d_s2->SetElementName("3D Histogram Scene");
-  //g_histo2d_s2->AddElement(calo3d);
-  //MultiView::getInstance()->registerElement(calo3d);
 
   mDataTypeLists[EVisualisationDataType::Calo]->AddElement(caloList);
   mDataTypeLists[EVisualisationDataType::Calo]->AddElement(emcalList);

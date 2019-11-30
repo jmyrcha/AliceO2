@@ -16,6 +16,9 @@
 #include "EventVisualisationDetectors/DataReaderAOD.h"
 #include "ReconstructionDataFormats/Track.h"
 
+#include <FairLogger.h>
+
+#include <TSystem.h>
 #include <TTree.h>
 #include <TVector2.h>
 #include <TError.h>
@@ -30,7 +33,12 @@ DataReaderAOD::DataReaderAOD() = default;
 void DataReaderAOD::open()
 {
   TString file = "O2aod.root";
+
   this->mAODFile = TFile::Open(file);
+  if (!this->mAODFile) {
+    LOG(ERROR) << "There is no " << file.Data() << " file in current directory!";
+    gSystem->Exit(1);
+  }
 
   TTree* trec = static_cast<TTree*>(this->mAODFile->Get("O2tracks"));
   TTree* calo = static_cast<TTree*>(this->mAODFile->Get("O2calo"));
@@ -76,7 +84,7 @@ void DataReaderAOD::open()
   }
 
   // TODO: Slow method. How to get events number?
-  std::cout << "Setting max ev to: " << maxEventID + 1 << std::endl;
+  LOG(INFO) << "Setting max ev to: " << maxEventID + 1;
   fMaxEv = maxEventID + 1;
 }
 

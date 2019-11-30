@@ -41,7 +41,7 @@ class DataInterpreter
   virtual ~DataInterpreter() = default;
 
   // Should return visualisation objects for required data type
-  virtual std::unique_ptr<VisualisationEvent> interpretDataForType(TObject* data, EVisualisationDataType type) = 0;
+  virtual void interpretDataForType(TObject* data, EVisualisationDataType type, VisualisationEvent& event) = 0;
 };
 
 } // namespace event_visualisation

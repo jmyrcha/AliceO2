@@ -39,16 +39,16 @@ class DataInterpreterAOD : public DataInterpreter
   // Default destructor
   ~DataInterpreterAOD() final;
 
-  std::unique_ptr<VisualisationEvent> interpretDataForType(TObject* data, EVisualisationDataType type) final;
+  void interpretDataForType(TObject* data, EVisualisationDataType type, VisualisationEvent& event) final;
 
  private:
-  std::unique_ptr<VisualisationEvent> interpretAODTracks(TFile* AODFile, Int_t event);
+  void interpretAODTracks(TFile* AODFile, Int_t eventId, VisualisationEvent& event);
 
-  std::unique_ptr<VisualisationEvent> interpretAODCaloCells(TFile* AODFile, Int_t eventID);
-  std::unique_ptr<VisualisationEvent> interpretEMCALCell(Int_t absID, Float_t amplitude, std::unique_ptr<VisualisationEvent> event);
-  std::unique_ptr<VisualisationEvent> interpretPHOSCell(Int_t absID, Float_t amplitude, std::unique_ptr<VisualisationEvent> event);
+  void interpretAODCaloCells(TFile* AODFile, Int_t eventId, VisualisationEvent& event);
+  void interpretEMCALCell(Int_t absID, Float_t amplitude, VisualisationEvent& event);
+  void interpretPHOSCell(Int_t absID, Float_t amplitude, VisualisationEvent& event);
 
-  std::unique_ptr<VisualisationEvent> interpretMuonTracks(TFile* AODFile, Int_t eventID);
+  void interpretMuonTracks(TFile* AODFile, Int_t eventId, VisualisationEvent& event);
 
   Bool_t cutCell(std::vector<Float_t> caloAmplitudes, std::vector<Int_t> caloAbsIds, int caloCount,
                  Float_t amplitude, Char_t caloType, Float_t maxCellEnergy, Int_t maxCellEnergyAbsId);

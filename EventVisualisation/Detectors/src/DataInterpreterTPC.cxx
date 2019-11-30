@@ -47,12 +47,10 @@ DataInterpreterTPC::DataInterpreterTPC()
 
 DataInterpreterTPC::~DataInterpreterTPC() = default;
 
-std::unique_ptr<VisualisationEvent> DataInterpreterTPC::interpretDataForType(TObject* data, EVisualisationDataType type)
+void DataInterpreterTPC::interpretDataForType(TObject* data, EVisualisationDataType type, VisualisationEvent& event)
 {
   TList* list = (TList*)data;
-  Int_t event = ((TVector2*)list->At(2))->X();
-
-  auto ret_event = std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0);
+  Int_t eventId = ((TVector2*)list->At(2))->X();
 
   if (type == Clusters) {
     TFile* clustFile = (TFile*)list->At(1);
@@ -81,7 +79,7 @@ std::unique_ptr<VisualisationEvent> DataInterpreterTPC::interpretDataForType(TOb
         double xyz[3] = { globalXYZ.X(), globalXYZ.Y(), globalXYZ.Z() };
 
         VisualisationCluster cluster(xyz);
-        ret_event->addCluster(cluster);
+        event.addCluster(cluster);
       }
     }
   } else if (type == Tracks) {
@@ -100,7 +98,7 @@ std::unique_ptr<VisualisationEvent> DataInterpreterTPC::interpretDataForType(TOb
     prop->SetMagField(0.5);
 
     // Tracks are not in order
-    int startTime = 2 * mTPCReadoutCycle * event;
+    int startTime = 2 * mTPCReadoutCycle * eventId;
     int endTime = startTime + 2 * mTPCReadoutCycle;
 
     for (int i = 0; i < trkArr->size(); i++) {
@@ -134,11 +132,10 @@ std::unique_ptr<VisualisationEvent> DataInterpreterTPC::interpretDataForType(TOb
       }
       delete eve_track;
 
-      ret_event->addTrack(track);
+      event.addTrack(track);
     }
     delete trackList;
   }
-  return ret_event;
 }
 
 } // namespace event_visualisation
