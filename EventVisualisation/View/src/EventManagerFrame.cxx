@@ -53,8 +53,7 @@ EventManagerFrame::EventManagerFrame(o2::event_visualisation::EventManager& even
     b = EventManagerFrame::makeButton(f, "Prev", width);
     b->Connect("Clicked()", cls, this, "DoPrevEvent()");
 
-    mEventId = new TGNumberEntry(f, 0, 5, -1, TGNumberFormat::kNESInteger, TGNumberFormat::kNEANonNegative,
-                                 TGNumberFormat::kNELLimitMinMax, 0, 10000);
+    mEventId = new TGNumberEntry(f, 0, 5, -1, TGNumberFormat::kNESInteger, TGNumberFormat::kNEANonNegative, TGNumberFormat::kNELLimitMinMax, 0, 10000);
     f->AddFrame(mEventId, new TGLayoutHints(kLHintsNormal, 10, 5, 0, 0));
     mEventId->Connect("ValueSet(Long_t)", cls, this, "DoSetEvent()");
     TGLabel* infoLabel = new TGLabel(f);
@@ -132,6 +131,7 @@ void EventManagerFrame::DoLastEvent()
 
 void EventManagerFrame::DoSetEvent()
 {
+  mEventManager->GotoEvent(mEventId->GetNumberEntry()->GetIntNumber());
 }
 
 void EventManagerFrame::DoScreenshot()
@@ -160,9 +160,7 @@ void EventManagerFrame::setupGeometry()
   // get geometry from Geometry Manager and register in multiview
   auto multiView = MultiView::getInstance();
 
-  for (int iDet = 0; iDet < NvisualisationGroups; ++iDet) {
-    EVisualisationGroup det = static_cast<EVisualisationGroup>(iDet);
-    std::string detName = gVisualisationGroupName[det];
+  for (auto detName : gVisualisationGroupName) {
     if (settings.GetValue((detName + ".draw").c_str(), false)) {
       if (detName == "TPC" || detName == "MCH" || detName == "MTR" || detName == "MID" || detName == "MFT" || detName == "AD0" || detName == "FMD") { // don't load MUON+MFT and AD and standard TPC to R-Phi view
         multiView->drawGeometryForDetector(detName, true, false);

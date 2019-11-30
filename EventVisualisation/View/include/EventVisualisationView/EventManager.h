@@ -28,6 +28,7 @@
 #include <TGeoMatrix.h>
 #include <TEveQuadSet.h>
 #include <TEveTrackPropagator.h>
+#include <TH2F.h>
 
 #include <string>
 
@@ -121,6 +122,8 @@ class EventManager : public TEveEventManager
   void setupMuonTrackPropagator(TEveTrackPropagator* prop, Bool_t tracker, Bool_t trigger);
   void displayCalo(VisualisationEvent& event);
   void setCaloQuadSet(const Float_t quadSize, const TGeoHMatrix* matrix, TEveQuadSet* quadSet);
+  TH2F* mEmcalHistogram;
+  TH2F* mPhosHistogram;
 
   void displayClusters(VisualisationEvent& event, const std::string& detectorName);
 };

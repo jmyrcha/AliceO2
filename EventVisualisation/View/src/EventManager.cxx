@@ -44,7 +44,6 @@
 #include <TStyle.h>
 #include <TEveCalo.h>
 #include <TEveCaloData.h>
-#include <TH2.h>
 
 using namespace std;
 
@@ -73,6 +72,13 @@ EventManager::EventManager() : TEveEventManager("Event", "")
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);
   mWidth = settings.GetValue("tracks.width", 1);
+
+  // 3D calorimeter histogram
+  double pi = TMath::Pi();
+  mEmcalHistogram = new TH2F("histoEMcell", "EMCal Cell #eta vs #phi vs E",
+                             100, -1.5, 1.5, 80, -pi, pi);
+  mPhosHistogram = new TH2F("histoPHcell", "PHOS Cell #eta vs #phi vs E",
+                            100, -1.5, 1.5, 80, -pi, pi);
 }
 
 void EventManager::Open()
@@ -668,17 +674,13 @@ void EventManager::displayCalo(VisualisationEvent& event)
   auto* phosList = new TEveElementList("PHOS");
   phosList->IncDenyDestroy();
 
-  // 3D calorimeter histogram
-  double pi = TMath::Pi();
-  TH2F* histoEM = new TH2F("histoEMcell", "EMCal Cell #eta vs #phi vs E",
-                           100, -1.5, 1.5, 80, -pi, pi);
-  TH2F* histoPH = new TH2F("histoPHcell", "PHOS Cell #eta vs #phi vs E",
-                           100, -1.5, 1.5, 80, -pi, pi);
-
   // Warning: Geometries need to be initialised before
   // We assume that they were initialised in AOD interpreter
   const auto& emcalGeom = o2::emcal::Geometry::GetInstance();
   const auto& phosGeom = o2::phos::Geometry::GetInstance();
+
+  mEmcalHistogram->Reset();
+  mPhosHistogram->Reset();
 
   int numberOfSuperModules = emcalGeom->GetNumberOfSuperModules();
   TEveQuadSet* emcalQuads[numberOfSuperModules];
@@ -713,12 +715,22 @@ void EventManager::displayCalo(VisualisationEvent& event)
   for (size_t i = 0; i < caloCount; ++i) {
     VisualisationCaloCell caloCell = event.getCaloCell(i);
 
-    // Cells = blue quads
     int module = caloCell.getModule();
+    float eta = caloCell.getEta();
     if (caloCell.getType() == 1) {
+      // Cells = blue quads
       if (emcalQuads[module]) {
         emcalQuads[module]->AddQuad(caloCell.Y(), caloCell.Z());
         emcalQuads[module]->QuadValue(caloCell.getAmplitude() * 1000);
+      }
+
+      // Histogram = orange boxes
+      if (TMath::Abs(eta) < 0.7) {
+        mEmcalHistogram->Fill(eta, caloCell.getPhi(), caloCell.getAmplitude());
+        //      printf("\t CaloCell %d, energy %2.2f,eta %2.2f, phi %2.2f\n",
+        //             caloCell.getAbsID(), caloCell.getAmplitude(), caloCell.getEta(), caloCell.getPhi()*TMath::RadToDeg());
+      } else {
+        LOG(WARNING) << "Wrong eta value for EMCAL calorimeter cell, active workaround!!!";
       }
     }
     // TODO: PHOS Geometry not set yet, so not possible to use
@@ -728,22 +740,12 @@ void EventManager::displayCalo(VisualisationEvent& event)
     //        phosQuads[module]->QuadValue(caloCell.getAmplitude() * 1000);
     //      }
     //    }
-
-    // Histogram = orange boxes
-    float eta = caloCell.getEta();
-    if (TMath::Abs(eta) < 0.7) {
-      histoEM->Fill(eta, caloCell.getPhi(), caloCell.getAmplitude());
-      //      printf("\t CaloCell %d, energy %2.2f,eta %2.2f, phi %2.2f\n",
-      //             caloCell.getAbsID(), caloCell.getAmplitude(), caloCell.getEta(), caloCell.getPhi()*TMath::RadToDeg());
-    } else {
-      LOG(WARNING) << "Wrong eta value for calorimeter cell, active workaround!!!";
-    }
   }
 
   TEveCaloDataHist* data = new TEveCaloDataHist();
-  data->AddHistogram(histoEM);
+  data->AddHistogram(mEmcalHistogram);
   data->RefSliceInfo(0).Setup("EMCell:", 0, kOrange + 7);
-  data->AddHistogram(histoPH);
+  data->AddHistogram(mPhosHistogram);
   data->RefSliceInfo(1).Setup("PHCell:", 0, kYellow);
 
   data->GetEtaBins()->SetTitleFont(120);
