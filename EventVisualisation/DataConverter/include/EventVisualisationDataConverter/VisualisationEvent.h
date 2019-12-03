@@ -25,6 +25,7 @@
 
 #include <vector>
 #include <ctime>
+#include <string>
 
 namespace o2
 {

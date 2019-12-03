@@ -25,6 +25,8 @@
 #include <TEveProjectionManager.h>
 #include <TSystem.h>
 
+#include <string>
+
 namespace o2
 {
 namespace event_visualisation
@@ -36,20 +38,20 @@ GeometryManager& GeometryManager::getInstance()
   return instance;
 }
 
-TEveGeoShape* GeometryManager::getGeometryForDetector(string detectorName)
+TEveGeoShape* GeometryManager::getGeometryForDetector(std::string detectorName)
 {
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);
 
   // read geometry path from config file
-  string geomPath = settings.GetValue("simple.geom.path", "");
+  std::string geomPath = settings.GetValue("simple.geom.path", "");
 
   // TODO: we need a way to set O2 installation path here
-  const string o2basePathSpecifier = "${ALICE_ROOT}";
-  const string o2basePath = ""; //= gSystem->Getenv("ALICE_ROOT");
+  const std::string o2basePathSpecifier = "${ALICE_ROOT}";
+  const std::string o2basePath = ""; //= gSystem->Getenv("ALICE_ROOT");
   const size_t o2pos = geomPath.find(o2basePathSpecifier);
 
-  if (o2pos != string::npos) {
+  if (o2pos != std::string::npos) {
     geomPath.replace(o2pos, o2pos + o2basePathSpecifier.size(), o2basePath);
   }
 

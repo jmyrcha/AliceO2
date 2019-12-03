@@ -46,6 +46,8 @@
 #include <TFile.h>
 #include <TGeoManager.h>
 
+#include <string>
+
 namespace o2
 {
 namespace event_visualisation
@@ -57,7 +59,7 @@ void Initializer::setup(const Options options, EventManager::EDataSource default
   ConfigurationManager::getInstance().getConfig(settings);
 
   const bool fullscreen = settings.GetValue("fullscreen.mode", false);                           // hide left and bottom tabs
-  const string ocdbStorage = settings.GetValue("OCDB.default.path", "local://$ALICE_ROOT/OCDB"); // default path to OCDB
+  const std::string ocdbStorage = settings.GetValue("OCDB.default.path", "local://$ALICE_ROOT/OCDB"); // default path to OCDB
   LOG(INFO) << "Initializer -- OCDB path:" << ocdbStorage;
 
   auto& eventManager = EventManager::getInstance();

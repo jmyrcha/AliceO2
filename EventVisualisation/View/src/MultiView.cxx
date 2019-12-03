@@ -29,6 +29,8 @@
 #include <TEveProjectionManager.h>
 #include <TEveWindowManager.h>
 
+#include <string>
+
 namespace o2
 {
 namespace event_visualisation
@@ -144,7 +146,7 @@ MultiView::EScenes MultiView::getSceneOfProjection(EProjections projection)
   return NumberOfScenes;
 }
 
-void MultiView::drawGeometryForDetector(string detectorName, bool threeD, bool rPhi, bool zRho)
+void MultiView::drawGeometryForDetector(std::string detectorName, bool threeD, bool rPhi, bool zRho)
 {
   auto& geometryManager = GeometryManager::getInstance();
   TEveGeoShape* shape = geometryManager.getGeometryForDetector(detectorName);

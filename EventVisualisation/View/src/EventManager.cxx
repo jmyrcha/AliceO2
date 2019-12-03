@@ -45,6 +45,8 @@
 #include <TEveCalo.h>
 #include <TEveCaloData.h>
 
+#include <string>
+
 namespace o2
 {
 namespace event_visualisation
@@ -503,7 +505,7 @@ bool EventManager::trackSelected(const VisualisationTrack& track)
   };
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);
-  string trackSelection = settings.GetValue("tracks.selection", "");
+  std::string trackSelection = settings.GetValue("tracks.selection", "");
 
   if (trackSelection == "ITSin_noTPCin") {
     return track.isRecoFlagSet(kITSin) && !track.isRecoFlagSet(kTPCin);

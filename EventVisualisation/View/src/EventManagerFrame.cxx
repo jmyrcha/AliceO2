@@ -27,7 +27,6 @@
 #include <TGLabel.h>
 
 #include <Rtypes.h>
-#include <string>
 
 ClassImp(o2::event_visualisation::EventManagerFrame);
 
