@@ -15,6 +15,8 @@
 #include "EventVisualisationBase/GeometryManager.h"
 #include "EventVisualisationBase/ConfigurationManager.h"
 
+#include "FairRoot.h"
+
 #include <TFile.h>
 #include <TGLViewer.h>
 #include <TEnv.h>
@@ -22,10 +24,6 @@
 #include <TEveManager.h>
 #include <TEveProjectionManager.h>
 #include <TSystem.h>
-
-#include <iostream>
-
-using namespace std;
 
 namespace o2
 {
@@ -58,7 +56,7 @@ TEveGeoShape* GeometryManager::getGeometryForDetector(string detectorName)
   // load ROOT file with geometry
   TFile* f = TFile::Open(Form("%s/simple_geom_%s.root", geomPath.c_str(), detectorName.c_str()));
   if (!f) {
-    cout << "GeometryManager::GetSimpleGeom -- no file with geometry found for: " << detectorName << "!" << endl;
+    LOG(ERROR) << "GeometryManager::GetSimpleGeom -- no file with geometry found for: " << detectorName << "!";
     return nullptr;
   }
 

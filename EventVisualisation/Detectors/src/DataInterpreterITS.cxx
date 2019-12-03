@@ -33,8 +33,6 @@
 #include <iostream>
 #include <gsl/span>
 
-using namespace std;
-
 namespace o2
 {
 namespace event_visualisation

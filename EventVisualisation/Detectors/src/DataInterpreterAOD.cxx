@@ -24,6 +24,7 @@
 #include "CCDB/Manager.h"
 #include "CCDB/IdPath.h"
 #include "CCDB/Condition.h"
+
 #include "FairLogger.h"
 
 #include <TEveManager.h>
@@ -40,7 +41,6 @@
 
 #include <gsl/span>
 
-using namespace std;
 using namespace o2::ccdb;
 
 namespace o2

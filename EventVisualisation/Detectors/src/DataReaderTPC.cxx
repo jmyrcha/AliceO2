@@ -17,12 +17,11 @@
 #include "DataFormatsTPC/TrackTPC.h"
 #include "EventVisualisationDetectors/DataReaderTPC.h"
 
-#include <FairLogger.h>
+#include "FairLogger.h"
 
 #include <TSystem.h>
 #include <TTree.h>
 #include <TVector2.h>
-#include <TError.h>
 
 namespace o2
 {
@@ -38,13 +37,11 @@ void DataReaderTPC::open()
 
   this->mTracFile = TFile::Open(trackFile);
   if (!this->mTracFile) {
-    LOG(ERROR) << "There is no " << trackFile.Data() << " file in current directory!";
-    gSystem->Exit(1);
+    LOG(FATAL) << "There is no " << trackFile.Data() << " file in current directory!";
   }
   this->mClusFile = TFile::Open(clusterFile);
   if (!this->mClusFile) {
-    LOG(ERROR) << "There is no " << clusterFile.Data() << " file in current directory!";
-    gSystem->Exit(1);
+    LOG(FATAL) << "There is no " << clusterFile.Data() << " file in current directory!";
   }
 
   TTree* trec = static_cast<TTree*>(this->mTracFile->Get("tpcrec"));
@@ -63,7 +60,7 @@ void DataReaderTPC::open()
   if (mMaxEv * 2 * mTPCReadoutCycle < time) {
     mMaxEv++;
   }
-  std::cout << "Setting max ev to: " << mMaxEv << " max time: " << time << std::endl;
+  LOG(INFO) << "Setting max ev to: " << mMaxEv << " max time: " << time;
 }
 
 Int_t DataReaderTPC::GetEventCount()

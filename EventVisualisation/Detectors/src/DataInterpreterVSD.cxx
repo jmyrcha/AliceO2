@@ -21,10 +21,6 @@
 #include <TEveTrackPropagator.h>
 #include <TGListTree.h>
 
-#include <iostream>
-
-using namespace std;
-
 namespace o2
 {
 namespace event_visualisation

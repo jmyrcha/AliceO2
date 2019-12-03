@@ -18,16 +18,17 @@
 #include "EventVisualisationBase/ConfigurationManager.h"
 #include "EventVisualisationBase/DataInterpreter.h"
 
+#include "FairRoot.h"
+
 #include <TApplication.h>
 #include <TEveBrowser.h>
 #include <TEveManager.h>
 #include <TEnv.h>
 
+#include <string>
 #include <unistd.h>
 #include <ctime>
-#include <iostream>
 
-using namespace std;
 using namespace o2::event_visualisation;
 
 std::string printOptions(Options* o)
@@ -70,10 +71,10 @@ Options* processCommandLine(int argc, char* argv[])
         options.fileName = optarg;
         break;
       case ':':
-        printf("option needs a value\n");
+		LOG(ERROR) << "Option needs a value";
         return nullptr;
       case '?':
-        printf("unknown option: %c\n", optopt);
+        LOG(ERROR) << "Unknown option: " << optopt;
         return nullptr;
     }
   }
@@ -81,7 +82,7 @@ Options* processCommandLine(int argc, char* argv[])
   // optind is for the extra arguments
   // which are not parsed
   for (; optind < argc; optind++) {
-    printf("extra arguments: %s\n", argv[optind]);
+	  LOG(INFO) << "Extra arguments: " << argv[optind];
     return nullptr;
   }
 
@@ -90,10 +91,10 @@ Options* processCommandLine(int argc, char* argv[])
 
 int main(int argc, char** argv)
 {
-  cout << "Welcome in O2 event visualisation tool" << endl;
+  LOG(INFO) << "Welcome in O2 event visualisation tool";
   Options* options = processCommandLine(argc, argv);
   if (options == nullptr) {
-    exit(-1);
+    LOG(FATAL) << "No options specified!";
   }
 
   srand(static_cast<unsigned int>(time(nullptr)));
@@ -116,10 +117,9 @@ int main(int argc, char** argv)
   TApplication* app = new TApplication("o2eve", &argc, argv);
   app->Connect("TEveBrowser", "CloseWindow()", "TApplication", app, "Terminate()");
 
-  cout << "Initializing TEveManager" << endl;
+  LOG(INFO) << "Initializing TEveManager";
   if (!TEveManager::Create(kTRUE, "FI")) {
-    cout << "FATAL -- Could not create TEveManager!!" << endl;
-    exit(0);
+    LOG(FATAL) << "Could not create TEveManager!";
   }
 
   // Initialize o2 Event Visualisation

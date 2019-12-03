@@ -16,8 +16,6 @@
 
 #include "EventVisualisationDataConverter/VisualisationEvent.h"
 
-using namespace std;
-
 namespace o2
 {
 namespace event_visualisation

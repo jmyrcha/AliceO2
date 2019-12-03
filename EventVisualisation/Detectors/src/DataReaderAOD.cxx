@@ -16,12 +16,11 @@
 #include "EventVisualisationDetectors/DataReaderAOD.h"
 #include "ReconstructionDataFormats/Track.h"
 
-#include <FairLogger.h>
+#include "FairLogger.h"
 
 #include <TSystem.h>
 #include <TTree.h>
 #include <TVector2.h>
-#include <TError.h>
 
 namespace o2
 {
@@ -36,8 +35,7 @@ void DataReaderAOD::open()
 
   this->mAODFile = TFile::Open(file);
   if (!this->mAODFile) {
-    LOG(ERROR) << "There is no " << file.Data() << " file in current directory!";
-    gSystem->Exit(1);
+    LOG(FATAL) << "There is no " << file.Data() << " file in current directory!";
   }
 
   TTree* trec = static_cast<TTree*>(this->mAODFile->Get("O2tracks"));

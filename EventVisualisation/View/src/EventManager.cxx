@@ -28,7 +28,7 @@
 #include "EMCALBase/Geometry.h"
 #include "PHOSBase/Geometry.h"
 
-#include <FairLogger.h>
+#include "FairLogger.h"
 
 #include <TEveManager.h>
 #include <TEveTrackPropagator.h>
@@ -44,8 +44,6 @@
 #include <TStyle.h>
 #include <TEveCalo.h>
 #include <TEveCaloData.h>
-
-using namespace std;
 
 namespace o2
 {
@@ -179,16 +177,19 @@ void EventManager::ClearNewEventCommands()
 
 EventManager::~EventManager()
 {
+  MultiView::getInstance()->destroyAllEvents();
   for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; i++) {
-    if (mDataInterpreters[i] != nullptr) {
-      delete mDataInterpreters[i];
-      mDataInterpreters[i] = nullptr;
-    }
-    if (mDataReaders[i] != nullptr) {
-      delete mDataReaders[i];
-      mDataReaders[i] = nullptr;
-    }
+    delete mDataInterpreters[i];
+    mDataInterpreters[i] = nullptr;
+    delete mDataReaders[i];
+    mDataReaders[i] = nullptr;
   }
+  delete mDataSource;
+  mDataSource = nullptr;
+  delete mEmcalHistogram;
+  mEmcalHistogram = nullptr;
+  delete mPhosHistogram;
+  mPhosHistogram = nullptr;
   mInstance = nullptr;
 }
 
@@ -221,7 +222,8 @@ void EventManager::displayTracks(VisualisationEvent& event, const std::string& d
   if (settings.GetValue("tracks.byPt.show", false)) {
     displayTracksByPt(event, detectorName);
     return;
-  } else if (settings.GetValue("tracks.byType.show", false)) {
+  } 
+  if (settings.GetValue("tracks.byType.show", false)) {
     displayTracksByType(event, detectorName);
     return;
   }
@@ -542,9 +544,8 @@ void EventManager::animateTracks()
           for (int propIter = 0; propIter < propagators.size(); propIter++) {
             propagators[propIter]->SetMaxR(R);
           }
-
           gSystem->ProcessEvents();
-          gEve->FullRedraw3D();
+          gEve->Redraw3D();
         }
       }
     }

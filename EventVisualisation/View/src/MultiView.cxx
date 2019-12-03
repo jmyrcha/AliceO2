@@ -19,6 +19,8 @@
 #include "EventVisualisationBase/GeometryManager.h"
 #include "EventVisualisationBase/VisualisationConstants.h"
 
+#include "FairRoot.h"
+
 #include <TBrowser.h>
 #include <TEnv.h>
 #include <TEveBrowser.h>
@@ -26,10 +28,6 @@
 #include <TEveProjectionAxes.h>
 #include <TEveProjectionManager.h>
 #include <TEveWindowManager.h>
-
-#include <iostream>
-
-using namespace std;
 
 namespace o2
 {
@@ -156,7 +154,7 @@ void MultiView::drawGeometryForDetector(string detectorName, bool threeD, bool r
 void MultiView::registerGeometry(TEveGeoShape* geom, bool threeD, bool rPhi, bool zRho)
 {
   if (!geom) {
-    cout << "MultiView::registerGeometry -- geometry is NULL!" << endl;
+    LOG(ERROR) << "MultiView::registerGeometry -- geometry is NULL!";
     return;
   }
   mGeomVector.push_back(geom);

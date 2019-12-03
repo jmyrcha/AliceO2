@@ -33,6 +33,8 @@
 #include "EventVisualisationDetectors/DataInterpreterITS.h"
 #include "EventVisualisationDetectors/DataInterpreterTPC.h"
 
+#include "FairRoot.h"
+
 #include <TGTab.h>
 #include <TEnv.h>
 #include <TEveBrowser.h>
@@ -41,11 +43,8 @@
 #include <TSystem.h>
 #include <TSystemDirectory.h>
 #include <TEveWindowManager.h>
-#include <iostream>
 #include <TFile.h>
 #include <TGeoManager.h>
-
-using namespace std;
 
 namespace o2
 {
@@ -59,7 +58,7 @@ void Initializer::setup(const Options options, EventManager::EDataSource default
 
   const bool fullscreen = settings.GetValue("fullscreen.mode", false);                           // hide left and bottom tabs
   const string ocdbStorage = settings.GetValue("OCDB.default.path", "local://$ALICE_ROOT/OCDB"); // default path to OCDB
-  cout << "Initializer -- OCDB path:" << ocdbStorage << endl;
+  LOG(INFO) << "Initializer -- OCDB path:" << ocdbStorage;
 
   auto& eventManager = EventManager::getInstance();
   eventManager.setDataSourceType(defaultDataSource);

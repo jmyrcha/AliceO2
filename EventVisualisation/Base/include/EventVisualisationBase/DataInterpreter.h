@@ -36,7 +36,7 @@ class DataInterpreter
 {
  public:
   // Default constructor
-  DataInterpreter();
+  DataInterpreter() = default;
   // Virtual destructor
   virtual ~DataInterpreter() = default;
 

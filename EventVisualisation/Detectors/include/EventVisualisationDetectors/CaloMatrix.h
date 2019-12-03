@@ -20,8 +20,9 @@
 /// This file will be removed once it will be possible to obtain matrices
 /// from OCDB / AOD / other valid sources
 
+#include "FairLogger.h"
+
 #include <TGeoMatrix.h>
-#include <TError.h>
 
 namespace o2
 {
@@ -34,7 +35,7 @@ class CaloMatrix
   static TGeoHMatrix* getEMCALMatrix(int superModule)
   {
     if (superModule < 0 || superModule > 19) {
-      Error("CaloMatrix::getEMCALMatrix", "Super module number out of bounds");
+      LOG(FATAL) << "CaloMatrix: EMCAL super module number out of bounds!";
     }
     auto matrix = new TGeoHMatrix;
     matrix->SetRotation(mEMCALRotation[superModule]);
@@ -45,7 +46,7 @@ class CaloMatrix
   static TGeoHMatrix* getPHOSMatrix(int module)
   {
     if (module < 0 || module > 4) {
-      Error("CaloMatrix::getPHOSMatrix", "Module number out of bounds");
+      LOG(FATAL) << "CaloMatrix: PHOS module number out of bounds!";
     }
     auto matrix = new TGeoHMatrix;
     matrix->SetRotation(mPHOSRotation[module]);
