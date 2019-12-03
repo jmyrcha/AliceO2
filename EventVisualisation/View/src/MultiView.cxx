@@ -19,7 +19,7 @@
 #include "EventVisualisationBase/GeometryManager.h"
 #include "EventVisualisationBase/VisualisationConstants.h"
 
-#include "FairRoot.h"
+#include "FairLogger.h"
 
 #include <TBrowser.h>
 #include <TEnv.h>

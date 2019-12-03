@@ -15,7 +15,7 @@
 #include "EventVisualisationBase/GeometryManager.h"
 #include "EventVisualisationBase/ConfigurationManager.h"
 
-#include "FairRoot.h"
+#include "FairLogger.h"
 
 #include <TFile.h>
 #include <TGLViewer.h>

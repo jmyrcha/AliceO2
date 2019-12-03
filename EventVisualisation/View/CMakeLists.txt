@@ -11,7 +11,8 @@
 o2_add_library(EventVisualisationView
                SOURCES src/MultiView.cxx src/Initializer.cxx src/EventManagerFrame.cxx src/EventManager.cxx
                PUBLIC_LINK_LIBRARIES O2::EventVisualisationBase
-                                     O2::EventVisualisationDetectors)
+                                     O2::EventVisualisationDetectors
+                                     FairLogger::FairLogger)
 
 o2_target_root_dictionary(EventVisualisationView
                           HEADERS include/EventVisualisationView/MultiView.h

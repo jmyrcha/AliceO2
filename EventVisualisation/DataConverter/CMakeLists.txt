@@ -15,4 +15,5 @@ o2_add_library(EventVisualisationDataConverter
                        src/VisualisationCluster.cxx
                PUBLIC_LINK_LIBRARIES O2::ReconstructionDataFormats
                                      ROOT::Eve
+                                     FairLogger::FairLogger
 )

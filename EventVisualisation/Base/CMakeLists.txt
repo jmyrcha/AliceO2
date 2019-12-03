@@ -16,4 +16,5 @@ o2_add_library(EventVisualisationBase
                                      O2::CCDB 
                                      O2::EventVisualisationDataConverter
                                      O2::DetectorsBase
+                                     FairLogger::FairLogger
 )

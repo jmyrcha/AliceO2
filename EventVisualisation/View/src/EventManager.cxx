@@ -46,6 +46,7 @@
 #include <TEveCaloData.h>
 
 #include <string>
+#include <vector>
 
 namespace o2
 {
@@ -531,7 +532,7 @@ void EventManager::animateTracks()
     if (mDataInterpreters[i]) {
       TEveElementList* tracks = (TEveElementList*)mDataTypeLists[EVisualisationDataType::Tracks]->FindChild(Form("%s tracks by type", gVisualisationGroupName[i].c_str()));
       if (tracks) {
-        vector<TEveTrackPropagator*> propagators;
+        std::vector<TEveTrackPropagator*> propagators;
 
         for (TEveElement::List_i i = tracks->BeginChildren(); i != tracks->EndChildren(); i++) {
           TEveTrackList* trkList = ((TEveTrackList*)*i);

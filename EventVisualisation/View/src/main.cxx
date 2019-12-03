@@ -18,7 +18,7 @@
 #include "EventVisualisationBase/ConfigurationManager.h"
 #include "EventVisualisationBase/DataInterpreter.h"
 
-#include "FairRoot.h"
+#include "FairLogger.h"
 
 #include <TApplication.h>
 #include <TEveBrowser.h>

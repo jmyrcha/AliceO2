@@ -33,7 +33,7 @@
 #include "EventVisualisationDetectors/DataInterpreterITS.h"
 #include "EventVisualisationDetectors/DataInterpreterTPC.h"
 
-#include "FairRoot.h"
+#include "FairLogger.h"
 
 #include <TGTab.h>
 #include <TEnv.h>

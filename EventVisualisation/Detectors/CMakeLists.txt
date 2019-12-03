@@ -28,6 +28,7 @@ o2_add_library(EventVisualisationDetectors
                                      O2::DataFormatsTPC
                                      O2::ReconstructionDataFormats
                                      O2::CCDB
+                                     FairLogger::FairLogger
                )
 
 o2_add_executable(fill-o2cdb-emcal-phos-matrix
