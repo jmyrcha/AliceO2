@@ -91,19 +91,6 @@ TGTextButton* EventManagerFrame::makeButton(TGCompositeFrame* p, const char* txt
   return b;
 }
 
-TGCheckButton* EventManagerFrame::makeCheckButton(TGCompositeFrame* p, const char* txt,
-                                                  Int_t width, Int_t lo, Int_t ro, Int_t to, Int_t bo)
-{
-  TGCheckButton* b = new TGCheckButton(p, txt);
-
-  if (width > 0) {
-    b->SetWidth(width);
-    b->ChangeOptions(b->GetOptions() | kFixedWidth);
-  }
-  p->AddFrame(b, new TGLayoutHints(kLHintsNormal, lo, ro, to, bo));
-  return b;
-}
-
 void EventManagerFrame::DoFirstEvent()
 {
   mEventManager->GotoEvent(0);

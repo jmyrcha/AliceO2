@@ -20,7 +20,6 @@
 
 #include <TGMdiMainFrame.h>
 
-class TGCheckButton;
 class TGTextButton;
 class TGCompositeFrame;
 class TGNumberEntry;
@@ -37,13 +36,9 @@ class EventManagerFrame : public TGMainFrame
   static TGTextButton* makeButton(TGCompositeFrame* p, const char* txt, Int_t width = 0,
                                   Int_t lo = 0, Int_t ro = 0, Int_t to = 0, Int_t bo = 0);
 
-  static TGCheckButton* makeCheckButton(TGCompositeFrame* p, const char* txt, Int_t width = 0,
-                                        Int_t lo = 0, Int_t ro = 0, Int_t to = 0, Int_t bo = 0);
-
  protected:
   o2::event_visualisation::EventManager* mEventManager; // Model object.
   TGNumberEntry* mEventId;                              // Display/edit current event id
-  TGCheckButton* mClusters;
 
  public:
   EventManagerFrame(o2::event_visualisation::EventManager& eventManager);
@@ -58,7 +53,6 @@ class EventManagerFrame : public TGMainFrame
   void setupCamera();
   /// Clears and draws everything anew, used also by Initializer on startup
   void refresh(bool firstTime);
-  ;
 
  public: // slots
   void DoFirstEvent();
