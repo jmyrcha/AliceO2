@@ -51,7 +51,6 @@ struct Fixture {
     app->Connect("TEveBrowser", "CloseWindow()", "TApplication", app, "Terminate()");
     if (!TEveManager::Create(kTRUE, "FI")) {
       LOG(FATAL) << "Could not create TEveManager!";
-      exit(1);
     }
   }
   ~Fixture()
@@ -64,7 +63,7 @@ BOOST_GLOBAL_FIXTURE(Fixture);
 
 BOOST_AUTO_TEST_CASE(Should_SetProperEventCount_When_DataFileIsCorrect_Test)
 {
-  LOG(INFO) << "Checking that each DataReader sets proper event count when data file is correct.";
+  LOG(STATE) << "Checking that each DataReader sets proper event count when data file is correct.";
 
   // Arrange
   DataReader* readers[] = { new DataReaderAOD(), new DataReaderITS(), new DataReaderTPC, new DataReaderVSD };
@@ -87,7 +86,7 @@ BOOST_AUTO_TEST_CASE(Should_SetProperEventCount_When_DataFileIsCorrect_Test)
 
 BOOST_AUTO_TEST_CASE(Should_ReturnEventData_When_EventNumberInRange_Test)
 {
-  LOG(INFO) << "Checking that each DataReader returns event data for the event specified.";
+  LOG(STATE) << "Checking that each DataReader returns event data for the event specified.";
 
   // Arrange
   DataReader* readers[] = { new DataReaderAOD(), new DataReaderITS(), new DataReaderTPC, new DataReaderVSD };
@@ -110,7 +109,7 @@ BOOST_AUTO_TEST_CASE(Should_ReturnEventData_When_EventNumberInRange_Test)
 
 BOOST_AUTO_TEST_CASE(Should_ReturnNull_When_EventNumberOutsideRange_Test)
 {
-  LOG(INFO) << "Checking that each DataReader returns nullptr when event required is outside range.";
+  LOG(STATE) << "Checking that each DataReader returns nullptr when event required is outside range.";
 
   // Arrange
   DataReader* readers[] = { new DataReaderAOD(), new DataReaderITS(), new DataReaderTPC, new DataReaderVSD };
@@ -133,7 +132,7 @@ BOOST_AUTO_TEST_CASE(Should_ReturnNull_When_EventNumberOutsideRange_Test)
 
 BOOST_AUTO_TEST_CASE(Should_InterpreEventTracks_When_CorrectEvent_Test)
 {
-  LOG(INFO) << "Checking that each DataInterpreter processes all tracks in an event.";
+  LOG(STATE) << "Checking that each DataInterpreter processes all tracks in an event.";
 
   // Arrange
   // FIXME: VSD breaks, where is any correct code??
@@ -142,7 +141,10 @@ BOOST_AUTO_TEST_CASE(Should_InterpreEventTracks_When_CorrectEvent_Test)
   int testedEvents[] = { 140, 5, 5, 5 };
   int trackCounts[] = { 5946, 10, 33, 2 };
 
-  std::vector<std::unique_ptr<VisualisationEvent>> events(4, std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0));
+  std::vector<std::unique_ptr<VisualisationEvent>> events(3);
+  for (int i = 0; i < 3; i++) {
+    events[i] = std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0);
+  }
 
   // Act
   for (int i = 0; i < 3; i++) {
@@ -153,12 +155,8 @@ BOOST_AUTO_TEST_CASE(Should_InterpreEventTracks_When_CorrectEvent_Test)
 
   // Assert
   for (int i = 0; i < 3; i++) {
-    BOOST_CHECK_EQUAL(event->getTrackCount(), trackCounts[i]);
+    BOOST_CHECK_EQUAL(events[i]->getTrackCount(), trackCounts[i]);
   }
-
-    BOOST_CHECK_EQUAL(event->getClusterCount(), clusterCounts[i]);
-    BOOST_CHECK_EQUAL(event->getMuonTrackCount(), muonCounts[i]);
-    BOOST_CHECK_EQUAL(event->getCaloCellsCount(), caloCounts[i]);
 
   for (int i = 0; i < 3; i++) {
     delete readers[i];
@@ -168,7 +166,7 @@ BOOST_AUTO_TEST_CASE(Should_InterpreEventTracks_When_CorrectEvent_Test)
 
 BOOST_AUTO_TEST_CASE(Should_InterpreEventClusters_When_CorrectEvent_Test)
 {
-  LOG(INFO) << "Checking that each DataInterpreter processes all clusters in an event.";
+  LOG(STATE) << "Checking that each DataInterpreter processes all clusters in an event.";
 
   // Arrange
   // FIXME: VSD breaks, where is any correct code??
@@ -177,7 +175,10 @@ BOOST_AUTO_TEST_CASE(Should_InterpreEventClusters_When_CorrectEvent_Test)
   int testedEvents[] = { 140, 5, 5, 5 };
   int clusterCounts[] = { 0, 1393, 5472, 1 };
 
-  std::vector<std::unique_ptr<VisualisationEvent>> events(4, std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0));
+  std::vector<std::unique_ptr<VisualisationEvent>> events(4);
+  for (int i = 0; i < 3; i++) {
+    events[i] = std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0);
+  }
 
   // Act
   for (int i = 0; i < 3; i++) {
@@ -188,7 +189,7 @@ BOOST_AUTO_TEST_CASE(Should_InterpreEventClusters_When_CorrectEvent_Test)
 
   // Assert
   for (int i = 0; i < 3; i++) {
-    BOOST_CHECK_EQUAL(event->getClusterCount(), clusterCounts[i]);
+    BOOST_CHECK_EQUAL(events[i]->getClusterCount(), clusterCounts[i]);
   }
 
   for (int i = 0; i < 3; i++) {
@@ -199,7 +200,7 @@ BOOST_AUTO_TEST_CASE(Should_InterpreEventClusters_When_CorrectEvent_Test)
 
 BOOST_AUTO_TEST_CASE(Should_InterpretAODEventMuonTracks_When_CorrectAODEvent_Test)
 {
-  LOG(INFO) << "Checking that AOD DataInterpreter processes all muon tracks in an event.";
+  LOG(STATE) << "Checking that AOD DataInterpreter processes all muon tracks in an event.";
 
   // Arrange
   // FIXME: VSD breaks, where is any correct code??
@@ -221,14 +222,17 @@ BOOST_AUTO_TEST_CASE(Should_InterpretAODEventMuonTracks_When_CorrectAODEvent_Tes
 
 BOOST_AUTO_TEST_CASE(Should_NotInterpretEventTracks_When_NotAODEvent_Test)
 {
-  LOG(INFO) << "Checking that each DataInterpreter except for AOD does not get muon tracks in an event.";
+  LOG(STATE) << "Checking that each DataInterpreter except for AOD does not get muon tracks in an event.";
 
   // Arrange
   // FIXME: VSD breaks, where is any correct code??
   DataReader* readers[] = { new DataReaderITS(), new DataReaderTPC, new DataReaderVSD };
   DataInterpreter* interpreters[] = { new DataInterpreterITS(), new DataInterpreterTPC, new DataInterpreterVSD };
 
-  std::vector<std::unique_ptr<VisualisationEvent>> events(4, std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0));
+  std::vector<std::unique_ptr<VisualisationEvent>> events(4);
+  for (int i = 0; i < 3; i++) {
+    events[i] = std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0);
+  }
 
   // Act
   for (int i = 0; i < 2; i++) {
@@ -239,7 +243,7 @@ BOOST_AUTO_TEST_CASE(Should_NotInterpretEventTracks_When_NotAODEvent_Test)
 
   // Assert
   for (int i = 0; i < 2; i++) {
-    BOOST_CHECK_EQUAL(event->getMuonTrackCount(), 0);
+    BOOST_CHECK_EQUAL(events[i]->getMuonTrackCount(), 0);
   }
 
   for (int i = 0; i < 2; i++) {
@@ -250,7 +254,7 @@ BOOST_AUTO_TEST_CASE(Should_NotInterpretEventTracks_When_NotAODEvent_Test)
 
 BOOST_AUTO_TEST_CASE(Should_InterpretAODEventCaloCells_When_CorrectAODEvent_Test)
 {
-  LOG(INFO) << "Checking that AOD DataInterpreter processes all calorimeter cells in an event.";
+  LOG(STATE) << "Checking that AOD DataInterpreter processes all calorimeter cells in an event.";
 
   // Arrange
   // FIXME: VSD breaks, where is any correct code??
@@ -272,14 +276,17 @@ BOOST_AUTO_TEST_CASE(Should_InterpretAODEventCaloCells_When_CorrectAODEvent_Test
 
 BOOST_AUTO_TEST_CASE(Should_NotInterpretEventCaloCells_When_NotAODEvent_Test)
 {
-  LOG(INFO) << "Checking that each DataInterpreter except for AOD does not get calorimeter cells in an event.";
+  LOG(STATE) << "Checking that each DataInterpreter except for AOD does not get calorimeter cells in an event.";
 
   // Arrange
   // FIXME: VSD breaks, where is any correct code??
   DataReader* readers[] = { new DataReaderITS(), new DataReaderTPC, new DataReaderVSD };
   DataInterpreter* interpreters[] = { new DataInterpreterITS(), new DataInterpreterTPC, new DataInterpreterVSD };
 
-  std::vector<std::unique_ptr<VisualisationEvent>> events(4, std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0));
+  std::vector<std::unique_ptr<VisualisationEvent>> events(4);
+  for (int i = 0; i < 3; i++) {
+    events[i] = std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0);
+  }
 
   // Act
   for (int i = 0; i < 2; i++) {
@@ -290,7 +297,7 @@ BOOST_AUTO_TEST_CASE(Should_NotInterpretEventCaloCells_When_NotAODEvent_Test)
 
   // Assert
   for (int i = 0; i < 2; i++) {
-    BOOST_CHECK_EQUAL(event->getCaloCellsCount(), 0);
+    BOOST_CHECK_EQUAL(events[i]->getCaloCellsCount(), 0);
   }
 
   for (int i = 0; i < 2; i++) {

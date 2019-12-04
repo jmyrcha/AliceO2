@@ -50,20 +50,20 @@ BOOST_GLOBAL_FIXTURE(Fixture);
 
 BOOST_AUTO_TEST_CASE(Should_LoadDetectorGeometry_When_GeometryIsO2_Test)
 {
-  LOG(INFO) << "Checking that each O2 geometry is loaded properly.";
+  LOG(STATE) << "Checking that each O2 geometry is loaded properly.";
 
   // Arrange
   auto& geomManager = GeometryManager::getInstance();
   const std::string O2Geometries[] = {"EMC", "HMP", "ITS", "MCH", "MID", "PHS", "TOF", "TPC", "TRD"};
   int geometriesCount = 9;
-  TEveGeoShape* shapes[] = new TEveGeoShape*[geometriesCount];
+  TEveGeoShape* shapes[geometriesCount];
   for (int i = 0; i < geometriesCount; i++) {
     shapes[i] = nullptr;
   }
 
   // Act
   for (int i = 0; i < geometriesCount; i++) {
-    shapes[i] = geomManager.getGeometryForDetector(detName);
+    shapes[i] = geomManager.getGeometryForDetector(O2Geometries[i]);
   }
 
   // Assert
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(Should_LoadDetectorGeometry_When_GeometryIsO2_Test)
 
 BOOST_AUTO_TEST_CASE(Should_NotLoad_And_NotTerminate_When_GeometryDoesNotExist_Test)
 {
-  LOG(INFO) << "Checking that wrong geometry specifier raises a non-fatal error.";
+  LOG(STATE) << "Checking that wrong geometry specifier raises a non-fatal error.";
 
   // Arrange
   auto& geomManager = GeometryManager::getInstance();

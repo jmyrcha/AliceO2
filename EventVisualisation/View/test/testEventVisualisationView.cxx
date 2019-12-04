@@ -44,10 +44,8 @@ struct Fixture {
   {
     TApplication* app = new TApplication("o2eve", nullptr, nullptr);
     app->Connect("TEveBrowser", "CloseWindow()", "TApplication", app, "Terminate()");
-    LOG(INFO) << "Initializing TEveManager";
     if (!TEveManager::Create(kTRUE, "FI")) {
       LOG(FATAL) << "Could not create TEveManager!";
-      exit(1);
     }
     auto& eventManager = EventManager::getInstance();
     eventManager.setDataSourceType(EventManager::EDataSource::SourceOffline);
@@ -73,7 +71,7 @@ BOOST_GLOBAL_FIXTURE(Fixture);
 
 BOOST_AUTO_TEST_CASE(Should_SetHighestEventCount_When_MultipleDataFilesRead_Test)
 {
-  LOG(INFO) << "Checking that event count is set to biggest event from all input files.";
+  LOG(STATE) << "Checking that event count is set to biggest event from all input files.";
 
   // Arrange, act - also in tests fixture constructor
   auto& eventManager = EventManager::getInstance();
@@ -82,15 +80,15 @@ BOOST_AUTO_TEST_CASE(Should_SetHighestEventCount_When_MultipleDataFilesRead_Test
   BOOST_CHECK_EQUAL(eventManager.getDataSource()->GetEventCount(), 150);
 }
 
-BOOST_AUTO_TEST_CASE(Should_DisplayAODTracks_When_CorrectEvent_Test)
+BOOST_AUTO_TEST_CASE(Should_DisplayTracks_When_CorrectEvent_Test)
 {
-  LOG(INFO) << "Checking that AOD tracks are displayed in eve.";
+  LOG(STATE) << "Checking that tracks are displayed in eve.";
 
   // Arrange
   auto& eventManager = EventManager::getInstance();
 
   // Act
-  // Event with AOD data only
+  // Event with tracks
   eventManager.GotoEvent(140);
   TEveElementList* tracks = (TEveElementList*) (gEve->GetCurrentEvent()->FindChild("Tracks"));
 
@@ -100,7 +98,7 @@ BOOST_AUTO_TEST_CASE(Should_DisplayAODTracks_When_CorrectEvent_Test)
 
 BOOST_AUTO_TEST_CASE(Should_DisplayAODTracksAccordingToSettings_Test)
 {
-  LOG(INFO) << "Checking that AOD tracks are displayed according to settings.";
+  LOG(STATE) << "Checking that AOD tracks are displayed according to settings.";
 
   // Arrange
   auto& eventManager = EventManager::getInstance();
@@ -124,31 +122,15 @@ BOOST_AUTO_TEST_CASE(Should_DisplayAODTracksAccordingToSettings_Test)
   BOOST_CHECK_NE(AODTracks, nullptr);
 }
 
-BOOST_AUTO_TEST_CASE(Should_DisplayITSTracks_When_CorrectEvent_Test)
+BOOST_AUTO_TEST_CASE(Should_DisplayITSTracksAccordingToSettings_Test)
 {
-  LOG(INFO) << "Checking that ITS tracks are displayed in eve.";
+  LOG(STATE) << "Checking that ITS tracks are displayed according to settings.";
 
   // Arrange
   auto& eventManager = EventManager::getInstance();
 
   // Act
   // Event with ITS tracks only
-  eventManager.GotoEvent(1);
-  TEveElementList* tracks = (TEveElementList*) (gEve->GetCurrentEvent()->FindChild("Tracks"));
-
-  // Assert
-  BOOST_CHECK_NE(tracks, nullptr);
-}
-
-BOOST_AUTO_TEST_CASE(Should_DisplayITSTracksAccordingToSettings_Test)
-{
-  LOG(INFO) << "Checking that ITS tracks are displayed according to settings.";
-
-  // Arrange
-  auto& eventManager = EventManager::getInstance();
-
-  // Act
-  // Event with ITS data only
   eventManager.GotoEvent(1);
   TEveElementList* tracks = (TEveElementList*) (gEve->GetCurrentEvent()->FindChild("Tracks"));
 
@@ -166,23 +148,85 @@ BOOST_AUTO_TEST_CASE(Should_DisplayITSTracksAccordingToSettings_Test)
   BOOST_CHECK_NE(ITSTracks, nullptr);
 }
 
-BOOST_AUTO_TEST_CASE(GoToEventITSTest)
+BOOST_AUTO_TEST_CASE(Should_DisplayTPCTracksAccordingToSettings_Test)
 {
+  LOG(STATE) << "Checking that TPC tracks are displayed according to settings.";
+
+  // Arrange
   auto& eventManager = EventManager::getInstance();
 
+  // Act
+  // Event with TPC tracks
+  eventManager.GotoEvent(7);
+  TEveElementList* tracks = (TEveElementList*) (gEve->GetCurrentEvent()->FindChild("Tracks"));
+
+  TEnv settings;
+  ConfigurationManager::getInstance().getConfig(settings);
+
+  TEveElementList* TPCTracks;
+  if (settings.GetValue("tracks.byPt.show", false)) {
+    TPCTracks = (TEveElementList*)(tracks->FindChild("TPC tracks by Pt"));
+  } else if (settings.GetValue("tracks.byType.show", false)) {
+    TPCTracks = (TEveElementList*)(tracks->FindChild("TPC tracks by type"));
+  }
+
+  // Assert
+  BOOST_CHECK_NE(TPCTracks, nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(Should_DisplayClusters_When_CorrectEvent_Test)
+{
+  LOG(STATE) << "Checking that clusters are displayed in eve.";
+
+  // Arrange
+  auto& eventManager = EventManager::getInstance();
+
+  // Act
+  // Event with clusters
+  eventManager.GotoEvent(1);
+  TEveElementList* clusters = (TEveElementList*) (gEve->GetCurrentEvent()->FindChild("Clusters"));
+
+  // Assert
+  BOOST_CHECK_NE(clusters, nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(Should_DisplayITSClusters_When_CorrectEvent_Test)
+{
+  LOG(STATE) << "Checking that ITS clusters are displayed in eve.";
+
+  // Arrange
+  auto& eventManager = EventManager::getInstance();
+
+  // Act
   // Event with ITS clusters
   eventManager.GotoEvent(1);
-  TEveElementList* clusters = (TEveElementList*)(gEve->GetCurrentEvent()->FindChild("Clusters"));
-  BOOST_CHECK_NE(clusters, nullptr);
+  TEveElementList* clusters = (TEveElementList*) (gEve->GetCurrentEvent()->FindChild("Clusters"));
   TEveElementList* ITSClusters = (TEveElementList*)(clusters->FindChild("ITS"));
+
+  // Assert
   BOOST_CHECK_NE(ITSClusters, nullptr);
 }
 
+BOOST_AUTO_TEST_CASE(Should_DisplayTPCClusters_When_CorrectEvent_Test)
+{
+  LOG(STATE) << "Checking that TPC clusters are displayed in eve.";
 
+  // Arrange
+  auto& eventManager = EventManager::getInstance();
+
+  // Act
+  // Event with TPC clusters
+  eventManager.GotoEvent(1);
+  TEveElementList* clusters = (TEveElementList*) (gEve->GetCurrentEvent()->FindChild("Clusters"));
+  TEveElementList* TPCClusters = (TEveElementList*)(clusters->FindChild("TPC"));
+
+  // Assert
+  BOOST_CHECK_NE(TPCClusters, nullptr);
+}
 
 BOOST_AUTO_TEST_CASE(Should_DisplayCaloCells_When_CorrectAODEvent_Test)
 {
-  LOG(INFO) << "Checking that calorimeter cells are displayed in eve for an AOD event.";
+  LOG(STATE) << "Checking that calorimeter cells are displayed in eve for an AOD event.";
 
   // Arrange
   auto& eventManager = EventManager::getInstance();
@@ -190,24 +234,68 @@ BOOST_AUTO_TEST_CASE(Should_DisplayCaloCells_When_CorrectAODEvent_Test)
   // Act
   // Event with AOD data only
   eventManager.GotoEvent(140);
-  TEveElementList* calo = (TEveElementList*)(gEve->GetCurrentEvent()->FindChild("Calo"));
+  TEveElementList* calo = (TEveElementList*) (gEve->GetCurrentEvent()->FindChild("Calo"));
+
+  // Assert
   BOOST_CHECK_NE(calo, nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(Should_DisplayCalo3DTowers_When_CorrectAODEvent_Test)
+{
+  LOG(STATE) << "Checking that calorimeter towers are displayed in eve for an AOD event.";
+
+  // Arrange
+  auto& eventManager = EventManager::getInstance();
+
+  // Act
+  // Event with AOD data only
+  eventManager.GotoEvent(140);
+  TEveElementList* calo = (TEveElementList*) (gEve->GetCurrentEvent()->FindChild("Calo"));
   TEveElementList* histList = (TEveElementList*)(calo->FindChild("3D Histogram"));
   BOOST_CHECK_NE(histList, nullptr);
   TEveCalo3D* calo3d = (TEveCalo3D*)histList->FirstChild();
   BOOST_CHECK_NE(calo3d, nullptr);
   TEveCaloDataHist* data = (TEveCaloDataHist*)calo3d->GetData();
   BOOST_CHECK_NE(data, nullptr);
+}
 
+BOOST_AUTO_TEST_CASE(Should_DisplayEMCALCaloCells_When_CorrectAODEvent_Test)
+{
+  LOG(STATE) << "Checking that EMCAL calorimeter cells are displayed in eve for an AOD event.";
+
+  // Arrange
+  auto& eventManager = EventManager::getInstance();
+
+  // Act
+  // Event with AOD data only
+  eventManager.GotoEvent(140);
+  TEveElementList* calo = (TEveElementList*) (gEve->GetCurrentEvent()->FindChild("Calo"));
   TEveElementList* EMCALList = (TEveElementList*)(calo->FindChild("EMCAL"));
+
+  // Assert
   BOOST_CHECK_NE(EMCALList, nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(Should_DisplayPHOSCaloCells_When_CorrectAODEvent_Test)
+{
+  LOG(STATE) << "Checking that PHOS calorimeter cells are displayed in eve for an AOD event.";
+
+  // Arrange
+  auto& eventManager = EventManager::getInstance();
+
+  // Act
+  // Event with AOD data only
+  eventManager.GotoEvent(140);
+  TEveElementList* calo = (TEveElementList*) (gEve->GetCurrentEvent()->FindChild("Calo"));
   TEveElementList* PHOSList = (TEveElementList*)(calo->FindChild("PHOS"));
+
+  // Assert
   BOOST_CHECK_NE(PHOSList, nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(Should_DisplayMuonTracks_When_CorrectAODEvent_Test)
 {
-  LOG(INFO) << "Checking that muon tracks are displayed in eve for an AOD event.";
+  LOG(STATE) << "Checking that muon tracks are displayed in eve for an AOD event.";
 
   // Arrange
   auto& eventManager = EventManager::getInstance();
@@ -216,6 +304,8 @@ BOOST_AUTO_TEST_CASE(Should_DisplayMuonTracks_When_CorrectAODEvent_Test)
   // Event with AOD data only
   eventManager.GotoEvent(140);
   TEveElementList* muonList = (TEveElementList*) (gEve->GetCurrentEvent()->FindChild("Muon"));
+
+  // Assert
   BOOST_CHECK_NE(muonList, nullptr);
 }
 
