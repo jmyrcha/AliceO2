@@ -37,3 +37,9 @@ o2_add_executable(fill-o2cdb-emcal-phos-matrix
                               O2::DetectorsBase
                               O2::DetectorsCommonDataFormats
         )
+
+o2_add_test(Detectors
+        COMPONENT_NAME eve
+        PUBLIC_LINK_LIBRARIES O2::EventVisualisationDetectors
+        SOURCES test/testEventVisualisationDetectors.cxx
+        LABELS eve detectors)

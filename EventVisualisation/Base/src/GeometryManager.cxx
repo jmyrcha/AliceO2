@@ -77,7 +77,7 @@ TEveGeoShape* GeometryManager::getGeometryForDetector(std::string detectorName)
            settings.GetValue(Form("%s.trans", detectorName.c_str()), -1),
            settings.GetValue(Form("%s.line.color", detectorName.c_str()), -1));
 
-  gEve->GetDefaultGLViewer()->UpdateScene();
+  //gEve->GetDefaultGLViewer()->UpdateScene();
 
   return geomShape;
 }

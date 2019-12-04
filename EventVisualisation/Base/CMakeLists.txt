@@ -18,3 +18,9 @@ o2_add_library(EventVisualisationBase
                                      O2::DetectorsBase
                                      FairLogger::FairLogger
 )
+
+o2_add_test(GeometryManager
+        COMPONENT_NAME eve
+        PUBLIC_LINK_LIBRARIES O2::EventVisualisationBase
+        SOURCES test/testGeometryManager.cxx
+        LABELS eve base)

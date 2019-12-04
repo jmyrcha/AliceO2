@@ -25,3 +25,13 @@ o2_add_executable(eve
                   SOURCES src/main.cxx
                   PUBLIC_LINK_LIBRARIES O2::EventVisualisationView
                   )
+
+o2_add_test(View
+        COMPONENT_NAME eve
+        PUBLIC_LINK_LIBRARIES O2::EventVisualisationView
+        SOURCES test/testEventVisualisationView.cxx
+        LABELS eve)
+
+# file(GLOB EVE_TESTS "/home/maja/CERN/alice/sw/BUILD/O2-latest-maja-unit-tests/O2/stage/tests/o2-test-eve-*")
+#set(EVE_TESTS "/home/maja/CERN/alice/sw/BUILD/O2-latest-maja-unit-tests/O2/stage/tests/o2-test-eve-View")
+#file(COPY "/home/maja/CERN/alice/sw/BUILD/O2-latest-maja-unit-tests/O2/stage/tests/o2-test-eve-View" DESTINATION "/home/maja/CERN/new_alieve/o2eve/root-files/tests")
