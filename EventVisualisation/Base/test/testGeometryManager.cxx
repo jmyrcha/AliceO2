@@ -20,6 +20,8 @@
 
 #include <TApplication.h>
 #include <TEveManager.h>
+#include <TEveEventManager.h>
+#include <TEveViewer.h>
 
 namespace o2
 {
@@ -31,12 +33,12 @@ struct Fixture {
   {
     TApplication* app = new TApplication("o2eve", nullptr, nullptr);
     app->Connect("TEveBrowser", "CloseWindow()", "TApplication", app, "Terminate()");
-    LOG(INFO) << "Initializing TEveManager";
     if (!TEveManager::Create(kTRUE, "FI")) {
       LOG(FATAL) << "Could not create TEveManager!";
     }
-    // TODO: Check if geometries work without GeometryManager.cxx:80, then no event manager needed
-    //  Otherwise it crashes the tests
+    gEve->AddEvent(new TEveEventManager("Event", ""));
+    TEveViewer* viewer = gEve->SpawnNewViewer("3D View", "");
+    viewer ->AddScene(gEve->GetEventScene());
   }
   ~Fixture()
   {
@@ -46,19 +48,39 @@ struct Fixture {
 };
 BOOST_GLOBAL_FIXTURE(Fixture);
 
-BOOST_AUTO_TEST_CASE(drawO2GeometryTest)
+BOOST_AUTO_TEST_CASE(Should_LoadDetectorGeometry_When_GeometryIsO2_Test)
 {
+  LOG(INFO) << "Checking that each O2 geometry is loaded properly.";
+
+  // Arrange
   auto& geomManager = GeometryManager::getInstance();
   const std::string O2Geometries[] = {"EMC", "HMP", "ITS", "MCH", "MID", "PHS", "TOF", "TPC", "TRD"};
-  for (auto detName : O2Geometries) {
-    TEveGeoShape* shape = geomManager.getGeometryForDetector(detName);
-    BOOST_CHECK_NE(shape, nullptr);
+  int geometriesCount = 9;
+  TEveGeoShape* shapes[] = new TEveGeoShape*[geometriesCount];
+  for (int i = 0; i < geometriesCount; i++) {
+    shapes[i] = nullptr;
   }
+
+  // Act
+  for (int i = 0; i < geometriesCount; i++) {
+    shapes[i] = geomManager.getGeometryForDetector(detName);
+  }
+
+  // Assert
+  for (int i = 0; i < geometriesCount; i++) {
+    BOOST_CHECK_NE(shapes[i], nullptr);
+  }
+
 }
 
-BOOST_AUTO_TEST_CASE(dontFailOnAbsentGeometryTest)
+BOOST_AUTO_TEST_CASE(Should_NotLoad_And_NotTerminate_When_GeometryDoesNotExist_Test)
 {
+  LOG(INFO) << "Checking that wrong geometry specifier raises a non-fatal error.";
+
+  // Arrange
   auto& geomManager = GeometryManager::getInstance();
+
+  // Act, assert
   BOOST_CHECK_NO_THROW(geomManager.getGeometryForDetector("ACO"));
 }
 } // namespace event_visualisation
