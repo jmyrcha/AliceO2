@@ -163,7 +163,6 @@ void DataInterpreterAOD::interpretAODTracks(TFile* AODFile, Int_t eventId, Visua
 
     o2::track::TrackPar rec(trkX, trkAlpha, { trkY, trkZ, trkSnp, trkTgl, trkSigned1Pt });
     std::array<float, 3> p;
-    // TODO: Convert coordinates local --> global - correct?
     rec.getPxPyPzGlo(p);
 
     TEveRecTrackD t;

@@ -44,11 +44,13 @@ TObject* DataSourceOffline::getEventData(int no, EVisualisationGroup purpose)
 
 int DataSourceOffline::GetEventCount()
 {
+  int eventCount = 0;
   for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; i++) {
-    if (sInstance[i] != nullptr)
-      return sInstance[i]->GetEventCount();
+    if (sInstance[i] != nullptr && sInstance[i]->GetEventCount() > eventCount) {
+      eventCount = sInstance[i]->GetEventCount();
+    }
   }
-  return 1;
+  return eventCount;
 };
 
 } // namespace event_visualisation

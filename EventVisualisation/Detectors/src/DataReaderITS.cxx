@@ -44,34 +44,27 @@ void DataReaderITS::open()
     LOG(FATAL) << "There is no " << clusterFile.Data() << " file in current directory!";
   }
 
-  TTree* roft = (TTree*)this->mTracFile->Get("ITSTracksROF");
-  TTree* rofc = (TTree*)this->mClusFile->Get("ITSClustersROF");
+  TTree* tracksRof = dynamic_cast<TTree*>(this->mTracFile->Get("ITSTracksROF"));
+  TTree* clustersRof = dynamic_cast<TTree*>(this->mClusFile->Get("ITSClustersROF"));
 
-  if (roft != nullptr && rofc != nullptr) {
+  if (!tracksRof || !clustersRof) {
+    LOG(FATAL) << "Incorrect ITS file format, branch missing!";
+  }
 
-    //TTree *tracks = (TTree*)this->tracFile->Get("o2sim");
-    // temporary number of readout frames as number of events
-    TTree* tracksRof = (TTree*)this->mTracFile->Get("ITSTracksROF");
+  // Read all track RO frames to a buffer to count number of elements
+  std::vector<o2::itsmft::ROFRecord>* trackROFrames = nullptr;
+  tracksRof->SetBranchAddress("ITSTracksROF", &trackROFrames);
+  tracksRof->GetEntry(0);
 
-    //TTree *clusters = (TTree*)this->clusFile->Get("o2sim");
-    TTree* clustersRof = (TTree*)this->mClusFile->Get("ITSClustersROF");
+  // Read all cluster RO frames to a buffer
+  std::vector<o2::itsmft::ROFRecord>* clusterROFrames = nullptr;
+  clustersRof->SetBranchAddress("ITSClustersROF", &clusterROFrames);
+  clustersRof->GetEntry(0);
 
-    //Read all track RO frames to a buffer to count number of elements
-
-    std::vector<o2::itsmft::ROFRecord>* trackROFrames = nullptr;
-    tracksRof->SetBranchAddress("ITSTracksROF", &trackROFrames);
-    tracksRof->GetEntry(0);
-
-    //Read all cluster RO frames to a buffer
-    std::vector<o2::itsmft::ROFRecord>* clusterROFrames = nullptr;
-    clustersRof->SetBranchAddress("ITSClustersROF", &clusterROFrames);
-    clustersRof->GetEntry(0);
-
-    if (trackROFrames->size() == clusterROFrames->size()) {
-      mMaxEv = trackROFrames->size();
-    } else {
-      LOG(FATAL) << "DataReaderITS: Inconsistent number of readout frames in files";
-    }
+  if (trackROFrames->size() == clusterROFrames->size()) {
+    mMaxEv = trackROFrames->size();
+  } else {
+    LOG(FATAL) << "DataReaderITS: Inconsistent number of readout frames in files";
   }
 }
 
@@ -80,13 +73,17 @@ Int_t DataReaderITS::GetEventCount()
   return mMaxEv;
 }
 
-TObject* DataReaderITS::getEventData(int no)
+TObject* DataReaderITS::getEventData(int eventNumber)
 {
+  if(eventNumber < 0 || eventNumber >= this->mMaxEv) {
+    return nullptr;
+  }
+
   /// FIXME: Redesign the data reader class
   TList* list = new TList();
   list->Add(this->mTracFile);
   list->Add(this->mClusFile);
-  TVector2* v = new TVector2(no, 0);
+  TVector2* v = new TVector2(eventNumber, 0);
   list->Add(v);
   return list;
 }

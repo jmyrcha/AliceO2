@@ -121,11 +121,13 @@ void EventManager::GotoEvent(Int_t no)
     DataInterpreter* interpreter = mDataInterpreters[i];
     if (interpreter) {
       TObject* data = getDataSource()->getEventData(no, (EVisualisationGroup)i);
-      std::unique_ptr<VisualisationEvent> event = std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0);
-      for (int dataType = 0; dataType < EVisualisationDataType::NdataTypes; ++dataType) {
-        interpreter->interpretDataForType(data, (EVisualisationDataType)dataType, *event);
+      if(data) {
+        std::unique_ptr<VisualisationEvent> event = std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0);
+        for (int dataType = 0; dataType < EVisualisationDataType::NdataTypes; ++dataType) {
+          interpreter->interpretDataForType(data, (EVisualisationDataType) dataType, *event);
+        }
+        displayVisualisationEvent(*event, gVisualisationGroupName[i]);
       }
-      displayVisualisationEvent(*event, gVisualisationGroupName[i]);
     }
   }
 

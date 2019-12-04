@@ -38,9 +38,13 @@ void DataReaderAOD::open()
     LOG(FATAL) << "There is no " << file.Data() << " file in current directory!";
   }
 
-  TTree* trec = static_cast<TTree*>(this->mAODFile->Get("O2tracks"));
-  TTree* calo = static_cast<TTree*>(this->mAODFile->Get("O2calo"));
-  TTree* muon = static_cast<TTree*>(this->mAODFile->Get("O2mu"));
+  TTree* trec = dynamic_cast<TTree*>(this->mAODFile->Get("O2tracks"));
+  TTree* calo = dynamic_cast<TTree*>(this->mAODFile->Get("O2calo"));
+  TTree* muon = dynamic_cast<TTree*>(this->mAODFile->Get("O2mu"));
+
+  if (!trec || !calo || !muon) {
+    LOG(FATAL) << "Incorrect AOD file format, branch missing!";
+  }
 
   Int_t trackEventID;
   Int_t caloEventID;
@@ -83,20 +87,24 @@ void DataReaderAOD::open()
 
   // TODO: Slow method. How to get events number?
   LOG(INFO) << "Setting max ev to: " << maxEventID + 1;
-  fMaxEv = maxEventID + 1;
+  mMaxEv = maxEventID + 1;
 }
 
 Int_t DataReaderAOD::GetEventCount()
 {
-  return fMaxEv;
+  return mMaxEv;
 }
 
-TObject* DataReaderAOD::getEventData(int no)
+TObject* DataReaderAOD::getEventData(int eventNumber)
 {
+  if(eventNumber < 0 || eventNumber >= this->mMaxEv) {
+    return nullptr;
+  }
+
   /// FIXME: Redesign the data reader class
   TList* list = new TList();
   list->Add(this->mAODFile);
-  TVector2* v = new TVector2(no, 0);
+  TVector2* v = new TVector2(eventNumber, 0);
   list->Add(v);
   return list;
 }

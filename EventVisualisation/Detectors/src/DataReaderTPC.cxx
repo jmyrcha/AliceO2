@@ -44,7 +44,11 @@ void DataReaderTPC::open()
     LOG(FATAL) << "There is no " << clusterFile.Data() << " file in current directory!";
   }
 
-  TTree* trec = static_cast<TTree*>(this->mTracFile->Get("tpcrec"));
+  TTree* trec = dynamic_cast<TTree*>(this->mTracFile->Get("tpcrec"));
+  if (!trec) {
+    LOG(FATAL) << "Incorrect TPC file format, branch missing!";
+  }
+
   std::vector<tpc::TrackTPC>* trackBuffer = nullptr;
 
   trec->SetBranchAddress("TPCTracks", &trackBuffer);
@@ -70,12 +74,15 @@ Int_t DataReaderTPC::GetEventCount()
 
 TObject* DataReaderTPC::getEventData(int eventNumber)
 {
+  if(eventNumber < 0 || eventNumber >= this->mMaxEv) {
+    return nullptr;
+  }
+
   /// FIXME: Redesign the data reader class
   TList* list = new TList();
   list->Add(this->mTracFile);
   list->Add(this->mClusFile);
   TVector2* v = new TVector2(eventNumber, 0);
-
   list->Add(v);
   return list;
 }

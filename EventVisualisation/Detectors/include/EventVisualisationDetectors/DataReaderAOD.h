@@ -26,14 +26,14 @@ namespace event_visualisation
 class DataReaderAOD : public DataReader
 {
  private:
-  Int_t fMaxEv;
+  Int_t mMaxEv;
   TFile* mAODFile;
 
  public:
   DataReaderAOD();
   void open() override;
   Int_t GetEventCount() override;
-  TObject* getEventData(int no) override;
+  TObject* getEventData(int eventNumber) override;
 };
 
 } // namespace event_visualisation

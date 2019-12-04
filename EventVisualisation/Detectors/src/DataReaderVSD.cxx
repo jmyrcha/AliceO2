@@ -15,6 +15,8 @@
 
 #include "EventVisualisationDetectors/DataReaderVSD.h"
 
+#include "FairLogger.h"
+
 #include <TSystem.h>
 #include <TFile.h>
 #include <TPRegexp.h>
@@ -46,9 +48,7 @@ void DataReaderVSD::open()
   mCurEv = -1;
   mFile = TFile::Open(ESDFileName);
   if (!mFile) {
-    Error("VSD_Reader", "Can not open file '%s' ... terminating.",
-          ESDFileName.Data());
-    gSystem->Exit(1);
+    LOG(FATAL) << "There is no " << ESDFileName.Data() << " file in current directory!";
   }
 
   assert(mEvDirKeys.size() == 0);
@@ -64,15 +64,14 @@ void DataReaderVSD::open()
 
   mMaxEv = mEvDirKeys.size();
   if (mMaxEv == 0) {
-    Error("VSD_Reader", "No events to show ... terminating.");
-    gSystem->Exit(1);
+    LOG(FATAL) << "No VSD events to show.";
   }
 }
 
 TObject* DataReaderVSD::getEventData(int ev)
 {
   if (ev < 0 || ev >= this->mMaxEv) {
-    Warning("GotoEvent", "Invalid event id %d.", ev);
+    LOG(WARNING) << "Invalid VSD event id " << ev;
     return nullptr;
   }
   this->mCurEv = ev;
