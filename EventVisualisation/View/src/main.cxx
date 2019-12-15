@@ -34,7 +34,6 @@ using namespace o2::event_visualisation;
 std::string printOptions(Options* o)
 {
   std::string res;
-  res.append(std::string("randomTracks: ") + (o->randomTracks ? "true" : "false") + "\n");
   res.append(std::string("vds         : ") + (o->vsd ? "true" : "false") + "\n");
   res.append(std::string("its         : ") + (o->its ? "true" : "false") + "\n");
   res.append(std::string("tpc         : ") + (o->tpc ? "true" : "false") + "\n");
@@ -50,11 +49,8 @@ Options* processCommandLine(int argc, char* argv[])
   // put ':' in the starting of the
   // string so that program can
   // distinguish between '?' and ':'
-  while ((opt = getopt(argc, argv, ":itaf:rv")) != -1) {
+  while ((opt = getopt(argc, argv, ":itarv")) != -1) {
     switch (opt) {
-      case 'r':
-        options.randomTracks = true;
-        break;
       case 'i':
         options.its = true;
         break;
@@ -67,11 +63,8 @@ Options* processCommandLine(int argc, char* argv[])
       case 'v':
         options.vsd = true;
         break;
-      case 'f':
-        options.fileName = optarg;
-        break;
       case ':':
-		LOG(ERROR) << "Option needs a value";
+        LOG(ERROR) << "Option needs a value";
         return nullptr;
       case '?':
         LOG(ERROR) << "Unknown option: " << optopt;
@@ -82,7 +75,7 @@ Options* processCommandLine(int argc, char* argv[])
   // optind is for the extra arguments
   // which are not parsed
   for (; optind < argc; optind++) {
-	  LOG(INFO) << "Extra arguments: " << argv[optind];
+    LOG(INFO) << "Extra arguments: " << argv[optind];
     return nullptr;
   }
 

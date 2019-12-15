@@ -97,7 +97,7 @@ Int_t DataReaderAOD::GetEventCount()
 
 TObject* DataReaderAOD::getEventData(int eventNumber)
 {
-  if(eventNumber < 0 || eventNumber >= this->mMaxEv) {
+  if (eventNumber < 0 || eventNumber >= this->mMaxEv) {
     return nullptr;
   }
 

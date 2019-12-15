@@ -24,12 +24,10 @@ namespace event_visualisation
 {
 
 struct Options {
-  bool randomTracks;    // -r
-  bool vsd;             // -v
-  bool its;             // -i
-  bool tpc;             // -t
-  bool aod;             // -a
-  std::string fileName; // -f 'data.root'
+  bool vsd; // -v
+  bool its; // -i
+  bool tpc; // -t
+  bool aod; // -a
 };
 
 /// This class initializes a core of the visualisation system.

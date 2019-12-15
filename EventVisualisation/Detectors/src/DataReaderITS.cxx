@@ -75,7 +75,7 @@ Int_t DataReaderITS::GetEventCount()
 
 TObject* DataReaderITS::getEventData(int eventNumber)
 {
-  if(eventNumber < 0 || eventNumber >= this->mMaxEv) {
+  if (eventNumber < 0 || eventNumber >= this->mMaxEv) {
     return nullptr;
   }
 

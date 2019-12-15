@@ -121,10 +121,10 @@ void EventManager::GotoEvent(Int_t no)
     DataInterpreter* interpreter = mDataInterpreters[i];
     if (interpreter) {
       TObject* data = getDataSource()->getEventData(no, (EVisualisationGroup)i);
-      if(data) {
+      if (data) {
         std::unique_ptr<VisualisationEvent> event = std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0);
         for (int dataType = 0; dataType < EVisualisationDataType::NdataTypes; ++dataType) {
-          interpreter->interpretDataForType(data, (EVisualisationDataType) dataType, *event);
+          interpreter->interpretDataForType(data, (EVisualisationDataType)dataType, *event);
         }
         displayVisualisationEvent(*event, gVisualisationGroupName[i]);
       }
@@ -227,7 +227,7 @@ void EventManager::displayTracks(VisualisationEvent& event, const std::string& d
   if (settings.GetValue("tracks.byPt.show", false)) {
     displayTracksByPt(event, detectorName);
     return;
-  } 
+  }
   if (settings.GetValue("tracks.byType.show", false)) {
     displayTracksByType(event, detectorName);
     return;

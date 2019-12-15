@@ -58,7 +58,7 @@ void Initializer::setup(const Options options, EventManager::EDataSource default
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);
 
-  const bool fullscreen = settings.GetValue("fullscreen.mode", false);                           // hide left and bottom tabs
+  const bool fullscreen = settings.GetValue("fullscreen.mode", false);                                // hide left and bottom tabs
   const std::string ocdbStorage = settings.GetValue("OCDB.default.path", "local://$ALICE_ROOT/OCDB"); // default path to OCDB
   LOG(INFO) << "Initializer -- OCDB path:" << ocdbStorage;
 
