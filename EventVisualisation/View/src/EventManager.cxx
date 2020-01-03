@@ -528,9 +528,18 @@ void EventManager::animateTracks()
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);
 
+  std::string tracksString = "";
+  if (settings.GetValue("tracks.byPt.show", false)) {
+    tracksString = " tracks by Pt";
+  }
+  else if (settings.GetValue("tracks.byType.show", false)) {
+    tracksString = " tracks by type";
+  }
+
   for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; ++i) {
     if (mDataInterpreters[i]) {
       TEveElementList* tracks = (TEveElementList*)mDataTypeLists[EVisualisationDataType::Tracks]->FindChild(Form("%s tracks by type", gVisualisationGroupName[i].c_str()));
+	  LOG(INFO) << "Looking for tracks at: " << Form("%s%s", gVisualisationGroupName[i].c_str(), tracksString.c_str()) << "end";
       if (tracks) {
         std::vector<TEveTrackPropagator*> propagators;
 
