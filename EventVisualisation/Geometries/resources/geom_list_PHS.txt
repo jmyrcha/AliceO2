@@ -1,0 +1,4 @@
+/cave_1/PHOS_1/PATB_1/PEMC_1
+/cave_1/PHOS_2/PATB_1/PEMC_1
+/cave_1/PHOS_3/PATB_1/PEMC_1
+/cave_1/PHOH_4/PATH_1/PEMH_1

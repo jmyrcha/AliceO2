@@ -19,15 +19,21 @@
 #include <TGeoPhysicalNode.h> // for TGeoPhysicalNode, TGeoPNEntry
 #include <TObjArray.h>        // for TObjArray
 #include <TObject.h>          // for TObject
+#include <TSystem.h>          // for gSystem
 
 #include <cassert>
 #include <cstddef> // for NULL
 
 #include "DetectorsBase/GeometryManager.h"
 #include "DetectorsCommonDataFormats/AlignParam.h"
+//#include "CCDB/CcdbApi.h"
+#include "CCDB/BasicCCDBManager.h"
 
 using namespace o2::detectors;
 using namespace o2::base;
+using namespace o2::ccdb;
+
+TGeoManager* GeometryManager::sGeometry = nullptr;
 
 /// Implementation of GeometryManager, the geometry manager class which interfaces to TGeo and
 /// the look-up table mapping unique volume indices to symbolic volume names. For that, it
@@ -443,13 +449,38 @@ o2::base::MatBudget GeometryManager::meanMaterialBudget(float x0, float y0, floa
 //_________________________________
 void GeometryManager::loadGeometry(std::string geomFileName, std::string geomName)
 {
-  ///< load geometry from file
-  LOG(INFO) << "Loading geometry " << geomName << " from " << geomFileName;
-  TFile flGeom(geomFileName.data());
-  if (flGeom.IsZombie()) {
-    LOG(FATAL) << "Failed to open file " << geomFileName;
+  if (sGeometry->IsLocked()) {
+    LOG(ERROR) << "Cannot load a new geometry, the current one being locked. Setting internal geometry to null!!";
+    sGeometry = nullptr;
+    return;
   }
-  if (!flGeom.Get(geomName.data())) {
-    LOG(FATAL) << "Did not find geometry named " << geomName;
+
+  sGeometry = nullptr;
+  if (geomFileName.data() && (!gSystem->AccessPathName(geomFileName.data()))) {
+    sGeometry = TGeoManager::Import(geomFileName.data(), geomName.data());
+    LOG(INFO) << "From now on using geometry: " << geomName << " from custom geometry file: " << geomFileName;
+  }
+
+  if (!sGeometry) {
+    LOG(INFO) << "Loading geometry from CDB";
+    auto& ccdbManager = BasicCCDBManager::instance();
+    //CcdbApi api;
+    //std::map<std::string, std::string> metadata; // can be empty
+    //const std::string ocdbStorage = "local://$ALICE_ROOT/OCDB";
+    //api.init(ocdbStorage);
+    //auto geometry = api.retrieveFromTFileAny<TGeoManager*>("GRP/Geometry/Data", metadata);
+	auto geometry = ccdbManager.get<TGeoManager*>("GRP/Geometry/Data");
+
+    if (!geometry) {
+      LOG(FATAL) << "Couldn't load geometry data from CDB!";
+    }
+
+    sGeometry = *geometry;
+    if (!sGeometry) {
+      LOG(FATAL) << "Couldn't find TGeoManager in the specified CDB entry!";
+    }
+
+    //LOG(INFO) << "From now on using geometry from CDB base folder: " << api.getURL();
+    LOG(INFO) << "From now on using geometry from CDB base folder: " << ccdbManager.getURL();
   }
 }
