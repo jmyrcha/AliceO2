@@ -15,7 +15,6 @@ o2_add_library(EventVisualisationDetectors
                        src/DataInterpreterAOD.cxx
                        src/DataInterpreterITS.cxx
                        src/DataInterpreterTPC.cxx
-                       src/FillO2CDBEMCALPHOSMatrix.cxx
                PUBLIC_LINK_LIBRARIES O2::EventVisualisationBase
                                      O2::DataFormatsITSMFT
                                      O2::DataFormatsITS
@@ -34,6 +33,7 @@ o2_add_executable(fill-o2cdb-emcal-phos-matrix
         PUBLIC_LINK_LIBRARIES O2::CCDB
                               O2::DetectorsBase
                               O2::DetectorsCommonDataFormats
+                              O2::EventVisualisationBase
         )
 
 o2_add_test(Detectors

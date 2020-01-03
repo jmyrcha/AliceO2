@@ -136,6 +136,12 @@ void MultiView::setupMultiview()
   mViews[ViewZrho]->AddScene(mScenes[SceneZrhoEvent]);
 }
 
+MultiView::~MultiView()
+{
+  destroyAllGeometries();
+  destroyAllEvents();
+}
+
 MultiView::EScenes MultiView::getSceneOfProjection(EProjections projection)
 {
   if (projection == ProjectionRphi) {
@@ -189,6 +195,9 @@ void MultiView::destroyAllGeometries()
       mGeomVector[i] = nullptr;
     }
   }
+//  getScene(Scene3dGeom)->DestroyElements();
+//  getScene(SceneRphiGeom)->DestroyElements();
+//  getScene(SceneZrhoGeom)->DestroyElements();
 }
 
 void MultiView::registerElement(TEveElement* event)

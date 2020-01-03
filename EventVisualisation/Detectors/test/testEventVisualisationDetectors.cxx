@@ -68,16 +68,16 @@ BOOST_AUTO_TEST_CASE(Should_SetProperEventCount_When_DataFileIsCorrect_Test)
   int eventCounts[] = {150, 10, 10, 3865};
 
   // Act
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 3; i++) {
     readers[i]->open();
   }
 
   // Assert
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 3; i++) {
     BOOST_CHECK_EQUAL(readers[i]->getEventCount(), eventCounts[i]);
   }
 
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 3; i++) {
     delete readers[i];
   }
 }
@@ -91,16 +91,16 @@ BOOST_AUTO_TEST_CASE(Should_ReturnEventData_When_EventNumberInRange_Test)
   int eventCounts[] = {150, 10, 10, 3865};
 
   // Act
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 3; i++) {
     readers[i]->open();
   }
 
   // Assert
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 3; i++) {
     BOOST_CHECK_NE(readers[i]->getEventData(0), nullptr);
   }
 
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 3; i++) {
     delete readers[i];
   }
 }
@@ -114,16 +114,16 @@ BOOST_AUTO_TEST_CASE(Should_ReturnNull_When_EventNumberOutsideRange_Test)
   int eventCounts[] = {150, 10, 10, 3865};
 
   // Act
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 3; i++) {
     readers[i]->open();
   }
 
   // Assert
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 3; i++) {
     BOOST_CHECK_EQUAL(readers[i]->getEventData(eventCounts[i]), nullptr);
   }
 
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 3; i++) {
     delete readers[i];
   }
 }
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(Should_InterpreEventClusters_When_CorrectEvent_Test)
   int testedEvents[] = {140, 5, 5, 5};
   int clusterCounts[] = {0, 1393, 5472, 1};
 
-  std::vector<std::unique_ptr<VisualisationEvent>> events(4);
+  std::vector<std::unique_ptr<VisualisationEvent>> events(3);
   for (int i = 0; i < 3; i++) {
     events[i] = std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0);
   }
@@ -223,7 +223,7 @@ BOOST_AUTO_TEST_CASE(Should_NotInterpretEventTracks_When_NotAODEvent_Test)
   DataReader* readers[] = {new DataReaderITS(), new DataReaderTPC};
   DataInterpreter* interpreters[] = {new DataInterpreterITS(), new DataInterpreterTPC};
 
-  std::vector<std::unique_ptr<VisualisationEvent>> events(4);
+  std::vector<std::unique_ptr<VisualisationEvent>> events(3);
   for (int i = 0; i < 3; i++) {
     events[i] = std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0);
   }
@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE(Should_NotInterpretEventCaloCells_When_NotAODEvent_Test)
   DataReader* readers[] = {new DataReaderITS(), new DataReaderTPC};
   DataInterpreter* interpreters[] = {new DataInterpreterITS(), new DataInterpreterTPC};
 
-  std::vector<std::unique_ptr<VisualisationEvent>> events(4);
+  std::vector<std::unique_ptr<VisualisationEvent>> events(3);
   for (int i = 0; i < 3; i++) {
     events[i] = std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0);
   }

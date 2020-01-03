@@ -95,8 +95,8 @@ class MultiView
  private:
   /// Default constructor
   MultiView();
-  /// Default destructor
-  ~MultiView() = default;
+
+  ~MultiView();
 
   static MultiView* sInstance; ///< Single instance of the multiview
 

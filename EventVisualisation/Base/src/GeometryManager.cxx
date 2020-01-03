@@ -31,10 +31,21 @@ namespace o2
 namespace event_visualisation
 {
 
+GeometryManager* GeometryManager::sInstance = nullptr;
+
+GeometryManager::GeometryManager()
+{
+  TEnv settings;
+  ConfigurationManager::getInstance().getConfig(settings);
+  mR2Geometry = settings.GetValue("simple.geom.default", "R2") == "R2";
+}
+
 GeometryManager& GeometryManager::getInstance()
 {
-  static GeometryManager instance;
-  return instance;
+  if (sInstance == nullptr) {
+    sInstance = new GeometryManager();
+  }
+  return *sInstance;
 }
 
 TEveGeoShape* GeometryManager::getGeometryForDetector(std::string detectorName)
@@ -53,8 +64,8 @@ TEveGeoShape* GeometryManager::getGeometryForDetector(std::string detectorName)
   }
   LOG(INFO) << "GeometryManager::GetSimpleGeom for: " << detectorName << " from " << Form("%s/simple_geom_%s.root", geomPath.c_str(), detectorName.c_str());
 
-  TEveGeoShapeExtract* geomShapreExtract = static_cast<TEveGeoShapeExtract*>(f->Get(detectorName.c_str()));
-  TEveGeoShape* geomShape = TEveGeoShape::ImportShapeExtract(geomShapreExtract);
+  TEveGeoShapeExtract* geomShapeExtract = static_cast<TEveGeoShapeExtract*>(f->Get(detectorName.c_str()));
+  TEveGeoShape* geomShape = TEveGeoShape::ImportShapeExtract(geomShapeExtract);
   f->Close();
 
   geomShape->SetName(detectorName.c_str());
@@ -79,7 +90,7 @@ void GeometryManager::drawDeep(TEveGeoShape* geomShape, Color_t color, Char_t tr
   if (geomShape->HasChildren()) {
     geomShape->SetRnrSelf(false);
 
-    if (strcmp(geomShape->GetElementName(), "TPC_Drift_1") == 0) { // hack for TPC drift chamber
+    if (mR2Geometry && strcmp(geomShape->GetElementName(), "TPC_Drift_1") == 0) { // hack for TPC drift chamber
       geomShape->SetRnrSelf(kTRUE);
       if (color >= 0)
         geomShape->SetMainColor(color);
@@ -113,7 +124,7 @@ void GeometryManager::drawDeep(TEveGeoShape* geomShape, Color_t color, Char_t tr
       geomShape->SetMainTransparency(transparency);
     }
 
-    if (strcmp(geomShape->GetElementName(), "PHOS_5") == 0) { // hack for PHOS module which is not installed
+    if (mR2Geometry && strcmp(geomShape->GetElementName(), "PHOS_5") == 0) { // hack for PHOS module which is not installed
       geomShape->SetRnrSelf(false);
     }
   }

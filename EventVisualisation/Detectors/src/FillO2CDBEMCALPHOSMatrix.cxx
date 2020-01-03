@@ -27,9 +27,9 @@
 #include <map>
 
 using namespace o2::ccdb;
+using namespace o2::event_visualisation;
 
-// Based on O2 CCDB/example/fill_local_ocdb.C
-// and AliEMCALSetAlignment.C, AliPHOSSetAlignment.C
+// Based on AliEMCALSetAlignment.C, AliPHOSSetAlignment.C
 int main(int argc, char** argv)
 {
   CcdbApi api;
@@ -80,10 +80,8 @@ int main(int argc, char** argv)
   new (alobj[19]) o2::detectors::AlignParam("EMCAL/OneThrdSupermodule4",
                                             uid, dx, dy, dz, dpsi, dtheta, dphi, kTRUE);
 
-  // store abitrary user object in strongly typed manner
+  // Store arbitrary user object in strongly typed manner
   api.storeAsTFileAny(array, "EMCAL/Align/Data", metadata);
-
-  //ConditionId* id = new ConditionId("EMCAL/Align/Data", 0, IdRunRange::Infinity(), 0);
 
   array->Clear();
 
@@ -105,7 +103,6 @@ int main(int argc, char** argv)
   }
 
   api.storeAsTFileAny(array, "PHOS/Align/Data", metadata);
-  //id = new ConditionId("PHOS/Align/Data", 0, IdRunRange::Infinity(), 0);
 
   array->Delete();
 

@@ -43,7 +43,7 @@ class EventManagerFrame : public TGMainFrame
  public:
   EventManagerFrame(o2::event_visualisation::EventManager& eventManager);
   ~EventManagerFrame() override = default;
-  ClassDefOverride(EventManagerFrame, 0); // GUI window for AliEveEventManager.
+  ClassDefOverride(EventManagerFrame, 0); // GUI window for EventManager.
 
   /// Loads geometry for all detectors
   void setupGeometry();

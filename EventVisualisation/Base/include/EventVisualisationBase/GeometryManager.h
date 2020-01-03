@@ -44,14 +44,16 @@ class GeometryManager
   bool getR2Geometry() const { return this->mR2Geometry; }
 
  private:
+  static GeometryManager* sInstance;
+
   /// If using R2 geometry
-  bool mR2Geometry = false;
+  bool mR2Geometry;
 
   /// Goes through all children nodes of geometry shape and sets drawing options
   void drawDeep(TEveGeoShape* geomShape, Color_t color, Char_t transparency, Color_t lineColor);
 
   /// Default constructor
-  GeometryManager() = default;
+  GeometryManager();
   /// Default destructor
   ~GeometryManager() = default;
   /// Deleted copy constructor

@@ -130,10 +130,16 @@ void EventManagerFrame::DoRefresh()
 
 void EventManagerFrame::DoR2Geometry()
 {
+  auto& geomMan = GeometryManager::getInstance();
+  geomMan.setR2Geometry(true);
+  refresh(false);
 }
 
 void EventManagerFrame::DoR3Geometry()
 {
+  auto& geomMan = GeometryManager::getInstance();
+  geomMan.setR2Geometry(false);
+  refresh(false);
 }
 
 void EventManagerFrame::setupGeometry()
