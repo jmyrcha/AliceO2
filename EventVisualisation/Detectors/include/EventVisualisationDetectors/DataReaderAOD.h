@@ -8,31 +8,29 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-/// \file DataReaderITS.h
-/// \brief ITS Detector-specific reading from file(s)
+/// \file DataReaderAOD.h
+/// \brief AOD Detector-specific reading from file(s)
 /// \author julian.myrcha@cern.ch
 
-#ifndef ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAREADERITS_H
-#define ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAREADERITS_H
-
-#include "EventVisualisationBase/DataReader.h"
+#ifndef ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAREADERAOD_H
+#define ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAREADERAOD_H
 
 #include <TFile.h>
+#include "EventVisualisationBase/DataReader.h"
 
 namespace o2
 {
 namespace event_visualisation
 {
 
-class DataReaderITS : public DataReader
+class DataReaderAOD : public DataReader
 {
  private:
   Int_t mMaxEv;
-  TFile* mClusFile;
-  TFile* mTracFile;
+  TFile* mAODFile;
 
  public:
-  DataReaderITS();
+  DataReaderAOD();
   void open() override;
   int getEventCount() const override;
   TObject* getEventData(int eventNumber) override;
@@ -41,4 +39,4 @@ class DataReaderITS : public DataReader
 } // namespace event_visualisation
 } // namespace o2
 
-#endif //ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAREADERITS_H
+#endif //ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAREADERAOD_H

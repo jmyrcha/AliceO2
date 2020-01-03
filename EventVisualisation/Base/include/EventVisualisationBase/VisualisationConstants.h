@@ -31,15 +31,14 @@ enum EVisualisationGroup {
   MCH,
   PHS,
   RPH,
+  TOF,
   SDD,
   SPD,
   SSD,
-  TOF,
   ITS,
   TPC,
   TRD,
-  RND,
-  VSD,
+  AOD,
   NvisualisationGroups
 };
 
@@ -50,59 +49,23 @@ const std::string gVisualisationGroupName[NvisualisationGroups] = {
   "MCH",
   "PHS",
   "RPH",
+  "TOF",
   "SDD",
   "SPD",
   "SSD",
-  "TOF",
   "ITS",
   "TPC",
   "TRD",
-  "RND",
-  "VSD"};
-
-const bool R2Visualisation[NvisualisationGroups] = {
-  true,  //"ACO",
-  true,  //"EMC",
-  true,  //"HMP",
-  true,  //"MCH",
-  true,  //"PHS",
-  true,  //"RPH",
-  true,  //"SDD",
-  true,  //"SPD",
-  true,  //"SSD",
-  true,  //"TOF",
-  false, //ITS
-  true,  //"TPC",
-  true,  //"TRD",
-  true,  //"RND",
-  true   //"VSD"
-};
-
-const bool R3Visualisation[NvisualisationGroups] = {
-  true,  //"ACO",
-  true,  //"EMC",
-  true,  //"HMP",
-  false, //"MCH",
-  true,  //"PHS",
-  false, //"RPH",
-  false, //"SDD",
-  false, //"SPD",
-  false, //"SSD",
-  false, //"TOF",
-  true,  // ITS
-  true,  //"TPC",
-  false, //"TRD",
-  false, //"RND",
-  false  //"VSD"
-};
+  "AOD"};
 
 enum EVisualisationDataType {
   Raw,       ///< Raw data
   Hits,      ///< Hits
   Digits,    ///< Digits
   Clusters,  ///< Reconstructed clusters (RecPoints)
-  ESD,       ///< Event Summary Data
-  AOD,       ///< Analysis Object Data
+  Tracks,    ///< Reconstructed tracks
+  Calo,      ///< Calorimeter cells (for AOD only)
+  Muon,      ///< Muon tracks (for AOD only)
   NoData,    ///< no data was loaded
   NdataTypes ///< number of supported data types
 };
@@ -112,11 +75,12 @@ const std::string gDataTypeNames[NdataTypes] = {
   "Hits",
   "Digits",
   "Clusters",
-  "ESD",
-  "AOD",
+  "Tracks",
+  "Calo",
+  "Muon",
   "NoData"};
 
 } // namespace event_visualisation
 } // namespace o2
 
-#endif
+#endif //ALICE_O2_EVENTVISUALISATION_BASE_VISUALISATIONCONSTANTS_H

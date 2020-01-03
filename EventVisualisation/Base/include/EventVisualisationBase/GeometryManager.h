@@ -39,13 +39,13 @@ class GeometryManager
   /// Returns ROOT shapes describing simplified geometry of given detector
   TEveGeoShape* getGeometryForDetector(std::string detectorName);
 
-  /// sets geometry to R2/R3
+  /// Sets geometry to R2/R3
   void setR2Geometry(bool R2Geometry) { this->mR2Geometry = R2Geometry; }
   bool getR2Geometry() const { return this->mR2Geometry; }
 
  private:
-  /// using R2 geometry
-  bool mR2Geometry = true;
+  /// If using R2 geometry
+  bool mR2Geometry = false;
 
   /// Goes through all children nodes of geometry shape and sets drawing options
   void drawDeep(TEveGeoShape* geomShape, Color_t color, Char_t transparency, Color_t lineColor);
@@ -63,4 +63,4 @@ class GeometryManager
 } // namespace event_visualisation
 } // namespace o2
 
-#endif // ALICE_O2_EVENTVISUALISATION_BASE_GEOMETRYMANAGER_H
+#endif //ALICE_O2_EVENTVISUALISATION_BASE_GEOMETRYMANAGER_H

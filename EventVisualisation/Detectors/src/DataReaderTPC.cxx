@@ -14,11 +14,14 @@
 /// \author julian.myrcha@cern.ch
 /// \author p.nowakowski@cern.ch
 
+#include "DataFormatsTPC/TrackTPC.h"
 #include "EventVisualisationDetectors/DataReaderTPC.h"
+
+#include "FairLogger.h"
+
+#include <TSystem.h>
 #include <TTree.h>
 #include <TVector2.h>
-#include <TError.h>
-#include "DataFormatsTPC/TrackTPC.h"
 
 namespace o2
 {
@@ -33,26 +36,56 @@ void DataReaderTPC::open()
   TString trackFile = "tpctracks.root";
 
   this->mTracFile = TFile::Open(trackFile);
+  if (!this->mTracFile) {
+    LOG(FATAL) << "There is no " << trackFile.Data() << " file in current directory!";
+  }
   this->mClusFile = TFile::Open(clusterFile);
+  if (!this->mClusFile) {
+    LOG(FATAL) << "There is no " << clusterFile.Data() << " file in current directory!";
+  }
 
-  TTree* trec = static_cast<TTree*>(this->mTracFile->Get("tpcrec"));
+  TTree* trec = dynamic_cast<TTree*>(this->mTracFile->Get("tpcrec"));
+  if (!trec) {
+    LOG(FATAL) << "Incorrect TPC file format, branch missing!";
+  }
+
   std::vector<tpc::TrackTPC>* trackBuffer = nullptr;
 
   trec->SetBranchAddress("TPCTracks", &trackBuffer);
   trec->GetEntry(0);
 
-  mMaxEv = trackBuffer->size();
+  int time = 0;
+  for (int i = 0; i < trackBuffer->size(); i++) {
+    int trackTime = (*trackBuffer)[i].getTime0();
+    if (trackTime > time)
+      time = trackTime;
+  }
+  mMaxEv = time / (2 * mTPCReadoutCycle);
+  if (mMaxEv * 2 * mTPCReadoutCycle < time) {
+    mMaxEv++;
+  }
+  LOG(INFO) << "Setting max ev to: " << mMaxEv << " max time: " << time;
 }
 
-TObject* DataReaderTPC::getEventData(int no)
+int DataReaderTPC::getEventCount() const
 {
+  return mMaxEv;
+}
+
+TObject* DataReaderTPC::getEventData(int eventNumber)
+{
+  if (eventNumber < 0 || eventNumber >= this->mMaxEv) {
+    return nullptr;
+  }
+
   /// FIXME: Redesign the data reader class
   TList* list = new TList();
   list->Add(this->mTracFile);
   list->Add(this->mClusFile);
-  TVector2* v = new TVector2(no, 0);
+  TVector2* v = new TVector2(eventNumber, 0);
   list->Add(v);
   return list;
 }
+
 } // namespace event_visualisation
 } // namespace o2

@@ -9,14 +9,18 @@
 // or submit itself to any jurisdiction.
 
 /// \file DataInterpreterTPC.cxx
-/// \brief converting TPC data to Event Visualisation primitives
+/// \brief Converting TPC data to Event Visualisation primitives
 /// \author julian.myrcha@cern.ch
 /// \author p.nowakowski@cern.ch
 
-#include "EventVisualisationDataConverter/VisualisationCluster.h"
 #include "EventVisualisationDetectors/DataInterpreterTPC.h"
 #include "EventVisualisationBase/ConfigurationManager.h"
 #include "EventVisualisationDataConverter/VisualisationEvent.h"
+
+#include "TPCBase/Mapper.h"
+#include "DataFormatsTPC/TrackTPC.h"
+#include "DataFormatsTPC/ClusterNative.h"
+#include "DataFormatsTPC/ClusterNativeHelper.h"
 
 #include <TEveManager.h>
 #include <TEveTrackPropagator.h>
@@ -25,30 +29,26 @@
 #include <TFile.h>
 #include <TTree.h>
 #include <TVector2.h>
-
-#include "TPCBase/Mapper.h"
-#include "DataFormatsTPC/TrackTPC.h"
-#include "DataFormatsTPC/ClusterNative.h"
-#include "DataFormatsTPC/ClusterNativeHelper.h"
+#include <TROOT.h>
 
 #include <iostream>
 #include <gsl/span>
-
-using namespace std;
 
 namespace o2
 {
 namespace event_visualisation
 {
 
+DataInterpreterTPC::DataInterpreterTPC()
+{
+}
+
 DataInterpreterTPC::~DataInterpreterTPC() = default;
 
-std::unique_ptr<VisualisationEvent> DataInterpreterTPC::interpretDataForType(TObject* data, EVisualisationDataType type)
+void DataInterpreterTPC::interpretDataForType(TObject* data, EVisualisationDataType type, VisualisationEvent& event)
 {
   TList* list = (TList*)data;
-
-  // Int_t event = ((TVector2*)list->At(2))->X();
-  auto ret_event = std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0);
+  Int_t eventId = ((TVector2*)list->At(2))->X();
 
   if (type == Clusters) {
     TFile* clustFile = (TFile*)list->At(1);
@@ -77,10 +77,10 @@ std::unique_ptr<VisualisationEvent> DataInterpreterTPC::interpretDataForType(TOb
         double xyz[3] = {globalXYZ.X(), globalXYZ.Y(), globalXYZ.Z()};
 
         VisualisationCluster cluster(xyz);
-        ret_event->addCluster(cluster);
+        event.addCluster(cluster);
       }
     }
-  } else if (type == ESD) {
+  } else if (type == Tracks) {
     TFile* trackFile = (TFile*)list->At(0);
 
     TTree* tracks = (TTree*)trackFile->Get("tpcrec");
@@ -95,13 +95,17 @@ std::unique_ptr<VisualisationEvent> DataInterpreterTPC::interpretDataForType(TOb
     auto prop = trackList->GetPropagator();
     prop->SetMagField(0.5);
 
-    int first, last;
-    first = 0;
-    last = trkArr->size();
+    // Tracks are not in order
+    int startTime = 2 * mTPCReadoutCycle * eventId;
+    int endTime = startTime + 2 * mTPCReadoutCycle;
 
-    gsl::span<tpc::TrackTPC> mTracks = gsl::make_span(&(*trkArr)[first], last - first);
+    for (int i = 0; i < trkArr->size(); i++) {
+      const auto& rec = (*trkArr)[i];
 
-    for (const auto& rec : mTracks) {
+      if (rec.getTime0() < startTime || rec.getTime0() > endTime) {
+        continue;
+      }
+
       std::array<float, 3> p;
       rec.getPxPyPzGlo(p);
       TEveRecTrackD t;
@@ -116,7 +120,8 @@ std::unique_ptr<VisualisationEvent> DataInterpreterTPC::interpretDataForType(TOb
       double track_end[3] = {end.fX, end.fY, end.fZ};
       double track_p[3] = {p[0], p[1], p[2]};
 
-      VisualisationTrack track(rec.getSign(), 0.0, 0, 0, 0.0, 0.0, track_start, track_end, track_p, 0, 0.0, 0.0, 0.0, 0);
+      VisualisationTrack track(rec.getSign(), 0.0, 0, 0, 0.0, 0.0, track_start, track_end, track_p, 0, 0.0, 0.0,
+                               0.0, 0, 0);
 
       for (Int_t i = 0; i < eve_track->GetN(); ++i) {
         Float_t x, y, z;
@@ -125,11 +130,10 @@ std::unique_ptr<VisualisationEvent> DataInterpreterTPC::interpretDataForType(TOb
       }
       delete eve_track;
 
-      ret_event->addTrack(track);
+      event.addTrack(track);
     }
     delete trackList;
   }
-  return ret_event;
 }
 
 } // namespace event_visualisation

@@ -9,15 +9,15 @@
 // or submit itself to any jurisdiction.
 
 /// \file DataSourceOffline.h
-/// \brief Grouping reading from file(s)
+/// \brief Group reading from file(s)
 /// \author julian.myrcha@cern.ch
 /// \author p.nowakowski@cern.ch
 
 #ifndef ALICE_O2_EVENTVISUALISATION_BASE_DATASOURCEOFFLINE_H
 #define ALICE_O2_EVENTVISUALISATION_BASE_DATASOURCEOFFLINE_H
 
-#include <EventVisualisationBase/DataSource.h>
-#include <EventVisualisationBase/DataReader.h>
+#include "EventVisualisationBase/DataSource.h"
+#include "EventVisualisationBase/DataReader.h"
 
 class TObject;
 
@@ -29,7 +29,7 @@ namespace event_visualisation
 class DataSourceOffline : public DataSource
 {
  protected:
-  static DataReader* instance[EVisualisationGroup::NvisualisationGroups];
+  static DataReader* sInstance[EVisualisationGroup::NvisualisationGroups];
 
  public:
   DataSourceOffline() = default;
@@ -40,11 +40,11 @@ class DataSourceOffline : public DataSource
   /// Deleted assigment operator
   void operator=(DataSourceOffline const&) = delete;
 
-  int GetEventCount() override;
+  int getEventCount() override;
 
   void registerReader(DataReader* reader, EVisualisationGroup purpose)
   {
-    instance[purpose] = reader;
+    sInstance[purpose] = reader;
   }
 
   TObject* getEventData(int no, EVisualisationGroup purpose) override;

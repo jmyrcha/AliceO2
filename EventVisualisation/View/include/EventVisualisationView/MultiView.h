@@ -83,19 +83,20 @@ class MultiView
   void destroyAllGeometries();
 
   /// Registers an element to be drawn
-  void registerElement(TEveElement* event); //override;
+  void registerElement(TEveElement* event);
 
   ///
   void registerEvent(TEveElement* event) { return registerElement(event); }
   /// Removes all shapes representing current event
-  void destroyAllEvents(); //override;
+  void destroyAllEvents();
+
   void redraw3D();
 
  private:
   /// Default constructor
   MultiView();
   /// Default destructor
-  ~MultiView();
+  ~MultiView() = default;
 
   static MultiView* sInstance; ///< Single instance of the multiview
 
@@ -110,9 +111,15 @@ class MultiView
   void setupMultiview();
   /// Returns geometry scene for given projection manager
   EScenes getSceneOfProjection(EProjections projection);
+
+  /// Vector keeping all geometries
+  ///
+  /// This is used just to know what to remove
+  /// when destroying of all geometries is requested
+  std::vector<TEveGeoShape*> mGeomVector;
 };
 
 } // namespace event_visualisation
 } // namespace o2
 
-#endif // ALICE_O2_EVENTVISUALISATION_VIEW_MULTIVIEW_H
+#endif //ALICE_O2_EVENTVISUALISATION_VIEW_MULTIVIEW_H

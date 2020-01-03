@@ -9,7 +9,7 @@
 // or submit itself to any jurisdiction.
 
 /// \file DataInterpreterTPC.h
-/// \brief converting TPC data to Event Visualisation primitives
+/// \brief Converting TPC data to Event Visualisation primitives
 /// \author julian.myrcha@cern.ch
 /// \author p.nowakowski@cern.ch
 
@@ -22,7 +22,6 @@
 
 #include "EventVisualisationBase/DataInterpreter.h"
 #include "EventVisualisationBase/VisualisationConstants.h"
-#include "EventVisualisationDataConverter/VisualisationEvent.h"
 
 namespace o2
 {
@@ -31,15 +30,17 @@ namespace event_visualisation
 
 class DataInterpreterTPC : public DataInterpreter
 {
+ private:
+  Int_t mTPCReadoutCycle = 100; // ms, provisional
+
  public:
   // Default constructor
-  DataInterpreterTPC() = default;
+  DataInterpreterTPC();
 
   // Default destructor
   ~DataInterpreterTPC() final;
 
-  // Returns a visualisation Event for this data type
-  std::unique_ptr<VisualisationEvent> interpretDataForType(TObject* data, EVisualisationDataType type) final;
+  void interpretDataForType(TObject* data, EVisualisationDataType type, VisualisationEvent& event) final;
 };
 
 } // namespace event_visualisation

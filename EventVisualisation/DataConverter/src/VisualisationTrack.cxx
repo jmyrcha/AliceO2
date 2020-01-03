@@ -15,9 +15,6 @@
 ///
 
 #include "EventVisualisationDataConverter/VisualisationTrack.h"
-#include <iostream>
-
-using namespace std;
 
 namespace o2
 {
@@ -30,7 +27,7 @@ VisualisationTrack::VisualisationTrack(
   int charge,
   double energy,
   int ID,
-  int PID,
+  o2::track::PID PID,
   double mass,
   double signedPT,
   double startXYZ[],
@@ -40,8 +37,10 @@ VisualisationTrack::VisualisationTrack(
   double phi,
   double theta,
   double helixCurvature,
-  int type)
-  : mCharge(charge),
+  int type,
+  unsigned long long flags)
+  : mID(ID),
+    mCharge(charge),
     mEnergy(energy),
     mParentID(parentID),
     mPID(PID),
@@ -49,12 +48,12 @@ VisualisationTrack::VisualisationTrack(
     mMass(mass),
     mHelixCurvature(helixCurvature),
     mTheta(theta),
-    mPhi(phi)
+    mPhi(phi),
+    mFlags(flags)
 {
-  addMomentum(pxpypz);
-  addStartCoordinates(startXYZ);
-  addEndCoordinates(endXYZ);
-  mID = ID;
+  setMomentum(pxpypz);
+  setStartCoordinates(startXYZ);
+  setEndCoordinates(endXYZ);
   mType = gTrackTypes[type];
 }
 
@@ -63,19 +62,19 @@ void VisualisationTrack::addChild(int childID)
   mChildrenIDs.push_back(childID);
 }
 
-void VisualisationTrack::addMomentum(double pxpypz[3])
+void VisualisationTrack::setMomentum(double pxpypz[3])
 {
   for (int i = 0; i < 3; i++)
     mMomentum[i] = pxpypz[i];
 }
 
-void VisualisationTrack::addStartCoordinates(double xyz[3])
+void VisualisationTrack::setStartCoordinates(double xyz[3])
 {
   for (int i = 0; i < 3; i++)
     mStartCoordinates[i] = xyz[i];
 }
 
-void VisualisationTrack::addEndCoordinates(double xyz[3])
+void VisualisationTrack::setEndCoordinates(double xyz[3])
 {
   for (int i = 0; i < 3; i++)
     mEndCoordinates[i] = xyz[i];

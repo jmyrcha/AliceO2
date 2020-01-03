@@ -35,31 +35,17 @@ namespace event_visualisation
 
 class DataInterpreter
 {
- private:
-  static DataInterpreter* instance[EVisualisationGroup::NvisualisationGroups];
-
  public:
   // Default constructor
   DataInterpreter() = default;
   // Virtual destructor
   virtual ~DataInterpreter() = default;
-  static void removeInstances()
-  {
-    for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; i++)
-      if (instance[i] != nullptr) {
-        delete instance[i];
-        instance[i] = nullptr;
-      }
-  }
 
   // Should return visualisation objects for required data type
-  virtual std::unique_ptr<VisualisationEvent> interpretDataForType(TObject* data, EVisualisationDataType type) = 0;
-
-  static DataInterpreter* getInstance(EVisualisationGroup type) { return instance[type]; }
-  //static void setInstance(DataInterpreter* instance, EVisualisationGroup type) { DataInterpreter::instance[type] = instance; }
+  virtual void interpretDataForType(TObject* data, EVisualisationDataType type, VisualisationEvent& event) = 0;
 };
 
 } // namespace event_visualisation
 } // namespace o2
 
-#endif // ALICE_O2_EVENTVISUALISATION_BASE_DATAINTERPRETER_H
+#endif //ALICE_O2_EVENTVISUALISATION_BASE_DATAINTERPRETER_H

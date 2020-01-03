@@ -24,10 +24,9 @@ namespace event_visualisation
 {
 
 struct Options {
-  bool randomTracks;    // -r
-  bool vsd;             // -v
-  bool itc;             // -i
-  std::string fileName; // -f 'data.root'
+  bool its; // -i
+  bool tpc; // -t
+  bool aod; // -a
 };
 
 /// This class initializes a core of the visualisation system.
@@ -42,15 +41,9 @@ class Initializer
  public:
   /// Default constructor
   static void setup(const Options options, const EventManager::EDataSource defaultDataSource = EventManager::SourceOffline); // default data source will be moved to a config file
- private:
-  /// Loads geometry for all detectors
-  static void setupGeometry();
-  /// Sets up background color
-  static void setupBackground();
-  /// Sets up camera position
-  static void setupCamera();
 };
+
 } // namespace event_visualisation
 } // namespace o2
 
-#endif // ALICE_O2_EVENTVISUALISATION_VIEW_INITIALIZER_H
+#endif //ALICE_O2_EVENTVISUALISATION_VIEW_INITIALIZER_H

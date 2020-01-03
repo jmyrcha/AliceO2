@@ -9,7 +9,7 @@
 // or submit itself to any jurisdiction.
 
 /// \file DataInterpreterITS.h
-/// \brief converting ITS data to Event Visualisation primitives
+/// \brief Converting ITS data to Event Visualisation primitives
 /// \author julian.myrcha@cern.ch
 /// \author p.nowakowski@cern.ch
 
@@ -35,13 +35,12 @@ class DataInterpreterITS : public DataInterpreter
   DataInterpreterITS();
 
   // Default destructor
-  ~DataInterpreterITS() final = default;
+  ~DataInterpreterITS() final;
 
-  // Returns a visualisation Event for this data type
-  std::unique_ptr<VisualisationEvent> interpretDataForType(TObject* data, EVisualisationDataType type) final;
+  void interpretDataForType(TObject* data, EVisualisationDataType type, VisualisationEvent& event) final;
 };
 
 } // namespace event_visualisation
 } // namespace o2
 
-#endif //ALICE_O2_EVENTVISUALISATION_BASE_DATAINTERPRETERITS_H
+#endif //ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAINTERPRETERITS_H

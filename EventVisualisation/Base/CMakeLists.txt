@@ -10,12 +10,17 @@
 
 o2_add_library(EventVisualisationBase
                SOURCES src/ConfigurationManager.cxx
-                       src/DataInterpreter.cxx
                        src/DataSourceOffline.cxx
                        src/GeometryManager.cxx
                PUBLIC_LINK_LIBRARIES ROOT::Eve
                                      O2::CCDB 
                                      O2::EventVisualisationDataConverter
-									 O2::DetectorsBase 
-
+                                     O2::DetectorsBase
+                                     FairLogger::FairLogger
 )
+
+o2_add_test(GeometryManager
+        COMPONENT_NAME eve
+        PUBLIC_LINK_LIBRARIES O2::EventVisualisationBase
+        SOURCES test/testGeometryManager.cxx
+        LABELS eve base)

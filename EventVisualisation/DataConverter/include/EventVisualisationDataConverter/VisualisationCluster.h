@@ -13,10 +13,8 @@
 /// \author  Julian Myrcha
 ///
 
-#ifndef ALICE_O2_DATACONVERTER_VISUALISATIONCLUSTER_H
-#define ALICE_O2_DATACONVERTER_VISUALISATIONCLUSTER_H
-
-#include "EventVisualisationDataConverter/VisualisationTrack.h"
+#ifndef ALICE_O2_EVENTVISUALISATION_DATACONVERTER_VISUALISATIONCLUSTER_H
+#define ALICE_O2_EVENTVISUALISATION_DATACONVERTER_VISUALISATIONCLUSTER_H
 
 #include <vector>
 #include <ctime>
@@ -45,9 +43,7 @@ class VisualisationCluster
  private:
   void setCoordinates(double xyz[3]);
   double mCoordinates[3]; /// Vector of cluster's coordinates
-
- private:
 };
 } // namespace event_visualisation
 } // namespace o2
-#endif // ALICE_O2_DATACONVERTER_VISUALISATIONCLUSTER_H
+#endif //ALICE_O2_EVENTVISUALISATION_DATACONVERTER_VISUALISATIONCLUSTER_H

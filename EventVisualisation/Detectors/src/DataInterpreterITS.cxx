@@ -13,8 +13,8 @@
 /// \author julian.myrcha@cern.ch
 /// \author p.nowakowski@cern.ch
 
-#include "EventVisualisationBase/ConfigurationManager.h"
 #include "EventVisualisationDetectors/DataInterpreterITS.h"
+#include "EventVisualisationBase/ConfigurationManager.h"
 #include "EventVisualisationDataConverter/VisualisationEvent.h"
 
 #include "DataFormatsITS/TrackITS.h"
@@ -30,9 +30,8 @@
 #include <TTree.h>
 #include <TVector2.h>
 
+#include <iostream>
 #include <gsl/span>
-
-using namespace std;
 
 namespace o2
 {
@@ -47,12 +46,12 @@ DataInterpreterITS::DataInterpreterITS()
   gman->fillMatrixCache(o2::utils::bit2Mask(o2::TransformType::T2GRot));
 }
 
-std::unique_ptr<VisualisationEvent> DataInterpreterITS::interpretDataForType(TObject* data, EVisualisationDataType type)
+DataInterpreterITS::~DataInterpreterITS() = default;
+
+void DataInterpreterITS::interpretDataForType(TObject* data, EVisualisationDataType type, VisualisationEvent& event)
 {
   TList* list = (TList*)data;
-  Int_t event = ((TVector2*)list->At(2))->X();
-
-  auto ret_event = std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0);
+  Int_t eventId = ((TVector2*)list->At(2))->X();
 
   if (type == Clusters) {
     its::GeometryTGeo* gman = its::GeometryTGeo::Instance();
@@ -70,8 +69,7 @@ std::unique_ptr<VisualisationEvent> DataInterpreterITS::interpretDataForType(TOb
     std::vector<itsmft::ROFRecord>* clusterROFrames = nullptr;
     clustersRof->SetBranchAddress("ITSClustersROF", &clusterROFrames);
     clustersRof->GetEntry(0);
-
-    auto currentClusterROF = clusterROFrames->at(event);
+    auto currentClusterROF = clusterROFrames->at(eventId);
 
     int first, last;
     first = currentClusterROF.getROFEntry().getIndex();
@@ -83,10 +81,9 @@ std::unique_ptr<VisualisationEvent> DataInterpreterITS::interpretDataForType(TOb
       const auto& gloC = c.getXYZGloRot(*gman);
       double xyz[3] = {gloC.X(), gloC.Y(), gloC.Z()};
       VisualisationCluster cluster(xyz);
-
-      ret_event->addCluster(cluster);
+      event.addCluster(cluster);
     }
-  } else if (type == ESD) {
+  } else if (type == Tracks) {
     TFile* trackFile = (TFile*)list->At(0);
     TFile* clustFile = (TFile*)list->At(1);
 
@@ -122,7 +119,7 @@ std::unique_ptr<VisualisationEvent> DataInterpreterITS::interpretDataForType(TOb
     prop->SetMagField(0.5);
     prop->SetMaxR(50.);
 
-    auto currentTrackROF = trackROFrames->at(event);
+    auto currentTrackROF = trackROFrames->at(eventId);
 
     int first, last;
     first = currentTrackROF.getROFEntry().getIndex();
@@ -145,7 +142,7 @@ std::unique_ptr<VisualisationEvent> DataInterpreterITS::interpretDataForType(TOb
       double track_end[3] = {end.fX, end.fY, end.fZ};
       double track_p[3] = {p[0], p[1], p[2]};
 
-      VisualisationTrack track(rec.getSign(), 0.0, 0, 0, 0.0, 0.0, track_start, track_end, track_p, 0, 0.0, 0.0, 0.0, 0);
+      VisualisationTrack track(rec.getSign(), 0.0, 0, 0, 0.0, 0.0, track_start, track_end, track_p, 0, 0.0, 0.0, 0.0, 0, 0);
 
       for (Int_t i = 0; i < eve_track->GetN(); ++i) {
         Float_t x, y, z;
@@ -163,11 +160,10 @@ std::unique_ptr<VisualisationEvent> DataInterpreterITS::interpretDataForType(TOb
       //                        tpoints->SetNextPoint(gloC.X(), gloC.Y(), gloC.Z());
       //                    }
 
-      ret_event->addTrack(track);
+      event.addTrack(track);
     }
     delete trackList;
   }
-  return ret_event;
 }
 
 } // namespace event_visualisation

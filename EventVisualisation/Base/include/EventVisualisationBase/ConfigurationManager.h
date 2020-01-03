@@ -49,6 +49,7 @@ class ConfigurationManager
   void operator=(ConfigurationManager const&) = delete;
 };
 
-}
-}
-#endif // ALICE_O2_EVENTVISUALISATION_BASE_CONFIGURATIONMANAGER_H
+} // namespace event_visualisation
+} // namespace o2
+
+#endif //ALICE_O2_EVENTVISUALISATION_BASE_CONFIGURATIONMANAGER_H
