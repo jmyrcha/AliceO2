@@ -538,15 +538,13 @@ void EventManager::animateTracks()
 
   for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; ++i) {
     if (mDataInterpreters[i]) {
-      TEveElementList* tracks = (TEveElementList*)mDataTypeLists[EVisualisationDataType::Tracks]->FindChild(Form("%s tracks by type", gVisualisationGroupName[i].c_str()));
-	  LOG(INFO) << "Looking for tracks at: " << Form("%s%s", gVisualisationGroupName[i].c_str(), tracksString.c_str()) << "end";
+      TEveElementList* tracks = (TEveElementList*)mDataTypeLists[EVisualisationDataType::Tracks]->FindChild(Form("%s%s", gVisualisationGroupName[i].c_str(), tracksString.c_str()));
       if (tracks) {
         std::vector<TEveTrackPropagator*> propagators;
 
         for (TEveElement::List_i i = tracks->BeginChildren(); i != tracks->EndChildren(); i++) {
-          TEveTrackList* trkList = ((TEveTrackList*)*i);
-          TEveTrackPropagator* prop = trkList->GetPropagator();
-          propagators.push_back(prop);
+          TEveTrackList* trkList = ((TEveTrackList * ) * i);
+          propagators.push_back(trkList->GetPropagator());
         }
         int animationSpeed = settings.GetValue("tracks.animation.speed", 10);
         for (int R = 0; R <= 520; R += animationSpeed) {
@@ -556,8 +554,9 @@ void EventManager::animateTracks()
           for (int propIter = 0; propIter < propagators.size(); propIter++) {
             propagators[propIter]->SetMaxR(R);
           }
+		  // Unlike in alieve, full redraw is needed to update the visualisation (slows down the animation)
           gSystem->ProcessEvents();
-          gEve->Redraw3D();
+          gEve->FullRedraw3D();
         }
       }
     }
