@@ -55,7 +55,7 @@ class VisualisationEvent
   void addCaloCell(const VisualisationCaloCell& caloCell) { mCaloCells.push_back(caloCell); }
 
   // Multiplicity getter
-  inline int GetMultiplicity() { return mMultiplicity; }
+  inline int getMultiplicity() { return mMultiplicity; }
 
   // Returns track with index i
   const VisualisationTrack& getTrack(int i) const;

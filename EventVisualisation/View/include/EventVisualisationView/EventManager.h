@@ -72,7 +72,7 @@ class EventManager : public TEveEventManager
   void setDataSource(DataSource* dataSource) { this->mDataSource = dataSource; }
 
   void Open() override;
-  void GotoEvent(Int_t /*event*/) override;
+  void GotoEvent(Int_t event) override;
   void NextEvent() override;
   void PrevEvent() override;
   void Close() override;
