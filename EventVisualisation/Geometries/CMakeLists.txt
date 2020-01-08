@@ -18,7 +18,8 @@ o2_add_executable(simple-geom-generate
 
 o2_add_executable(fill-o2cdb-geometry
                   SOURCES src/FillO2CDBGeometry.cxx
-                  PUBLIC_LINK_LIBRARIES O2::DetectorsBase
+                  PUBLIC_LINK_LIBRARIES O2::EventVisualisationBase
+                                        O2::DetectorsBase
                                         O2::CCDB
                                         FairLogger::FairLogger
 				 )

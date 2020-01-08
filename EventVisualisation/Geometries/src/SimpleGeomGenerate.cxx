@@ -38,6 +38,9 @@
 #include <string>
 #include <vector>
 
+using namespace o2::ccdb;
+using namespace o2::event_visualisation;
+
 struct Options {
   std::string detName;   // -m "TPC"
   std::string outputDir; // -d "O2/EventVisualisation/resources/geometry/run3"
@@ -112,14 +115,14 @@ void generateSimpleGeometry(const char* detectorName = "", const int runNumber =
 
   // load config file
   TEnv settings;
-  o2::event_visualisation::ConfigurationManager::getInstance().getConfig(settings);
+  ConfigurationManager::getInstance().getConfig(settings);
 
   //CcdbApi api;
   //std::map<std::string, std::string> metadata; // can be empty
   // set OCDB path from config and set run number for which we want to generate geometry
   const std::string ocdbStorage = settings.GetValue("OCDB.default.path", "local://$ALICE_ROOT/OCDB"); // default path to OCDB
   auto& ccdbManager = BasicCCDBManager::instance();
-  mgr.setURL(ocdbStorage);
+  ccdbManager.setURL(ocdbStorage);
   //api.init(ocdbStorage);
 
   // load geometry from OCDB
@@ -242,7 +245,7 @@ Options* processCommandLine(int argc, char* argv[])
 
 int main(int argc, char** argv)
 {
-  LOG(INFO << "Launching simple geometry generator...";
+  LOG(INFO) << "Launching simple geometry generator...";
   Options* options = processCommandLine(argc, argv);
   if (options == nullptr)
     LOG(FATAL) << "Wrong arguments specified!";
@@ -255,7 +258,7 @@ int main(int argc, char** argv)
 
   TEveManager::Terminate();
 
-  LOG(INFO << "Simple geometries generated";
+  LOG(INFO) << "Simple geometries generated";
 
   return EXIT_SUCCESS;
 }

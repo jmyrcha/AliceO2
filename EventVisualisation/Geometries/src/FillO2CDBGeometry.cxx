@@ -25,6 +25,7 @@
 #include <sstream>
 
 using namespace o2::ccdb;
+using namespace o2::event_visualisation;
 
 void processCommandLine(int argc, char* argv[], char** dir, int* run)
 {
