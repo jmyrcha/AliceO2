@@ -16,7 +16,6 @@
 
 #include "EventVisualisationView/Initializer.h"
 #include "EventVisualisationBase/ConfigurationManager.h"
-#include "EventVisualisationBase/DataInterpreter.h"
 
 #include "FairLogger.h"
 
@@ -27,7 +26,6 @@
 
 #include <string>
 #include <unistd.h>
-#include <ctime>
 
 using namespace o2::event_visualisation;
 
@@ -85,8 +83,6 @@ int main(int argc, char** argv)
   if (options == nullptr) {
     LOG(FATAL) << "No options specified!";
   }
-
-  srand(static_cast<unsigned int>(time(nullptr)));
 
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);
