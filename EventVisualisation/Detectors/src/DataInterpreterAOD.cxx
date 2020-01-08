@@ -62,8 +62,9 @@ DataInterpreterAOD::DataInterpreterAOD()
   // ConfigurationManager::getInstance().getConfig(settings);
   // const std::string ocdbStorage = settings.GetValue("OCDB.default.path", "local://$ALICE_ROOT/OCDB"); // default path to OCDB
   // api.init(ocdbStorage);
+  //
   // auto array = api.retrieveFromTFileAny<TClonesArray*>("EMCAL/Align/Data", metadata);
-  //  TClonesArray& alobj = *array;
+  // TClonesArray& alobj = *array;
   //
   //  for (int mod = 0; mod < mEMCALGeom->GetNumberOfSuperModules(); mod++) {
   //    if (!mEMCALGeom->GetMatrixForSuperModuleFromArray(mod)) {
@@ -83,14 +84,8 @@ DataInterpreterAOD::DataInterpreterAOD()
 
   // TODO: Setting PHOS matrices once it will be possible
   // Currently no setter and getter for PHOS matrices in PHOS geometry
-  //  path = IdPath("PHOS", "Align", "Data");
-  //  cond = o2::ccdb::Manager::Instance()->getCondition(path, 1);
-  //  if (!cond) {
-  //    LOG(FATAL) << "Couldn't load PHOS alignment matrices from CDB!";
-  //  }
-  //  cond->setOwner(0);
   //  array->Clear();
-  //  array = (TClonesArray*)cond->getObject();
+  //  array = api.retrieveFromTFileAny<TClonesArray*>("PHOS/Align/Data", metadata);
   //  alobj = *array;
   //
   //  for (int mod = 0; mod < 5; mod++) {
