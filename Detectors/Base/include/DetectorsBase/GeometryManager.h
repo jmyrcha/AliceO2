@@ -48,9 +48,7 @@ class GeometryManager : public TObject
 {
  public:
   ///< load geometry from file
-  static void loadGeometry(std::string geomFileName = "", std::string geomName = "");
-  /// Get loaded geometry
-  static TGeoManager* getGeometry() { return sGeometry; }
+  static void loadGeometry(std::string geomFileName = "O2geometry.root", std::string geomName = "FAIRGeom");
 
   ///< Get the global transformation matrix (ideal geometry) for a given alignable volume
   ///< The alignable volume is identified by 'symname' which has to be either a valid symbolic
@@ -135,8 +133,6 @@ class GeometryManager : public TObject
     (0x1 << sDetOffset) - 1; /// mask=max sensitive volumes allowed per detector (0xffff)
 
   ClassDefOverride(GeometryManager, 0); // Manager of geometry information for alignment
-
-  static TGeoManager* sGeometry; /// Geometry loaded from a file / OCDB
 };
 } // namespace base
 } // namespace o2

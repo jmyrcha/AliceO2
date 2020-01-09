@@ -572,7 +572,7 @@ void* CcdbApi::extractFromTFile(TFile& file, std::string const& objname, TClass 
   auto result = object;
   // We need to handle some specific cases as ROOT ties them deeply
   // to the file they are contained in
-  if (cl->InheritsFrom("TObject") && strcmp(cl->GetName(), "TGeoManager")) {
+  if (cl->InheritsFrom("TObject")) {
     // make a clone
     auto obj = ((TObject*)object)->Clone();
     // detach from the file

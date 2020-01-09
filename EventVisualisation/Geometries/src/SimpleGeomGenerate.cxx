@@ -17,7 +17,7 @@
 #include "EventVisualisationBase/ConfigurationManager.h"
 #include "EventVisualisationBase/GeometryManager.h"
 #include "DetectorsBase/GeometryManager.h"
-#include "CCDB/BasicCCDBManager.h"
+//#include "CCDB/BasicCCDBManager.h"
 
 #include "FairLogger.h"
 
@@ -113,18 +113,18 @@ void generateSimpleGeometry(const char* detectorName = "", const int runNumber =
   }
 
   // load config file
-  TEnv settings;
-  ConfigurationManager::getInstance().getConfig(settings);
+  //TEnv settings;
+  //ConfigurationManager::getInstance().getConfig(settings);
 
   // set OCDB path from config and set run number for which we want to generate geometry
-  const std::string ocdbStorage = settings.GetValue("OCDB.default.path", "local://$ALICE_ROOT/OCDB"); // default path to OCDB
-  auto& ccdbManager = BasicCCDBManager::instance();
-  ccdbManager.setURL(ocdbStorage);
+  //const std::string ocdbStorage = settings.GetValue("OCDB.default.path", "local://$ALICE_ROOT/OCDB"); // default path to OCDB
+  //auto& ccdbManager = BasicCCDBManager::instance();
+  //ccdbManager.setURL(ocdbStorage);
 
   // load geometry from OCDB
-  o2::base::GeometryManager::loadGeometry();
+  //o2::base::GeometryManager::loadGeometry();
   // load geometry from file
-  //o2::base::GeometryManager::loadGeometry("O2geometry.root", "FAIRGeom");
+  o2::base::GeometryManager::loadGeometry("O2geometry.root", "FAIRGeom");
 
   gGeoManager = o2::base::GeometryManager::getGeometry();
   gGeoManager->DefaultColors();
