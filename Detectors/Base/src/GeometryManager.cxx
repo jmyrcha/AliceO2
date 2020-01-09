@@ -26,7 +26,6 @@
 
 #include "DetectorsBase/GeometryManager.h"
 #include "DetectorsCommonDataFormats/AlignParam.h"
-//#include "CCDB/CcdbApi.h"
 #include "CCDB/BasicCCDBManager.h"
 
 using namespace o2::detectors;
@@ -464,23 +463,13 @@ void GeometryManager::loadGeometry(std::string geomFileName, std::string geomNam
   if (!sGeometry) {
     LOG(INFO) << "Loading geometry from CDB";
     auto& ccdbManager = BasicCCDBManager::instance();
-    //CcdbApi api;
-    //std::map<std::string, std::string> metadata; // can be empty
-    //const std::string ocdbStorage = "local://$ALICE_ROOT/OCDB";
-    //api.init(ocdbStorage);
-    //auto geometry = api.retrieveFromTFileAny<TGeoManager*>("GRP/Geometry/Data", metadata);
-	auto geometry = ccdbManager.get<TGeoManager*>("GRP/Geometry/Data");
+	auto geometry = ccdbManager.get<TGeoManager>("GRP/Geometry/Data");
 
     if (!geometry) {
       LOG(FATAL) << "Couldn't load geometry data from CDB!";
     }
 
-    sGeometry = *geometry;
-    if (!sGeometry) {
-      LOG(FATAL) << "Couldn't find TGeoManager in the specified CDB entry!";
-    }
-
-    //LOG(INFO) << "From now on using geometry from CDB base folder: " << api.getURL();
+    sGeometry = geometry;
     LOG(INFO) << "From now on using geometry from CDB base folder: " << ccdbManager.getURL();
   }
 }

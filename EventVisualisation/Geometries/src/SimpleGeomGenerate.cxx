@@ -17,7 +17,6 @@
 #include "EventVisualisationBase/ConfigurationManager.h"
 #include "EventVisualisationBase/GeometryManager.h"
 #include "DetectorsBase/GeometryManager.h"
-//#include "CCDB/CcdbApi.h"
 #include "CCDB/BasicCCDBManager.h"
 
 #include "FairLogger.h"
@@ -117,13 +116,10 @@ void generateSimpleGeometry(const char* detectorName = "", const int runNumber =
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);
 
-  //CcdbApi api;
-  //std::map<std::string, std::string> metadata; // can be empty
   // set OCDB path from config and set run number for which we want to generate geometry
   const std::string ocdbStorage = settings.GetValue("OCDB.default.path", "local://$ALICE_ROOT/OCDB"); // default path to OCDB
   auto& ccdbManager = BasicCCDBManager::instance();
   ccdbManager.setURL(ocdbStorage);
-  //api.init(ocdbStorage);
 
   // load geometry from OCDB
   o2::base::GeometryManager::loadGeometry();
