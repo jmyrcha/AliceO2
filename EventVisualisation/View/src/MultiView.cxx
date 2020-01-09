@@ -11,6 +11,7 @@
 ///
 /// \file    MultiView.cxx
 /// \author  Jeremi Niedziela
+///
 
 #include "EventVisualisationView/MultiView.h"
 
@@ -195,9 +196,9 @@ void MultiView::destroyAllGeometries()
       mGeomVector[i] = nullptr;
     }
   }
-//  getScene(Scene3dGeom)->DestroyElements();
-//  getScene(SceneRphiGeom)->DestroyElements();
-//  getScene(SceneZrhoGeom)->DestroyElements();
+  //  getScene(Scene3dGeom)->DestroyElements();
+  //  getScene(SceneRphiGeom)->DestroyElements();
+  //  getScene(SceneZrhoGeom)->DestroyElements();
 }
 
 void MultiView::registerElement(TEveElement* event)

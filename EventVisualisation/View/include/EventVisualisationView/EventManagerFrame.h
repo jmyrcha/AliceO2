@@ -8,10 +8,13 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-/// \file EventManagerFrame.h
-/// \brief GUI (bottom buttons) for visualisation
-/// \author julian.myrcha@cern.ch
-/// \author p.nowakowski@cern.ch
+///
+/// \file    EventManagerFrame.h
+/// \brief   GUI (bottom buttons) for visualisation
+/// \author  julian.myrcha@cern.ch
+/// \author  p.nowakowski@cern.ch
+/// \author  Maja Kabus <maja.kabus@cern.ch>
+///
 
 #ifndef ALICE_O2_EVENTVISUALISATION_VIEW_EVENTMANAGERFRAME_H
 #define ALICE_O2_EVENTVISUALISATION_VIEW_EVENTMANAGERFRAME_H

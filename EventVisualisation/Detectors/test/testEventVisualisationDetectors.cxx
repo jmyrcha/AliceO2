@@ -8,6 +8,11 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
+///
+/// \file    testEventVisualisationDetectors.cxx
+/// \author  Maja Kabus <maja.kabus@cern.ch>
+///
+
 #define BOOST_TEST_MODULE Test EventVisualisation Detectors
 #define BOOST_TEST_MAIN
 #define BOOST_TEST_DYN_LINK
@@ -97,7 +102,8 @@ BOOST_AUTO_TEST_CASE(Should_ReturnEventData_When_EventNumberInRange_Test)
 
   // Assert
   for (int i = 0; i < 3; i++) {
-    BOOST_CHECK_NE(readers[i]->getEventData(0), nullptr);
+    TList* data = (TList*)readers[i]->getEventData(0, EVisualisationDataType::Tracks);
+    BOOST_CHECK_EQUAL(data->IsEmpty(), false);
   }
 
   for (int i = 0; i < 3; i++) {
@@ -105,9 +111,9 @@ BOOST_AUTO_TEST_CASE(Should_ReturnEventData_When_EventNumberInRange_Test)
   }
 }
 
-BOOST_AUTO_TEST_CASE(Should_ReturnNull_When_EventNumberOutsideRange_Test)
+BOOST_AUTO_TEST_CASE(Should_ReturnEmpty_When_EventNumberOutsideRange_Test)
 {
-  LOG(STATE) << "Checking that each DataReader returns nullptr when event required is outside range.";
+  LOG(STATE) << "Checking that each DataReader returns empty list when event required is outside range.";
 
   // Arrange
   DataReader* readers[] = {new DataReaderAOD(), new DataReaderITS(), new DataReaderTPC};
@@ -120,7 +126,8 @@ BOOST_AUTO_TEST_CASE(Should_ReturnNull_When_EventNumberOutsideRange_Test)
 
   // Assert
   for (int i = 0; i < 3; i++) {
-    BOOST_CHECK_EQUAL(readers[i]->getEventData(eventCounts[i]), nullptr);
+    TList* data = (TList*)readers[i]->getEventData(eventCounts[i], EVisualisationDataType::Tracks);
+    BOOST_CHECK_EQUAL(data->IsEmpty(), true);
   }
 
   for (int i = 0; i < 3; i++) {
@@ -146,7 +153,7 @@ BOOST_AUTO_TEST_CASE(Should_InterpreEventTracks_When_CorrectEvent_Test)
   // Act
   for (int i = 0; i < 3; i++) {
     readers[i]->open();
-    TObject* data = readers[i]->getEventData(testedEvents[i]);
+    TObject* data = readers[i]->getEventData(testedEvents[i], EVisualisationDataType::Tracks);
     interpreters[i]->interpretDataForType(data, EVisualisationDataType::Tracks, *(events[i]));
   }
 
@@ -179,7 +186,7 @@ BOOST_AUTO_TEST_CASE(Should_InterpreEventClusters_When_CorrectEvent_Test)
   // Act
   for (int i = 0; i < 3; i++) {
     readers[i]->open();
-    TObject* data = readers[i]->getEventData(testedEvents[i]);
+    TObject* data = readers[i]->getEventData(testedEvents[i], EVisualisationDataType::Tracks);
     interpreters[i]->interpretDataForType(data, EVisualisationDataType::Clusters, *(events[i]));
   }
 
@@ -205,7 +212,7 @@ BOOST_AUTO_TEST_CASE(Should_InterpretAODEventMuonTracks_When_CorrectAODEvent_Tes
 
   // Act
   reader->open();
-  TObject* data = reader->getEventData(140);
+  TObject* data = reader->getEventData(140, EVisualisationDataType::Tracks);
   interpreter->interpretDataForType(data, EVisualisationDataType::Muon, *event);
 
   // Assert
@@ -231,7 +238,7 @@ BOOST_AUTO_TEST_CASE(Should_NotInterpretEventTracks_When_NotAODEvent_Test)
   // Act
   for (int i = 0; i < 2; i++) {
     readers[i]->open();
-    TObject* data = readers[i]->getEventData(5);
+    TObject* data = readers[i]->getEventData(5, EVisualisationDataType::Tracks);
     interpreters[i]->interpretDataForType(data, EVisualisationDataType::Muon, *(events[i]));
   }
 
@@ -257,7 +264,7 @@ BOOST_AUTO_TEST_CASE(Should_InterpretAODEventCaloCells_When_CorrectAODEvent_Test
 
   // Act
   reader->open();
-  TObject* data = reader->getEventData(140);
+  TObject* data = reader->getEventData(140, EVisualisationDataType::Tracks);
   interpreter->interpretDataForType(data, EVisualisationDataType::Calo, *event);
 
   // Assert
@@ -283,7 +290,7 @@ BOOST_AUTO_TEST_CASE(Should_NotInterpretEventCaloCells_When_NotAODEvent_Test)
   // Act
   for (int i = 0; i < 2; i++) {
     readers[i]->open();
-    TObject* data = readers[i]->getEventData(5);
+    TObject* data = readers[i]->getEventData(5, EVisualisationDataType::Tracks);
     interpreters[i]->interpretDataForType(data, EVisualisationDataType::Calo, *(events[i]));
   }
 

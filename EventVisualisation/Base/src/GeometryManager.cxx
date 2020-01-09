@@ -12,6 +12,7 @@
 /// \file    GeometryManager.cxx
 /// \author  Jeremi Niedziela
 /// \author  Julian Myrcha
+///
 
 #include "EventVisualisationBase/GeometryManager.h"
 #include "EventVisualisationBase/ConfigurationManager.h"

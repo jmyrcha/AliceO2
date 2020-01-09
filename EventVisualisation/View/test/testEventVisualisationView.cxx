@@ -8,6 +8,11 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
+///
+/// \file    testEventVisualisationView.cxx
+/// \author  Maja Kabus <maja.kabus@cern.ch>
+///
+
 #define BOOST_TEST_MODULE Test EventVisualisation View
 #define BOOST_TEST_MAIN
 #define BOOST_TEST_DYN_LINK
@@ -17,6 +22,7 @@
 #include "EventVisualisationView/MultiView.h"
 #include "EventVisualisationBase/ConfigurationManager.h"
 #include "EventVisualisationBase/DataSource.h"
+#include "EventVisualisationBase/VisualisationConstants.h"
 #include "EventVisualisationDetectors/DataReaderAOD.h"
 #include "EventVisualisationDetectors/DataInterpreterAOD.h"
 #include "EventVisualisationDetectors/DataReaderTPC.h"
@@ -46,7 +52,7 @@ struct Fixture {
       LOG(FATAL) << "Could not create TEveManager!";
     }
     auto& eventManager = EventManager::getInstance();
-    eventManager.setDataSourceType(EventManager::EDataSource::SourceOffline);
+    eventManager.setDataSourceType(EDataSource::SourceOffline);
     gEve->AddEvent(&eventManager);
 
     DataReader* readers[] = {new DataReaderAOD(), new DataReaderITS(), new DataReaderTPC};

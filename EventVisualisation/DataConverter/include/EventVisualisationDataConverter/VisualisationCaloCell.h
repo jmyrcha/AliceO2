@@ -10,7 +10,7 @@
 
 ///
 /// \file    VisualisationCaloCell.h
-/// \author  Maja Kabus
+/// \author  Maja Kabus <maja.kabus@cern.ch>
 ///
 
 #ifndef ALICE_O2_EVENTVISUALISATION_DATACONVERTER_VISUALISATIONCALOCELL_H

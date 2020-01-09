@@ -8,10 +8,12 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-/// \file DataInterpreterTPC.cxx
-/// \brief Converting TPC data to Event Visualisation primitives
-/// \author julian.myrcha@cern.ch
-/// \author p.nowakowski@cern.ch
+///
+/// \file    DataInterpreterTPC.cxx
+/// \brief   Converting TPC data to Event Visualisation primitives
+/// \author  julian.myrcha@cern.ch
+/// \author  p.nowakowski@cern.ch
+///
 
 #include "EventVisualisationDetectors/DataInterpreterTPC.h"
 #include "EventVisualisationBase/ConfigurationManager.h"
@@ -38,12 +40,6 @@ namespace o2
 {
 namespace event_visualisation
 {
-
-DataInterpreterTPC::DataInterpreterTPC()
-{
-}
-
-DataInterpreterTPC::~DataInterpreterTPC() = default;
 
 void DataInterpreterTPC::interpretDataForType(TObject* data, EVisualisationDataType type, VisualisationEvent& event)
 {

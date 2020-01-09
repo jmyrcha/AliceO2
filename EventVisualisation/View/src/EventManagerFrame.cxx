@@ -8,10 +8,13 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-/// \file EventManagerFrame.cxx
-/// \brief GUI (bottom buttons) for visualisation
-/// \author julian.myrcha@cern.ch
-/// \author p.nowakowski@cern.ch
+///
+/// \file    EventManagerFrame.cxx
+/// \brief   GUI (bottom buttons) for visualisation
+/// \author  julian.myrcha@cern.ch
+/// \author  p.nowakowski@cern.ch
+/// \author  Maja Kabus <maja.kabus@cern.ch>
+///
 
 #include "EventVisualisationBase/ConfigurationManager.h"
 #include "EventVisualisationBase/GeometryManager.h"

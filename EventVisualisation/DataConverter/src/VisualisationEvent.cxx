@@ -12,6 +12,7 @@
 /// \file    VisualisationEvent.cxx
 /// \author  Jeremi Niedziela
 /// \author  Maciej Grochowicz
+/// \author  Maja Kabus <maja.kabus@cern.ch>
 ///
 
 #include "EventVisualisationDataConverter/VisualisationEvent.h"

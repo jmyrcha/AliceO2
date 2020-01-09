@@ -13,6 +13,7 @@
 /// \author  Jeremi Niedziela
 /// \author  julian.myrcha@cern.ch
 /// \author  p.nowakowski@cern.ch
+/// \author  Maja Kabus <maja.kabus@cern.ch>
 ///
 
 #include "EventVisualisationView/Initializer.h"
@@ -48,7 +49,7 @@ namespace o2
 namespace event_visualisation
 {
 
-void Initializer::setup(const Options options, EventManager::EDataSource defaultDataSource)
+void Initializer::setup(const Options options, EDataSource defaultDataSource)
 {
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);

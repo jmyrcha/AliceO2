@@ -8,10 +8,12 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-/// \file DataInterpreterITS.h
-/// \brief Converting ITS data to Event Visualisation primitives
-/// \author julian.myrcha@cern.ch
-/// \author p.nowakowski@cern.ch
+///
+/// \file    DataInterpreterITS.h
+/// \brief   Converting ITS data to Event Visualisation primitives
+/// \author  julian.myrcha@cern.ch
+/// \author  p.nowakowski@cern.ch
+///
 
 #ifndef ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAINTERPRETERITS_H
 #define ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAINTERPRETERITS_H
@@ -35,7 +37,7 @@ class DataInterpreterITS : public DataInterpreter
   DataInterpreterITS();
 
   // Default destructor
-  ~DataInterpreterITS() final;
+  ~DataInterpreterITS() final = default;
 
   void interpretDataForType(TObject* data, EVisualisationDataType type, VisualisationEvent& event) final;
 };

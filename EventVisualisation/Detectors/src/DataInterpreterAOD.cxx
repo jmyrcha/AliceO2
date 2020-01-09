@@ -8,11 +8,14 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-/// \file DataInterpreterAOD.cxx
-/// \brief converting AOD data to Event Visualisation primitives
-/// \author Maja Kabus
+///
+/// \file    DataInterpreterAOD.cxx
+/// \brief   Converting AOD data to Event Visualisation primitives
+/// \author  Maja Kabus <maja.kabus@cern.ch>
+///
 
 #include "EventVisualisationDetectors/DataInterpreterAOD.h"
+#include "EventVisualisationDetectors/DataReaderAOD.h"
 #include "EventVisualisationBase/ConfigurationManager.h"
 #include "EventVisualisationDataConverter/VisualisationEvent.h"
 #include "EventVisualisationDetectors/CaloMatrix.h"
@@ -106,8 +109,6 @@ DataInterpreterAOD::DataInterpreterAOD()
   //    }
   //  }
 }
-
-DataInterpreterAOD::~DataInterpreterAOD() = default;
 
 void DataInterpreterAOD::interpretDataForType(TObject* data, EVisualisationDataType type, VisualisationEvent& event)
 {

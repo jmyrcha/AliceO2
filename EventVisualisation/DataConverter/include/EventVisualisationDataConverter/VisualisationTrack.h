@@ -12,6 +12,7 @@
 /// \file    VisualisationTrack.h
 /// \author  Jeremi Niedziela
 /// \author  Maciej Grochowicz
+/// \author  Maja Kabus <maja.kabus@cern.ch>
 ///
 
 #ifndef ALICE_O2_EVENTVISUALISATION_DATACONVERTER_VISUALISATIONTRACK_H

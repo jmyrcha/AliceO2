@@ -11,8 +11,9 @@
 ///
 /// \file    MultiView.h
 /// \author  Jeremi Niedziela
-/// \author julian.myrcha@cern.ch
-/// \author p.nowakowski@cern.ch
+/// \author  julian.myrcha@cern.ch
+/// \author  p.nowakowski@cern.ch
+///
 
 #ifndef ALICE_O2_EVENTVISUALISATION_VIEW_MULTIVIEW_H
 #define ALICE_O2_EVENTVISUALISATION_VIEW_MULTIVIEW_H

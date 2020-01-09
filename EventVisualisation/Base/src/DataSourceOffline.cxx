@@ -8,10 +8,13 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-/// \file DataSourceOffline.h
-/// \brief Grouping reading from file(s)
-/// \author julian.myrcha@cern.ch
-/// \author p.nowakowski@cern.ch
+///
+/// \file    DataSourceOffline.cxx
+/// \brief   Group reading from file(s)
+/// \author  julian.myrcha@cern.ch
+/// \author  p.nowakowski@cern.ch
+/// \author  Maja Kabus <maja.kabus@cern.ch>
+///
 
 #include "EventVisualisationBase/DataSourceOffline.h"
 
@@ -22,11 +25,18 @@ namespace event_visualisation
 
 DataReader* DataSourceOffline::sInstance[EVisualisationGroup::NvisualisationGroups];
 
-TObject* DataSourceOffline::getEventData(int no, EVisualisationGroup purpose)
+TObject* DataSourceOffline::getEventData(int no, EVisualisationGroup detector, EVisualisationDataType dataType)
 {
-  if (sInstance[purpose] == nullptr)
+  if (sInstance[detector] == nullptr)
     return nullptr;
-  return sInstance[purpose]->getEventData(no);
+  return sInstance[detector]->getEventData(no, dataType);
+}
+
+bool DataSourceOffline::hasEventData(int eventNumber, EVisualisationGroup detector)
+{
+  if (sInstance[detector] == nullptr)
+    return false;
+  return sInstance[detector]->hasEventData(eventNumber);
 }
 
 int DataSourceOffline::getEventCount()

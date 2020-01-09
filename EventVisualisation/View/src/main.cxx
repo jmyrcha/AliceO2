@@ -11,8 +11,9 @@
 ///
 /// \file    main.cxx
 /// \author  Jeremi Niedziela
-/// \author julian.myrcha@cern.ch
-/// \author p.nowakowski@cern.ch
+/// \author  julian.myrcha@cern.ch
+/// \author  p.nowakowski@cern.ch
+///
 
 #include "EventVisualisationView/Initializer.h"
 #include "EventVisualisationBase/ConfigurationManager.h"

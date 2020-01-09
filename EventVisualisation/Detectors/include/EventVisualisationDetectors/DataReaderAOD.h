@@ -8,15 +8,18 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-/// \file DataReaderAOD.h
-/// \brief AOD Detector-specific reading from file(s)
-/// \author julian.myrcha@cern.ch
+///
+/// \file    DataReaderAOD.h
+/// \brief   AOD detector-specific reading from file(s)
+/// \author  Maja Kabus <maja.kabus@cern.ch>
+///
 
 #ifndef ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAREADERAOD_H
 #define ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAREADERAOD_H
 
-#include <TFile.h>
 #include "EventVisualisationBase/DataReader.h"
+
+#include <TFile.h>
 
 namespace o2
 {
@@ -26,14 +29,12 @@ namespace event_visualisation
 class DataReaderAOD : public DataReader
 {
  private:
-  Int_t mMaxEv;
   TFile* mAODFile;
 
  public:
-  DataReaderAOD();
-  void open() override;
-  int getEventCount() const override;
-  TObject* getEventData(int eventNumber) override;
+  DataReaderAOD() = default;
+  void open() final;
+  TObject* getEventData(int eventNumber, EVisualisationDataType dataType) final;
 };
 
 } // namespace event_visualisation

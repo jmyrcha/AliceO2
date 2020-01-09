@@ -11,13 +11,14 @@
 ///
 /// \file    EventManager.h
 /// \author  Jeremi Niedziela
-/// \author julian.myrcha@cern.ch
-/// \author p.nowakowski@cern.ch
+/// \author  julian.myrcha@cern.ch
+/// \author  p.nowakowski@cern.ch
+/// \author  Maja Kabus <maja.kabus@cern.ch>
+///
 
 #ifndef ALICE_O2_EVENTVISUALISATION_VIEW_EVENTMANAGER_H
 #define ALICE_O2_EVENTVISUALISATION_VIEW_EVENTMANAGER_H
 
-#include "EventVisualisationBase/VisualisationConstants.h"
 #include "EventVisualisationBase/DataInterpreter.h"
 #include "EventVisualisationBase/DataReader.h"
 #include "EventVisualisationDataConverter/VisualisationEvent.h"
@@ -49,12 +50,6 @@ class DataSource;
 class EventManager : public TEveEventManager
 {
  public:
-  enum EDataSource {
-    SourceOnline,  ///< Online reconstruction is a source of events
-    SourceOffline, ///< Local files are the source of events
-    SourceHLT      ///< HLT reconstruction is a source of events
-  };
-
   /// Returns an instance of EventManager
   static EventManager& getInstance();
 
@@ -68,7 +63,7 @@ class EventManager : public TEveEventManager
   }
 
   Int_t getCurrentEvent() const { return mCurrentEvent; }
-  DataSource* getDataSource() { return mDataSource; }
+  DataSource* getDataSource() const { return mDataSource; }
   void setDataSource(DataSource* dataSource) { this->mDataSource = dataSource; }
 
   void Open() override;

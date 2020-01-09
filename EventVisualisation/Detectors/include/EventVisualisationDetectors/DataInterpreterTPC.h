@@ -8,10 +8,12 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-/// \file DataInterpreterTPC.h
-/// \brief Converting TPC data to Event Visualisation primitives
-/// \author julian.myrcha@cern.ch
-/// \author p.nowakowski@cern.ch
+///
+/// \file    DataInterpreterTPC.h
+/// \brief   Converting TPC data to Event Visualisation primitives
+/// \author  julian.myrcha@cern.ch
+/// \author  p.nowakowski@cern.ch
+///
 
 #ifndef ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAINTERPRETERTPC_H
 #define ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAINTERPRETERTPC_H
@@ -35,10 +37,10 @@ class DataInterpreterTPC : public DataInterpreter
 
  public:
   // Default constructor
-  DataInterpreterTPC();
+  DataInterpreterTPC() = default;
 
   // Default destructor
-  ~DataInterpreterTPC() final;
+  ~DataInterpreterTPC() final = default;
 
   void interpretDataForType(TObject* data, EVisualisationDataType type, VisualisationEvent& event) final;
 };

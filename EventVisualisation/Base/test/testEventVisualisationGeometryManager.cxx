@@ -8,6 +8,11 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
+///
+/// \file    testEventVisualisationGeometryManager.cxx
+/// \author  Maja Kabus <maja.kabus@cern.ch>
+///
+
 #define BOOST_TEST_MODULE Test EventVisualisation Base
 #define BOOST_TEST_MAIN
 #define BOOST_TEST_DYN_LINK

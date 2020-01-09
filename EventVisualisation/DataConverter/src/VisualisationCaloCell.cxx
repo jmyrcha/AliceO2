@@ -10,7 +10,7 @@
 
 ///
 /// \file    VisualisationCaloCell.cxx
-/// \author  Maja Kabus
+/// \author  Maja Kabus <maja.kabus@cern.ch>
 ///
 
 #include "EventVisualisationDataConverter/VisualisationCaloCell.h"

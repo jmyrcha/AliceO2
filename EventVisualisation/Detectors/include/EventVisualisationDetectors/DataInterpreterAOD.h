@@ -8,9 +8,11 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-/// \file DataInterpreterAOD.h
-/// \brief converting AOD data to Event Visualisation primitives
-/// \author Maja Kabus
+///
+/// \file    DataInterpreterAOD.h
+/// \brief   Converting AOD data to Event Visualisation primitives
+/// \author  Maja Kabus <maja.kabus@cern.ch>
+///
 
 #ifndef ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAINTERPRETERAOD_H
 #define ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAINTERPRETERAOD_H
@@ -37,7 +39,7 @@ class DataInterpreterAOD : public DataInterpreter
   DataInterpreterAOD();
 
   // Default destructor
-  ~DataInterpreterAOD() final;
+  ~DataInterpreterAOD() final = default;
 
   void interpretDataForType(TObject* data, EVisualisationDataType type, VisualisationEvent& event) final;
 

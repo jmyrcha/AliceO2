@@ -33,6 +33,8 @@ using namespace o2::base;
 /// the look-up table mapping unique volume indices to symbolic volume names. For that, it
 /// collects several static methods
 
+TGeoManager* GeometryManager::sGeometry = nullptr;
+
 //______________________________________________________________________
 GeometryManager::GeometryManager()
 {

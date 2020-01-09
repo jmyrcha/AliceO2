@@ -11,6 +11,8 @@
 ///
 /// \file    GeometryManager.h
 /// \author  Jeremi Niedziela
+/// \author  julian.myrcha@cern.ch
+///
 
 #ifndef ALICE_O2_EVENTVISUALISATION_BASE_GEOMETRYMANAGER_H
 #define ALICE_O2_EVENTVISUALISATION_BASE_GEOMETRYMANAGER_H

@@ -10,7 +10,7 @@
 
 ///
 /// \file    SimpleGeomGenerate.cxx
-/// \author  Maja Kabus
+/// \author  Maja Kabus <maja.kabus@cern.ch>
 /// \brief   Generating root simple geometry files for event display
 /// \remarks Based on simple_geom_generate macro by Jeremi Niedziela on 09/02/2016.
 
@@ -37,7 +37,7 @@
 #include <string>
 #include <vector>
 
-using namespace o2::ccdb;
+//using namespace o2::ccdb;
 using namespace o2::event_visualisation;
 
 struct Options {

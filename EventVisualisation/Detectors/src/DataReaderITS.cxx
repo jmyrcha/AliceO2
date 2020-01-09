@@ -9,10 +9,11 @@
 // or submit itself to any jurisdiction.
 
 ///
-/// \file   DataReaderITS.cxx
-/// \brief  ITS Detector-specific reading from file(s)
-/// \author julian.myrcha@cern.ch
-/// \author p.nowakowski@cern.ch
+/// \file    DataReaderITS.cxx
+/// \brief   ITS detector-specific reading from file(s)
+/// \author  julian.myrcha@cern.ch
+/// \author  p.nowakowski@cern.ch
+///
 
 #include "DataFormatsITSMFT/ROFRecord.h"
 #include "EventVisualisationDetectors/DataReaderITS.h"
@@ -27,8 +28,6 @@ namespace o2
 {
 namespace event_visualisation
 {
-
-DataReaderITS::DataReaderITS() = default;
 
 void DataReaderITS::open()
 {
@@ -62,21 +61,16 @@ void DataReaderITS::open()
   clustersRof->GetEntry(0);
 
   if (trackROFrames->size() == clusterROFrames->size()) {
-    mMaxEv = trackROFrames->size();
+    setEventCount(trackROFrames->size());
   } else {
     LOG(FATAL) << "DataReaderITS: Inconsistent number of readout frames in files";
   }
 }
 
-int DataReaderITS::getEventCount() const
+TObject* DataReaderITS::getEventData(int eventNumber, EVisualisationDataType dataType)
 {
-  return mMaxEv;
-}
-
-TObject* DataReaderITS::getEventData(int eventNumber)
-{
-  if (eventNumber < 0 || eventNumber >= this->mMaxEv) {
-    return nullptr;
+  if (!this->hasEventData(eventNumber)) {
+    return new TList();
   }
 
   /// FIXME: Redesign the data reader class

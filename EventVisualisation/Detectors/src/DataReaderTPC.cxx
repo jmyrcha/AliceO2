@@ -9,10 +9,11 @@
 // or submit itself to any jurisdiction.
 
 ///
-/// \file   DataReaderTPC.cxx
-/// \brief  TPC Detector-specific reading from file(s)
-/// \author julian.myrcha@cern.ch
-/// \author p.nowakowski@cern.ch
+/// \file    DataReaderTPC.cxx
+/// \brief   TPC detector-specific reading from file(s)
+/// \author  julian.myrcha@cern.ch
+/// \author  p.nowakowski@cern.ch
+///
 
 #include "DataFormatsTPC/TrackTPC.h"
 #include "EventVisualisationDetectors/DataReaderTPC.h"
@@ -27,8 +28,6 @@ namespace o2
 {
 namespace event_visualisation
 {
-
-DataReaderTPC::DataReaderTPC() = default;
 
 void DataReaderTPC::open()
 {
@@ -60,22 +59,18 @@ void DataReaderTPC::open()
     if (trackTime > time)
       time = trackTime;
   }
-  mMaxEv = time / (2 * mTPCReadoutCycle);
-  if (mMaxEv * 2 * mTPCReadoutCycle < time) {
-    mMaxEv++;
+  int eventCount = time / (2 * mTPCReadoutCycle);
+  if (eventCount * 2 * mTPCReadoutCycle < time) {
+    eventCount++;
   }
-  LOG(INFO) << "Setting max ev to: " << mMaxEv << " max time: " << time;
+  setEventCount(eventCount);
+  LOG(INFO) << "Setting event count to: " << eventCount << " max time: " << time;
 }
 
-int DataReaderTPC::getEventCount() const
+TObject* DataReaderTPC::getEventData(int eventNumber, EVisualisationDataType dataType)
 {
-  return mMaxEv;
-}
-
-TObject* DataReaderTPC::getEventData(int eventNumber)
-{
-  if (eventNumber < 0 || eventNumber >= this->mMaxEv) {
-    return nullptr;
+  if (!this->hasEventData(eventNumber)) {
+    return new TList();
   }
 
   /// FIXME: Redesign the data reader class

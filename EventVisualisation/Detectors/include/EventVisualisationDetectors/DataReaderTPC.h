@@ -8,9 +8,12 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-/// \file DataReaderTPC.h
-/// \brief TPC Detector-specific reading from file(s)
-/// \author julian.myrcha@cern.ch
+///
+/// \file    DataReaderTPC.h
+/// \brief   TPC detector-specific reading from file(s)
+/// \author  julian.myrcha@cern.ch
+/// \author  Maja Kabus <maja.kabus@cern.ch>
+///
 
 #ifndef ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAREADERTPC_H
 #define ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAREADERTPC_H
@@ -27,16 +30,14 @@ namespace event_visualisation
 class DataReaderTPC : public DataReader
 {
  private:
-  Int_t mMaxEv;
   TFile* mClusFile;
   TFile* mTracFile;
   Int_t mTPCReadoutCycle = 100; // ms, provisional
 
  public:
-  DataReaderTPC();
-  void open() override;
-  int getEventCount() const override;
-  TObject* getEventData(int eventNumber) override;
+  DataReaderTPC() = default;
+  void open() final;
+  TObject* getEventData(int eventNumber, EVisualisationDataType dataType) final;
 };
 
 } // namespace event_visualisation

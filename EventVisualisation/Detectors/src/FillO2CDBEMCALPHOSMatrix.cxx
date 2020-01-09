@@ -10,8 +10,9 @@
 
 ///
 /// \file    FillO2CDBGeometry.cxx
-/// \author  Maja Kabus
 /// \brief   Creating O2CDB entry for EMCAL ideal alignment matrices
+/// \author  Maja Kabus <maja.kabus@cern.ch>
+///
 
 #include "CCDB/CcdbApi.h"
 #include "DetectorsCommonDataFormats/AlignParam.h"

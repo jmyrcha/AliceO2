@@ -22,5 +22,5 @@ o2_add_library(EventVisualisationBase
 o2_add_test(GeometryManager
         COMPONENT_NAME eve
         PUBLIC_LINK_LIBRARIES O2::EventVisualisationBase
-        SOURCES test/testGeometryManager.cxx
+        SOURCES test/testEventVisualisationGeometryManager.cxx
         LABELS eve base)

@@ -11,12 +11,16 @@
 ///
 /// \file    Initializer.h
 /// \author  Jeremi Niedziela
+/// \author  Julian Myrcha
+/// \author  Piotr Nowakowski
+/// \author  Maja Kabus <maja.kabus@cern.ch>
 ///
 
 #ifndef ALICE_O2_EVENTVISUALISATION_VIEW_INITIALIZER_H
 #define ALICE_O2_EVENTVISUALISATION_VIEW_INITIALIZER_H
 
 #include "EventVisualisationView/EventManager.h"
+#include "EventVisualisationBase/VisualisationConstants.h"
 
 namespace o2
 {
@@ -40,7 +44,7 @@ class Initializer
 {
  public:
   /// Default constructor
-  static void setup(const Options options, const EventManager::EDataSource defaultDataSource = EventManager::SourceOffline); // default data source will be moved to a config file
+  static void setup(const Options options, const EDataSource defaultDataSource = SourceOffline); // default data source will be moved to a config file
 };
 
 } // namespace event_visualisation

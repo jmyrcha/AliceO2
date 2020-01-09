@@ -8,10 +8,12 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-/// \file DataInterpreterITS.cxx
-/// \brief converting ITS data to Event Visualisation primitives
-/// \author julian.myrcha@cern.ch
-/// \author p.nowakowski@cern.ch
+///
+/// \file    DataInterpreterITS.cxx
+/// \brief   Converting ITS data to Event Visualisation primitives
+/// \author  julian.myrcha@cern.ch
+/// \author  p.nowakowski@cern.ch
+///
 
 #include "EventVisualisationDetectors/DataInterpreterITS.h"
 #include "EventVisualisationBase/ConfigurationManager.h"
@@ -45,8 +47,6 @@ DataInterpreterITS::DataInterpreterITS()
   its::GeometryTGeo* gman = its::GeometryTGeo::Instance();
   gman->fillMatrixCache(o2::utils::bit2Mask(o2::TransformType::T2GRot));
 }
-
-DataInterpreterITS::~DataInterpreterITS() = default;
 
 void DataInterpreterITS::interpretDataForType(TObject* data, EVisualisationDataType type, VisualisationEvent& event)
 {

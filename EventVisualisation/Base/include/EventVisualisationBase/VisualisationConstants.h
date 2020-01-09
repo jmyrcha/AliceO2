@@ -11,7 +11,7 @@
 ///
 /// \file    VisualisationConstants.h
 /// \author  Jeremi Niedziela
-/// \author julian.myrcha@cern.ch
+/// \author  julian.myrcha@cern.ch
 ///
 
 #ifndef ALICE_O2_EVENTVISUALISATION_BASE_VISUALISATIONCONSTANTS_H
@@ -79,6 +79,12 @@ const std::string gDataTypeNames[NdataTypes] = {
   "Calo",
   "Muon",
   "NoData"};
+
+enum EDataSource {
+  SourceOnline,  ///< Online reconstruction is a source of events
+  SourceOffline, ///< Local files are the source of events
+  SourceHLT      ///< HLT reconstruction is a source of events
+};
 
 } // namespace event_visualisation
 } // namespace o2

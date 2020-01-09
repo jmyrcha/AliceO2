@@ -9,12 +9,12 @@
 // or submit itself to any jurisdiction.
 
 ///
-/// \file   DataReaderAOD.cxx
-/// \brief  AOD Detector-specific reading from file(s)
-/// \author Maja Kabus
+/// \file    DataReaderAOD.cxx
+/// \brief   AOD detector-specific reading from file(s)
+/// \author  Maja Kabus <maja.kabus@cern.ch>
+///
 
 #include "EventVisualisationDetectors/DataReaderAOD.h"
-#include "ReconstructionDataFormats/Track.h"
 
 #include "FairLogger.h"
 
@@ -26,8 +26,6 @@ namespace o2
 {
 namespace event_visualisation
 {
-
-DataReaderAOD::DataReaderAOD() = default;
 
 void DataReaderAOD::open()
 {
@@ -87,18 +85,13 @@ void DataReaderAOD::open()
 
   // TODO: Slow method. How to get events number?
   LOG(INFO) << "Setting max ev to: " << maxEventID + 1;
-  mMaxEv = maxEventID + 1;
+  setEventCount(maxEventID + 1);
 }
 
-int DataReaderAOD::getEventCount() const
+TObject* DataReaderAOD::getEventData(int eventNumber, EVisualisationDataType dataType)
 {
-  return mMaxEv;
-}
-
-TObject* DataReaderAOD::getEventData(int eventNumber)
-{
-  if (eventNumber < 0 || eventNumber >= this->mMaxEv) {
-    return nullptr;
+  if (!this->hasEventData(eventNumber)) {
+    return new TList();
   }
 
   /// FIXME: Redesign the data reader class

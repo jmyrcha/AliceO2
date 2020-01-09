@@ -11,9 +11,10 @@
 ///
 /// \file    EventManager.cxx
 /// \author  Jeremi Niedziela
-/// \author julian.myrcha@cern.ch
-/// \author p.nowakowski@cern.ch
-/// \author Maja Kabus
+/// \author  julian.myrcha@cern.ch
+/// \author  p.nowakowski@cern.ch
+/// \author  Maja Kabus <maja.kabus@cern.ch>
+///
 
 #include "EventVisualisationView/EventManager.h"
 #include "EventVisualisationDataConverter/VisualisationEvent.h"
@@ -44,6 +45,7 @@
 #include <TEveCaloData.h>
 
 #include <string>
+#include <cctype>
 #include <vector>
 
 namespace o2
@@ -88,7 +90,7 @@ void EventManager::Open()
     case SourceOffline: {
       DataSourceOffline* source = new DataSourceOffline();
       for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; i++) {
-        if (mDataInterpreters[i] != nullptr) {
+        if (mDataReaders[i] != nullptr) {
           mDataReaders[i]->open();
           source->registerReader(mDataReaders[i], static_cast<EVisualisationGroup>(i));
         }
@@ -115,14 +117,22 @@ void EventManager::GotoEvent(Int_t no)
     mDataTypeLists[i] = new TEveElementList(gDataTypeNames[i].c_str());
   }
 
+  TEnv settings;
+  ConfigurationManager::getInstance().getConfig(settings);
+
   for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; ++i) {
     DataInterpreter* interpreter = mDataInterpreters[i];
     if (interpreter) {
-      TObject* data = getDataSource()->getEventData(no, (EVisualisationGroup)i);
-      if (data) {
+      auto dataSource = getDataSource();
+      if (dataSource->hasEventData(no, (EVisualisationGroup)i)) {
         std::unique_ptr<VisualisationEvent> event = std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0);
         for (int dataType = 0; dataType < EVisualisationDataType::NdataTypes; ++dataType) {
-          interpreter->interpretDataForType(data, (EVisualisationDataType)dataType, *event);
+          if (settings.GetValue(Form("%c%s.show", std::tolower(gDataTypeNames[dataType][0]), gDataTypeNames[dataType].substr(1).data()), false)) {
+            TObject* data = dataSource->getEventData(no, (EVisualisationGroup)i, (EVisualisationDataType)dataType);
+            if (data) {
+              interpreter->interpretDataForType(data, (EVisualisationDataType)dataType, *event);
+            }
+          }
         }
         displayVisualisationEvent(*event, gVisualisationGroupName[i]);
       }
@@ -135,8 +145,6 @@ void EventManager::GotoEvent(Int_t no)
 
   MultiView::getInstance()->redraw3D();
 
-  TEnv settings;
-  ConfigurationManager::getInstance().getConfig(settings);
   if (settings.GetValue("tracks.animate", false))
     animateTracks();
 }
@@ -531,8 +539,7 @@ void EventManager::animateTracks()
   std::string tracksString = "";
   if (settings.GetValue("tracks.byPt.show", false)) {
     tracksString = " tracks by Pt";
-  }
-  else if (settings.GetValue("tracks.byType.show", false)) {
+  } else if (settings.GetValue("tracks.byType.show", false)) {
     tracksString = " tracks by type";
   }
 
@@ -543,7 +550,7 @@ void EventManager::animateTracks()
         std::vector<TEveTrackPropagator*> propagators;
 
         for (TEveElement::List_i i = tracks->BeginChildren(); i != tracks->EndChildren(); i++) {
-          TEveTrackList* trkList = ((TEveTrackList * ) * i);
+          TEveTrackList* trkList = ((TEveTrackList*)*i);
           propagators.push_back(trkList->GetPropagator());
         }
         int animationSpeed = settings.GetValue("tracks.animation.speed", 10);
@@ -554,7 +561,7 @@ void EventManager::animateTracks()
           for (int propIter = 0; propIter < propagators.size(); propIter++) {
             propagators[propIter]->SetMaxR(R);
           }
-		  // Unlike in alieve, full redraw is needed to update the visualisation (slows down the animation)
+          // Unlike in alieve, full redraw is needed to update the visualisation (slows down the animation)
           gSystem->ProcessEvents();
           gEve->FullRedraw3D();
         }
