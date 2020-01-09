@@ -64,14 +64,25 @@ DataInterpreterAOD::DataInterpreterAOD()
   // api.init(ocdbStorage);
   //
   // auto array = api.retrieveFromTFileAny<TClonesArray*>("EMCAL/Align/Data", metadata);
-  // TClonesArray& alobj = *array;
+  // if (!array) {
+  //   LOG(WARNING) << "Could not get EMCAL alignment matrix from OCDB, falling to default";
+  //   for (int mod = 0; mod < mEMCALGeom->GetNumberOfSuperModules(); mod++) {
+  //     if (!mEMCALGeom->GetMatrixForSuperModuleFromArray(mod)) {
+  //       TGeoHMatrix* matrix = CaloMatrix::getEMCALMatrix(mod);
+  //       mEMCALGeom->SetMisalMatrix(matrix, mod);
+  //     }
+  //   }
+  // }
+  // else {
+  //   TClonesArray& alobj = *array;
   //
-  //  for (int mod = 0; mod < mEMCALGeom->GetNumberOfSuperModules(); mod++) {
-  //    if (!mEMCALGeom->GetMatrixForSuperModuleFromArray(mod)) {
-  //      TGeoHMatrix* matrix = (TGeoHMatrix*)alobj[mod];
-  //      mEMCALGeom->SetMisalMatrix(matrix, mod);
+  //    for (int mod = 0; mod < mEMCALGeom->GetNumberOfSuperModules(); mod++) {
+  //      if (!mEMCALGeom->GetMatrixForSuperModuleFromArray(mod)) {
+  //        TGeoHMatrix* matrix = (TGeoHMatrix*)alobj[mod];
+  //        mEMCALGeom->SetMisalMatrix(matrix, mod);
+  //      }
   //    }
-  //  }
+  // }
 
   // Version 2: EMCAL hardcoded matrices from sample ESD (for visual comparison)
   LOG(INFO) << "Loading hardcoded matrices";
