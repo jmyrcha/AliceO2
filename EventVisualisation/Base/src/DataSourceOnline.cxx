@@ -9,37 +9,36 @@
 // or submit itself to any jurisdiction.
 
 ///
-/// \file    DataSourceOffline.cxx
-/// \brief   Group reading from file(s)
-/// \author  julian.myrcha@cern.ch
-/// \author  p.nowakowski@cern.ch
+/// \file    DataSourceOnline.cxx
+/// \brief   Reading event data from DPL / Framework
 /// \author  Maja Kabus <maja.kabus@cern.ch>
 ///
 
-#include "EventVisualisationBase/DataSourceOffline.h"
+#include "EventVisualisationBase/DataSourceOnline.h"
 
 namespace o2
 {
 namespace event_visualisation
 {
 
-DataReader* DataSourceOffline::sInstance[EVisualisationGroup::NvisualisationGroups];
+DataReader* DataSourceOnline::sInstance[EVisualisationGroup::NvisualisationGroups];
 
-TObject* DataSourceOffline::getEventData(int no, EVisualisationGroup detector, EVisualisationDataType dataType)
+TObject* DataSourceOnline::getEventData(int no, EVisualisationGroup purpose, EVisualisationDataType dataType)
 {
-  if (sInstance[detector] == nullptr)
-    return nullptr;
-  return sInstance[detector]->getEventData(no, dataType, SourceOffline);
+  if (sInstance[purpose] == nullptr) {
+    return new TList();
+  }
+  return sInstance[purpose]->getEventData(no, dataType, SourceOnline);
 }
 
-bool DataSourceOffline::hasEventData(int eventNumber, EVisualisationGroup detector)
+bool DataSourceOnline::hasEventData(int eventNumber, EVisualisationGroup detector)
 {
   if (sInstance[detector] == nullptr)
     return false;
   return sInstance[detector]->hasEventData(eventNumber);
 }
 
-int DataSourceOffline::getEventCount()
+int DataSourceOnline::getEventCount()
 {
   int eventCount = 0;
   for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; i++) {

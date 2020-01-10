@@ -44,13 +44,13 @@ class DataInterpreterAOD : public DataInterpreter
   void interpretDataForType(TObject* data, EVisualisationDataType type, VisualisationEvent& event) final;
 
  private:
-  void interpretAODTracks(TFile* AODFile, Int_t eventId, VisualisationEvent& event);
+  void interpretAODTracks(TList* list, VisualisationEvent& event);
 
-  void interpretAODCaloCells(TFile* AODFile, Int_t eventId, VisualisationEvent& event);
+  void interpretAODCaloCells(TList* list, VisualisationEvent& event);
   void interpretEMCALCell(Int_t absID, Float_t amplitude, VisualisationEvent& event);
   void interpretPHOSCell(Int_t absID, Float_t amplitude, VisualisationEvent& event);
 
-  void interpretMuonTracks(TFile* AODFile, Int_t eventId, VisualisationEvent& event);
+  void interpretMuonTracks(TList* list, VisualisationEvent& event);
 
   Bool_t cutCell(std::vector<Float_t> caloAmplitudes, std::vector<Int_t> caloAbsIds, int caloCount,
                  Float_t amplitude, Char_t caloType, Float_t maxCellEnergy, Int_t maxCellEnergyAbsId);

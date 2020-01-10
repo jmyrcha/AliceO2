@@ -27,6 +27,13 @@ namespace o2
 namespace event_visualisation
 {
 
+DataReaderAOD::DataReaderAOD()
+{
+  mTracks = new TList();
+	mCaloCells = new TList();
+	mMuonTracks = new TList();
+}
+
 void DataReaderAOD::open()
 {
   TString file = "O2aod.root";
@@ -88,18 +95,196 @@ void DataReaderAOD::open()
   setEventCount(maxEventID + 1);
 }
 
-TObject* DataReaderAOD::getEventData(int eventNumber, EVisualisationDataType dataType)
+TObject* DataReaderAOD::getEventData(int eventNumber, EVisualisationDataType dataType, EDataSource source)
 {
   if (!this->hasEventData(eventNumber)) {
     return new TList();
   }
 
-  /// FIXME: Redesign the data reader class
-  TList* list = new TList();
-  list->Add(this->mAODFile);
-  TVector2* v = new TVector2(eventNumber, 0);
-  list->Add(v);
-  return list;
+  if (dataType == Tracks) {
+    if (source == EDataSource::SourceOffline) {
+      return getTracks(eventNumber);
+    }
+    if (source == EDataSource::SourceOnline) {
+      return getOnlineTracks(eventNumber);
+    }
+  }
+  if (dataType == Calo) {
+    if (source == EDataSource::SourceOffline) {
+      return getCaloCells(eventNumber);
+    }
+    if (source == EDataSource::SourceOnline) {
+      return getOnlineCaloCells(eventNumber);
+    }
+  }
+  if (dataType == Muon) {
+    if (source == EDataSource::SourceOffline) {
+      return getMuonTracks(eventNumber);
+    }
+    if (source == EDataSource::SourceOnline) {
+      return getOnlineMuonTracks(eventNumber);
+    }
+  }
+
+  return new TList();
 }
+
+TObject* DataReaderAOD::getTracks(int eventId)
+{
+  TTree* tracks = (TTree*)mAODFile->Get("O2tracks");
+
+  // Read all tracks parameters to buffers
+  AODTrack fileTrack;
+  tracks->SetBranchAddress("fID4Tracks", &fileTrack.mId);
+  tracks->SetBranchAddress("fX", &fileTrack.mX);
+  tracks->SetBranchAddress("fAlpha", &fileTrack.mAlpha);
+  tracks->SetBranchAddress("fY", &fileTrack.mY);
+  tracks->SetBranchAddress("fZ", &fileTrack.mZ);
+  tracks->SetBranchAddress("fSnp", &fileTrack.mSnp);
+  tracks->SetBranchAddress("fTgl", &fileTrack.mTgl);
+  tracks->SetBranchAddress("fSigned1Pt", &fileTrack.mSigned1Pt);
+  tracks->SetBranchAddress("fPID", &fileTrack.mPID);
+  tracks->SetBranchAddress("fFlags", &fileTrack.mFlags);
+
+  TList* fileTracks = new TList();
+  int tracksCount = tracks->GetEntriesFast();
+  for (int i = 0; i < tracksCount; i++) {
+    tracks->GetEntry(i);
+
+    // TODO: This is provisional.
+    //  AOD is supposed to contain references from primary vertex to elements from given collision.
+    if (fileTrack.mId > eventId + 10)
+      break; // End event search
+    if (fileTrack.mId != eventId)
+      continue;
+
+    fileTracks->Add(new AODTrack(fileTrack));
+  }
+
+  return fileTracks;
+}
+
+TObject* DataReaderAOD::getCaloCells(int eventId)
+{
+  TTree* calo = (TTree*)mAODFile->Get("O2calo");
+
+  AODCalo fileCalo;
+  calo->SetBranchAddress("fID4Calo", &fileCalo.mId);
+  calo->SetBranchAddress("fCellNumber", &fileCalo.mCellNumber);
+  calo->SetBranchAddress("fAmplitude", &fileCalo.mAmplitude);
+  calo->SetBranchAddress("fType", &fileCalo.mType);
+
+  TList* fileCaloList = new TList();
+  int caloCount = calo->GetEntriesFast();
+  for (int i = 0; i < caloCount; i++) {
+    calo->GetEntry(i);
+
+    // TODO: This is provisional.
+    //  AOD is supposed to contain references from primary vertex to elements from given collision.
+    if (fileCalo.mId > eventId + 10)
+      break; // End event search
+    if (fileCalo.mId != eventId)
+      continue;
+
+    fileCaloList->Add(new AODCalo(fileCalo));
+  }
+
+  return fileCaloList;
+}
+
+TObject* DataReaderAOD::getMuonTracks(int eventId)
+{
+  TTree* muon = (TTree*)mAODFile->Get("O2mu");
+
+  AODMuonTrack fileMuon;
+  muon->SetBranchAddress("fID4mu", &fileMuon.mId);
+  muon->SetBranchAddress("fInverseBendingMomentum", &fileMuon.mInverseBendingMomentum);
+  muon->SetBranchAddress("fThetaX", &fileMuon.mThetaX);
+  muon->SetBranchAddress("fThetaY", &fileMuon.mThetaY);
+  muon->SetBranchAddress("fZ", &fileMuon.mZ);
+  muon->SetBranchAddress("fBendingCoor", &fileMuon.mBendingCoor);
+  muon->SetBranchAddress("fNonBendingCoor", &fileMuon.mNonBendingCoor);
+
+  TList* fileMuonList = new TList();
+  int muonCount = muon->GetEntriesFast();
+  for (int i = 0; i < muonCount; i++) {
+    muon->GetEntry(i);
+
+    // TODO: This is provisional.
+    //  AOD is supposed to contain references from primary vertex to elements from given collision.
+    if (fileMuon.mId > eventId + 10)
+      break; // End event search
+    if (fileMuon.mId != eventId)
+      continue;
+
+    fileMuonList->Add(new AODMuonTrack(fileMuon));
+  }
+
+  return fileMuonList;
+}
+
+TObject* DataReaderAOD::getOnlineTracks(int eventNumber)
+{
+  TList* onlineTracks = new TList();
+
+  for (auto obj : *mTracks) {
+    AODTrack* track = (AODTrack*)obj;
+    if (track->mId > eventNumber + 10) {
+      break; // End event search
+    }
+
+    if (track->mId == eventNumber)
+      onlineTracks->Add(track);
+  }
+
+  return onlineTracks;
+}
+
+TObject* DataReaderAOD::getOnlineCaloCells(int eventNumber)
+{
+  TList* onlineCalo = new TList();
+
+  for (auto obj : *mCaloCells) {
+    AODCalo* calo = (AODCalo*)obj;
+    if (calo->mId > eventNumber + 10)
+      break; // End event search
+    if (calo->mId != eventNumber)
+      continue;
+
+    onlineCalo->Add(calo);
+  }
+
+  return onlineCalo;
+}
+
+TObject* DataReaderAOD::getOnlineMuonTracks(int eventNumber)
+{
+  TList* onlineMuonTracks = new TList();
+
+  for (auto obj : *mMuonTracks) {
+    AODMuonTrack* muon = (AODMuonTrack*)obj;
+    if (muon->mId > eventNumber + 10)
+      break; // End event search
+    if (muon->mId != eventNumber)
+      continue;
+
+    onlineMuonTracks->Add(muon);
+  }
+
+  return onlineMuonTracks;
+}
+
+void DataReaderAOD::setOnlineEventData(TList* data, EVisualisationDataType type)
+{
+  LOG(INFO) << "Setting online data of size: " << data->GetEntries();
+  if (type == Tracks) {
+    mTracks = data;
+  } else if (type == Calo) {
+    mCaloCells = data;
+  } else if (type == Muon) {
+    mMuonTracks = data;
+  }
+}
+
 } // namespace event_visualisation
 } // namespace o2

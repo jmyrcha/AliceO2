@@ -32,7 +32,8 @@ class DataReader
 {
  public:
   virtual ~DataReader() = default;
-  virtual TObject* getEventData(int eventNumber, EVisualisationDataType dataType) = 0;
+  virtual TObject* getEventData(int eventNumber, EVisualisationDataType dataType, EDataSource source) = 0;
+  virtual void setOnlineEventData(TList* data, EVisualisationDataType type) = 0;
   virtual void open() = 0;
 
   int getEventCount() { return mEventCount; };

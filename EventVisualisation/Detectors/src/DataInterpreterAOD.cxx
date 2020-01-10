@@ -113,61 +113,26 @@ DataInterpreterAOD::DataInterpreterAOD()
 void DataInterpreterAOD::interpretDataForType(TObject* data, EVisualisationDataType type, VisualisationEvent& event)
 {
   TList* list = (TList*)data;
-  Int_t eventId = ((TVector2*)list->At(1))->X();
-  TFile* AODFile = (TFile*)list->At(0);
 
   if (type == Tracks) {
-    interpretAODTracks(AODFile, eventId, event);
+    interpretAODTracks(list, event);
   } else if (type == Calo) {
-    interpretAODCaloCells(AODFile, eventId, event);
+    interpretAODCaloCells(list, event);
   } else if (type == Muon) {
-    interpretMuonTracks(AODFile, eventId, event);
+    interpretMuonTracks(list, event);
   }
 }
 
-void DataInterpreterAOD::interpretAODTracks(TFile* AODFile, Int_t eventId, VisualisationEvent& event)
+void DataInterpreterAOD::interpretAODTracks(TList* list, VisualisationEvent& event)
 {
-  TTree* tracks = (TTree*)AODFile->Get("O2tracks");
-
-  // Read all tracks parameters to buffers
-  Int_t trkID;          // The index of the collision vertex, to which the track is attached
-  Float_t trkX;         // X coordinate for the point of parametrisation
-  Float_t trkAlpha;     // Local <--> global coor.system rotation angle
-  Float_t trkY;         // fP[0] local Y-coordinate of a track (cm)
-  Float_t trkZ;         // fP[1] local Z-coordinate of a track (cm)
-  Float_t trkSnp;       // fP[2] local sine of the track momentum azimuthal angle
-  Float_t trkTgl;       // fP[3] tangent of the track momentum dip angle
-  Float_t trkSigned1Pt; // fP[4] 1/pt (1/(GeV/c))
-  o2::track::PID trkPID;
-  ULong64_t trkFlags; // Reconstruction status flags - track quality parameters
-  tracks->SetBranchAddress("fID4Tracks", &trkID);
-  tracks->SetBranchAddress("fX", &trkX);
-  tracks->SetBranchAddress("fAlpha", &trkAlpha);
-  tracks->SetBranchAddress("fY", &trkY);
-  tracks->SetBranchAddress("fZ", &trkZ);
-  tracks->SetBranchAddress("fSnp", &trkSnp);
-  tracks->SetBranchAddress("fTgl", &trkTgl);
-  tracks->SetBranchAddress("fSigned1Pt", &trkSigned1Pt);
-  tracks->SetBranchAddress("fPID", &trkPID);
-  tracks->SetBranchAddress("fFlags", &trkFlags);
-
   TEveTrackList* trackList = new TEveTrackList("tracks");
   trackList->IncDenyDestroy();
   auto prop = trackList->GetPropagator();
   prop->SetMagField(0.5);
 
-  int tracksCount = tracks->GetEntriesFast();
-  for (int i = 0; i < tracksCount; i++) {
-    tracks->GetEntry(i);
-
-    // TODO: This is provisional.
-    //  AOD is supposed to contain references from primary vertex to elements from given collision.
-    if (trkID > eventId + 10)
-      break; // End event search
-    if (trkID != eventId)
-      continue;
-
-    o2::track::TrackPar rec(trkX, trkAlpha, {trkY, trkZ, trkSnp, trkTgl, trkSigned1Pt});
+  for (const auto& obj : *list) {
+    const AODTrack* fileTrack = (AODTrack*)obj;
+    o2::track::TrackPar rec(fileTrack->mX, fileTrack->mAlpha, {fileTrack->mY, fileTrack->mZ, fileTrack->mSnp, fileTrack->mTgl, fileTrack->mSigned1Pt});
     std::array<float, 3> p;
     rec.getPxPyPzGlo(p);
 
@@ -183,7 +148,7 @@ void DataInterpreterAOD::interpretAODTracks(TFile* AODFile, Int_t eventId, Visua
     double track_end[3] = {end.fX, end.fY, end.fZ};
     double track_p[3] = {p[0], p[1], p[2]};
 
-    VisualisationTrack track(rec.getSign(), 0.0, trkID, trkPID, 0.0, trkSigned1Pt, track_start, track_end, track_p, 0, 0.0, 0.0, 0.0, 0, trkFlags);
+    VisualisationTrack track(rec.getSign(), 0.0, fileTrack->mId, fileTrack->mPID, 0.0, fileTrack->mSigned1Pt, track_start, track_end, track_p, 0, 0.0, 0.0, 0.0, 0, fileTrack->mFlags);
 
     for (Int_t i = 0; i < eve_track->GetN(); ++i) {
       Float_t x, y, z;
@@ -197,20 +162,8 @@ void DataInterpreterAOD::interpretAODTracks(TFile* AODFile, Int_t eventId, Visua
   delete trackList;
 }
 
-void DataInterpreterAOD::interpretAODCaloCells(TFile* AODFile, Int_t eventId, VisualisationEvent& event)
+void DataInterpreterAOD::interpretAODCaloCells(TList* list, VisualisationEvent& event)
 {
-  TTree* calo = (TTree*)AODFile->Get("O2calo");
-  Int_t caloID;           // The index of the collision vertex, to which the cell is attached
-  Short_t caloCellNumber; // Cell absolute Id. number
-  Float_t caloAmplitude;  // Cell amplitude (= energy!)
-  Char_t caloType;        // Cell type (-1 is undefined, 0 is PHOS, 1 is EMCAL)
-  calo->SetBranchAddress("fID4Calo", &caloID);
-  calo->SetBranchAddress("fCellNumber", &caloCellNumber);
-  calo->SetBranchAddress("fAmplitude", &caloAmplitude);
-  calo->SetBranchAddress("fType", &caloType);
-
-  int caloCount = calo->GetEntriesFast();
-
   // TODO: In old alieve it was calculated for a given cluster before cluster cuts. What in O2 instead?
   float maxCellEnergy = 0.0;
   int maxCellEnergyAbsId = -1;
@@ -219,27 +172,19 @@ void DataInterpreterAOD::interpretAODCaloCells(TFile* AODFile, Int_t eventId, Vi
   std::vector<Float_t> caloAmplitudes = std::vector<Float_t>();
   std::vector<Char_t> caloTypes = std::vector<Char_t>();
 
-  for (int i = 0; i < caloCount; i++) {
-    calo->GetEntry(i);
+  for (const auto& obj : *list) {
+    const AODCalo* fileCalo = (AODCalo*)obj;
 
-    // TODO: This is provisional.
-    //  AOD is supposed to contain references from primary vertex to elements from given collision.
-    if (caloID > eventId + 10)
-      break; // End event search
-    if (caloID != eventId)
-      continue;
-
-    if (caloAmplitude > maxCellEnergy) {
-      maxCellEnergy = caloAmplitude;
-      maxCellEnergyAbsId = caloCellNumber;
+    if (fileCalo->mAmplitude > maxCellEnergy) {
+      maxCellEnergy = fileCalo->mAmplitude;
+      maxCellEnergyAbsId = fileCalo->mCellNumber;
     }
-
-    caloAbsIds.emplace_back(caloCellNumber);
-    caloAmplitudes.emplace_back(caloAmplitude);
-    caloTypes.emplace_back(caloType);
+    caloAbsIds.emplace_back(fileCalo->mCellNumber);
+    caloAmplitudes.emplace_back(fileCalo->mAmplitude);
+    caloTypes.emplace_back(fileCalo->mType);
   }
 
-  caloCount = caloAbsIds.size();
+  int caloCount = caloAbsIds.size();
   for (int i = 0; i < caloCount; i++) {
     // Cell rejected
     if (cutCell(caloAmplitudes, caloAbsIds, caloCount, caloAmplitudes[i], caloTypes[i],
@@ -443,31 +388,8 @@ Float_t DataInterpreterAOD::getCaloCellAmplitude(std::vector<Float_t> caloAmplit
   return caloAmplitudes[ind];
 }
 
-void DataInterpreterAOD::interpretMuonTracks(TFile* AODFile, Int_t eventId, VisualisationEvent& event)
+void DataInterpreterAOD::interpretMuonTracks(TList* list, VisualisationEvent& event)
 {
-  TTree* muon = (TTree*)AODFile->Get("O2mu");
-
-  Int_t muonID;                       // The index of the collision vertex, to which the muon is attached
-  Float_t muonInverseBendingMomentum; // Inverse bending momentum (GeV/c ** -1) times the charge
-  Float_t muonThetaX;                 // Angle of track at vertex in X direction (rad)
-  Float_t muonThetaY;                 // Angle of track at vertex in Y direction (rad)
-  Float_t muonZ;                      // Z coordinate (cm)
-  Float_t muonBendingCoor;            // bending coordinate (cm)
-  Float_t muonNonBendingCoor;         // non bending coordinate (cm)
-  Float_t muonCovariances[15];        // reduced covariance matrix of UNCORRECTED track parameters AT FIRST CHAMBER
-  Float_t muonChi2;                   // chi2 in the MUON track fit
-  Float_t muonChi2MatchTrigger;       // chi2 of trigger/track matching
-  muon->SetBranchAddress("fID4mu", &muonID);
-  muon->SetBranchAddress("fInverseBendingMomentum", &muonInverseBendingMomentum);
-  muon->SetBranchAddress("fThetaX", &muonThetaX);
-  muon->SetBranchAddress("fThetaY", &muonThetaY);
-  muon->SetBranchAddress("fZ", &muonZ);
-  muon->SetBranchAddress("fBendingCoor", &muonBendingCoor);
-  muon->SetBranchAddress("fNonBendingCoor", &muonNonBendingCoor);
-  muon->SetBranchAddress("fCovariances", &muonCovariances);
-  muon->SetBranchAddress("fChi2", &muonChi2);
-  muon->SetBranchAddress("fChi2MatchTrigger", &muonChi2MatchTrigger);
-
   // load trigger circuit
   //    static AliMUONTriggerCircuit* gTriggerCircuit = 0x0;
   //    if (!gTriggerCircuit)
@@ -487,16 +409,8 @@ void DataInterpreterAOD::interpretMuonTracks(TFile* AODFile, Int_t eventId, Visu
   auto prop = ghostList->GetPropagator();
   prop->SetMagField(0.5);
 
-  int muonCount = muon->GetEntriesFast();
-  for (int i = 0; i < muonCount; i++) {
-    muon->GetEntry(i);
-
-    // TODO: This is provisional.
-    //  AOD is supposed to contain references from primary vertex to elements from given collision.
-    if (muonID > eventId + 10)
-      break; // End event search
-    if (muonID != eventId)
-      continue;
+  for (const auto& obj : *list) {
+    const AODMuonTrack* fileMuonTrack = (AODMuonTrack*)obj;
 
     //recTrack.fIndex = muonID;
     //recTrack.fLabel = emt->GetLabel();
@@ -518,8 +432,8 @@ void DataInterpreterAOD::interpretMuonTracks(TFile* AODFile, Int_t eventId, Visu
     recTrack.fStatus = 0;
     //recTrack.fSign = emt->Charge();
     //Double_t z11 = (muonZ < -1.0) ? muonZ : (Double_t)AliMUONConstants::DefaultChamberZ(10);
-    recTrack.fV.Set(muonNonBendingCoor, muonBendingCoor, muonZ);
-    recTrack.fP.Set(-TMath::Tan(muonThetaX), -TMath::Tan(muonThetaY), -1.0);
+    recTrack.fV.Set(fileMuonTrack->mNonBendingCoor, fileMuonTrack->mBendingCoor, fileMuonTrack->mZ);
+    recTrack.fP.Set(-TMath::Tan(fileMuonTrack->mThetaX), -TMath::Tan(fileMuonTrack->mThetaY), -1.0);
 
     // produce eve track
     track = new TEveTrack(&recTrack, prop);

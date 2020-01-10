@@ -67,7 +67,7 @@ void DataReaderITS::open()
   }
 }
 
-TObject* DataReaderITS::getEventData(int eventNumber, EVisualisationDataType dataType)
+TObject* DataReaderITS::getEventData(int eventNumber, EVisualisationDataType dataType, EDataSource source)
 {
   if (!this->hasEventData(eventNumber)) {
     return new TList();
@@ -81,5 +81,15 @@ TObject* DataReaderITS::getEventData(int eventNumber, EVisualisationDataType dat
   list->Add(v);
   return list;
 }
+
+void DataReaderITS::setOnlineEventData(TList* data, EVisualisationDataType type)
+{
+  if (type == Tracks) {
+    mTracks = data;
+  } else if (type == Clusters) {
+    mClusters = data;
+  }
+}
+
 } // namespace event_visualisation
 } // namespace o2

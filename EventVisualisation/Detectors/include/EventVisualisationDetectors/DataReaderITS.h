@@ -21,6 +21,7 @@
 #include "EventVisualisationBase/DataReader.h"
 
 #include <TFile.h>
+#include <TList.h>
 
 namespace o2
 {
@@ -33,10 +34,14 @@ class DataReaderITS : public DataReader
   TFile* mClusFile;
   TFile* mTracFile;
 
+  TList* mTracks;
+  TList* mClusters;
+
  public:
   DataReaderITS() = default;
   void open() final;
-  TObject* getEventData(int eventNumber, EVisualisationDataType dataType) final;
+  TObject* getEventData(int eventNumber, EVisualisationDataType dataType, EDataSource source) final;
+  void setOnlineEventData(TList* data, EVisualisationDataType type) final;
 };
 
 } // namespace event_visualisation

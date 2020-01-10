@@ -67,7 +67,7 @@ void DataReaderTPC::open()
   LOG(INFO) << "Setting event count to: " << eventCount << " max time: " << time;
 }
 
-TObject* DataReaderTPC::getEventData(int eventNumber, EVisualisationDataType dataType)
+TObject* DataReaderTPC::getEventData(int eventNumber, EVisualisationDataType dataType, EDataSource source)
 {
   if (!this->hasEventData(eventNumber)) {
     return new TList();
@@ -80,6 +80,15 @@ TObject* DataReaderTPC::getEventData(int eventNumber, EVisualisationDataType dat
   TVector2* v = new TVector2(eventNumber, 0);
   list->Add(v);
   return list;
+}
+
+void DataReaderTPC::setOnlineEventData(TList* data, EVisualisationDataType type)
+{
+  if (type == Tracks) {
+    mTracks = data;
+  } else if (type == Clusters) {
+    mClusters = data;
+  }
 }
 
 } // namespace event_visualisation

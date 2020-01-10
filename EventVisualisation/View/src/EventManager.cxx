@@ -23,6 +23,7 @@
 #include "EventVisualisationBase/DataSource.h"
 #include "EventVisualisationBase/DataInterpreter.h"
 #include "EventVisualisationBase/DataSourceOffline.h"
+#include "EventVisualisationBase/DataSourceOnline.h"
 #include "ReconstructionDataFormats/PID.h"
 #include "EMCALBase/Geometry.h"
 #include "PHOSBase/Geometry.h"
@@ -85,13 +86,19 @@ EventManager::EventManager() : TEveEventManager("Event", "")
 void EventManager::Open()
 {
   switch (mCurrentDataSourceType) {
-    case SourceOnline:
-      break;
+    case SourceOnline: {
+      DataSourceOnline* source = new DataSourceOnline();
+      for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; i++) {
+        if (mDataReaders[i] != nullptr) {
+          source->registerReader(mDataReaders[i], static_cast<EVisualisationGroup>(i));
+        }
+      }
+      setDataSource(source);
+    } break;
     case SourceOffline: {
       DataSourceOffline* source = new DataSourceOffline();
       for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; i++) {
         if (mDataReaders[i] != nullptr) {
-          mDataReaders[i]->open();
           source->registerReader(mDataReaders[i], static_cast<EVisualisationGroup>(i));
         }
       }

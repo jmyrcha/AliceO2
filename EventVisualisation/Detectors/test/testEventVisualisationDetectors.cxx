@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(Should_ReturnEventData_When_EventNumberInRange_Test)
 
   // Assert
   for (int i = 0; i < 3; i++) {
-    TList* data = (TList*)readers[i]->getEventData(0, EVisualisationDataType::Tracks);
+    TList* data = (TList*)readers[i]->getEventData(0, EVisualisationDataType::Tracks, EDataSource::SourceOnline);
     BOOST_CHECK_EQUAL(data->IsEmpty(), false);
   }
 
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(Should_ReturnEmpty_When_EventNumberOutsideRange_Test)
 
   // Assert
   for (int i = 0; i < 3; i++) {
-    TList* data = (TList*)readers[i]->getEventData(eventCounts[i], EVisualisationDataType::Tracks);
+    TList* data = (TList*)readers[i]->getEventData(eventCounts[i], EVisualisationDataType::Tracks, EDataSource::SourceOnline);
     BOOST_CHECK_EQUAL(data->IsEmpty(), true);
   }
 
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(Should_InterpreEventTracks_When_CorrectEvent_Test)
   // Act
   for (int i = 0; i < 3; i++) {
     readers[i]->open();
-    TObject* data = readers[i]->getEventData(testedEvents[i], EVisualisationDataType::Tracks);
+    TObject* data = readers[i]->getEventData(testedEvents[i], EVisualisationDataType::Tracks, EDataSource::SourceOnline);
     interpreters[i]->interpretDataForType(data, EVisualisationDataType::Tracks, *(events[i]));
   }
 
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(Should_InterpreEventClusters_When_CorrectEvent_Test)
   // Act
   for (int i = 0; i < 3; i++) {
     readers[i]->open();
-    TObject* data = readers[i]->getEventData(testedEvents[i], EVisualisationDataType::Tracks);
+    TObject* data = readers[i]->getEventData(testedEvents[i], EVisualisationDataType::Tracks, EDataSource::SourceOnline);
     interpreters[i]->interpretDataForType(data, EVisualisationDataType::Clusters, *(events[i]));
   }
 
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(Should_InterpretAODEventMuonTracks_When_CorrectAODEvent_Tes
 
   // Act
   reader->open();
-  TObject* data = reader->getEventData(140, EVisualisationDataType::Tracks);
+  TObject* data = reader->getEventData(140, EVisualisationDataType::Tracks, EDataSource::SourceOnline);
   interpreter->interpretDataForType(data, EVisualisationDataType::Muon, *event);
 
   // Assert
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(Should_NotInterpretEventTracks_When_NotAODEvent_Test)
   // Act
   for (int i = 0; i < 2; i++) {
     readers[i]->open();
-    TObject* data = readers[i]->getEventData(5, EVisualisationDataType::Tracks);
+    TObject* data = readers[i]->getEventData(5, EVisualisationDataType::Tracks, EDataSource::SourceOnline);
     interpreters[i]->interpretDataForType(data, EVisualisationDataType::Muon, *(events[i]));
   }
 
@@ -264,7 +264,7 @@ BOOST_AUTO_TEST_CASE(Should_InterpretAODEventCaloCells_When_CorrectAODEvent_Test
 
   // Act
   reader->open();
-  TObject* data = reader->getEventData(140, EVisualisationDataType::Tracks);
+  TObject* data = reader->getEventData(140, EVisualisationDataType::Tracks, EDataSource::SourceOnline);
   interpreter->interpretDataForType(data, EVisualisationDataType::Calo, *event);
 
   // Assert
@@ -290,7 +290,7 @@ BOOST_AUTO_TEST_CASE(Should_NotInterpretEventCaloCells_When_NotAODEvent_Test)
   // Act
   for (int i = 0; i < 2; i++) {
     readers[i]->open();
-    TObject* data = readers[i]->getEventData(5, EVisualisationDataType::Tracks);
+    TObject* data = readers[i]->getEventData(5, EVisualisationDataType::Tracks, EDataSource::SourceOnline);
     interpreters[i]->interpretDataForType(data, EVisualisationDataType::Calo, *(events[i]));
   }
 
