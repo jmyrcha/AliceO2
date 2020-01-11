@@ -273,6 +273,16 @@ set_property(TEST test_Framework_test_CustomGUISokol PROPERTY DISABLED TRUE)
 set_property(TEST test_Framework_test_BoostSerializedProcessing
              PROPERTY DISABLED TRUE)
 
+# specific test which needs more libraries
+o2_add_test(AODTracksED NAME test_Framework_test_AODTracksED
+            SOURCES test/test_AODTracksED.cxx
+            COMPONENT_NAME Framework
+            LABELS framework workflow
+            PUBLIC_LINK_LIBRARIES O2::Framework O2::EventVisualisationView
+            TIMEOUT 30
+            NO_BOOST_TEST
+            COMMAND_LINE_ARGS ${DPL_WORKFLOW_TESTS_EXTRA_OPTIONS} --run --shm-segment-size 20000000)
+
 # specific tests which needs command line options
 o2_add_test(
   ProcessorOptions NAME test_Framework_test_ProcessorOptions
