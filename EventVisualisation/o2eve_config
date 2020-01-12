@@ -21,8 +21,10 @@ simple.geom.default:                    R3
 simple.geom.R3.path:                    ${ALICE_ROOT}/EVE/resources/geometry/run3
 simple.geom.R2.path:                    ${ALICE_ROOT}/EVE/resources/geometry/run2
 
-tracks.selection:                       TPCrefit_ITSrefit
-tracks.width:                           1
+tracks.selection:                       none
+# possible tracks selections: ITSin_noTPCin, noTISpureSA, TPCrefit, TPCrefit_ITSrefit
+
+tracks.width:                           2
 
 tracks.byPt.show:                       1
 tracks.byCategory.show:                 0
@@ -127,6 +129,12 @@ AD0.line.color:                         1
 FMD.line.color:                         907
 
 OCDB.default.path:                      local:///local/cdb
+
+screenshot.logo.draw                    1
+screenshot.info.draw                    1
+screenshot.projections.draw             1
+screenshot.force.energy                 Energy: 13 TeV
+screenshot.force.system                 System: Pb-Pb
 
 # uncomment for 4K Displays
 # Gui.DefaultFont:                        -*-helvetica-medium-r-*-*-20-*-*-*-*-*-iso8859-1

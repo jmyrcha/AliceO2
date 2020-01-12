@@ -23,6 +23,8 @@
 
 #include <TGMdiMainFrame.h>
 
+#include <tuple>
+
 class TGTextButton;
 class TGCompositeFrame;
 class TGNumberEntry;
@@ -56,6 +58,9 @@ class EventManagerFrame : public TGMainFrame
   void setupCamera();
   /// Clears and draws everything anew, used also by Initializer on startup
   void refresh(bool firstTime);
+  /// Saves a screenshot
+  void saveScreenshot();
+  std::tuple<int, int, bool, bool, bool, const char*, const char*> getScreenshotOptions();
 
  public: // slots
   void DoFirstEvent();
