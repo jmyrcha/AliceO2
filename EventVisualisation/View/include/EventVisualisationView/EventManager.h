@@ -62,7 +62,9 @@ class EventManager : public TEveEventManager
     mCcdbApi.init(path.Data());
   }
 
-  Int_t getCurrentEvent() const { return mCurrentEvent; }
+  Int_t getCurrentEventNumber() const { return mCurrentEventNumber; }
+  VisualisationEvent& getCurrentEvent() const { return *mCurrentEvent; }
+
   DataSource* getDataSource() const { return mDataSource; }
   void setDataSource(DataSource* dataSource) { this->mDataSource = dataSource; }
 
@@ -91,7 +93,9 @@ class EventManager : public TEveEventManager
 
   EDataSource mCurrentDataSourceType = EDataSource::SourceOffline;
   DataSource* mDataSource = nullptr;
-  Int_t mCurrentEvent = 0;
+
+  Int_t mCurrentEventNumber = 0;
+  std::unique_ptr<VisualisationEvent> mCurrentEvent = nullptr;
 
   Width_t mWidth;
 

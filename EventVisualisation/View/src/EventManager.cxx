@@ -109,7 +109,7 @@ void EventManager::GotoEvent(Int_t no)
     no = getDataSource()->getEventCount() - 1;
   }
 
-  this->mCurrentEvent = no;
+  mCurrentEventNumber = no;
 
   MultiView::getInstance()->destroyAllEvents();
 
@@ -125,16 +125,16 @@ void EventManager::GotoEvent(Int_t no)
     if (interpreter) {
       auto dataSource = getDataSource();
       if (dataSource->hasEventData(no, (EVisualisationGroup)i)) {
-        std::unique_ptr<VisualisationEvent> event = std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0);
+        mCurrentEvent = std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0);
         for (int dataType = 0; dataType < EVisualisationDataType::NdataTypes; ++dataType) {
           if (settings.GetValue(Form("%c%s.show", std::tolower(gDataTypeNames[dataType][0]), gDataTypeNames[dataType].substr(1).data()), false)) {
             TObject* data = dataSource->getEventData(no, (EVisualisationGroup)i, (EVisualisationDataType)dataType);
             if (data) {
-              interpreter->interpretDataForType(data, (EVisualisationDataType)dataType, *event);
+              interpreter->interpretDataForType(data, (EVisualisationDataType)dataType, *mCurrentEvent);
             }
           }
         }
-        displayVisualisationEvent(*event, gVisualisationGroupName[i]);
+        displayVisualisationEvent(*mCurrentEvent, gVisualisationGroupName[i]);
       }
     }
   }
@@ -151,19 +151,19 @@ void EventManager::GotoEvent(Int_t no)
 
 void EventManager::NextEvent()
 {
-  Int_t event = (this->mCurrentEvent + 1) % getDataSource()->getEventCount();
+  Int_t event = (mCurrentEventNumber + 1) % getDataSource()->getEventCount();
   GotoEvent(event);
 }
 
 void EventManager::PrevEvent()
 {
-  GotoEvent(this->mCurrentEvent - 1);
+  GotoEvent(mCurrentEventNumber - 1);
 }
 
 void EventManager::Close()
 {
-  delete this->mDataSource;
-  this->mDataSource = nullptr;
+  delete mDataSource;
+  mDataSource = nullptr;
 }
 
 void EventManager::AfterNewEventLoaded()

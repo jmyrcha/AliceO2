@@ -19,8 +19,8 @@
 #include "EventVisualisationBase/ConfigurationManager.h"
 #include "EventVisualisationBase/GeometryManager.h"
 #include "EventVisualisationView/EventManagerFrame.h"
+#include "EventVisualisationView/EventManager.h"
 #include "EventVisualisationView/MultiView.h"
-#include "EventVisualisationBase/DataSourceOffline.h"
 
 #include "FairLogger.h"
 
@@ -32,6 +32,7 @@
 #include <TEveBrowser.h>
 #include <TASImage.h>
 #include <TGFileDialog.h>
+#include <TTimeStamp.h>
 
 #include <Rtypes.h>
 
@@ -103,25 +104,25 @@ TGTextButton* EventManagerFrame::makeButton(TGCompositeFrame* p, const char* txt
 void EventManagerFrame::DoFirstEvent()
 {
   mEventManager->GotoEvent(0);
-  mEventId->SetIntNumber(mEventManager->getCurrentEvent());
+  mEventId->SetIntNumber(mEventManager->getCurrentEventNumber());
 }
 
 void EventManagerFrame::DoPrevEvent()
 {
   mEventManager->PrevEvent();
-  mEventId->SetIntNumber(mEventManager->getCurrentEvent());
+  mEventId->SetIntNumber(mEventManager->getCurrentEventNumber());
 }
 
 void EventManagerFrame::DoNextEvent()
 {
   mEventManager->NextEvent();
-  mEventId->SetIntNumber(mEventManager->getCurrentEvent());
+  mEventId->SetIntNumber(mEventManager->getCurrentEventNumber());
 }
 
 void EventManagerFrame::DoLastEvent()
 {
   mEventManager->GotoEvent(-1); /// -1 means last available
-  mEventId->SetIntNumber(mEventManager->getCurrentEvent());
+  mEventId->SetIntNumber(mEventManager->getCurrentEventNumber());
 }
 
 void EventManagerFrame::DoSetEvent()
@@ -236,7 +237,7 @@ void EventManagerFrame::refresh(bool firstTime)
 
   setupBackground();
 
-  mEventManager->GotoEvent(mEventManager->getCurrentEvent());
+  mEventManager->GotoEvent(mEventManager->getCurrentEventNumber());
   gSystem->ProcessEvents();
   gEve->Redraw3D();
 }
@@ -247,8 +248,8 @@ std::tuple<int, int, bool, bool, bool, const char*, const char*> EventManagerFra
   // 3,840 × 2,160 (4K)
   // 7,680 × 4,320 (8K)
   // 15,360 × 8,640 (16K)
-  int width = 1440;
-  int height = 900;
+  int width = 3840;
+  int height = 2160;
 
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);
@@ -257,11 +258,11 @@ std::tuple<int, int, bool, bool, bool, const char*, const char*> EventManagerFra
   bool info = settings.GetValue("screenshot.info.draw", true);
   bool projections = settings.GetValue("screenshot.projections.draw", true);
   const char *energyLabel = settings.GetValue("screenshot.force.energy", "Energy: unknown");
-  const char *systemLabel = settings.GetValue("screenshot.force.system", "System: unknown");
+  const char *systemLabel = settings.GetValue("screenshot.force.system", "Colliding system: unknown");
   if (std::strcmp(energyLabel, "") == 0)
     energyLabel = "Energy: unknown";
   if (std::strcmp(systemLabel,"") == 0)
-    systemLabel = "System: unknown";
+    systemLabel = "Colliding system: unknown";
 
   return std::make_tuple(width, height, logo, info, projections, energyLabel, systemLabel);
 }
@@ -284,13 +285,11 @@ void EventManagerFrame::saveScreenshot()
   int width3DView = projections ? TMath::FloorNint(2.0 * width / 3.0) : width; // width of the 3D view
   int height3DView = height;                                   // height of the 3D view
   float aspectRatio = (float) width3DView / (float) height3DView; // 3D View aspect ratio
-  LOG(INFO) << "Parent size: " << width3DView << " x " << height3DView << " ratio: " << aspectRatio;
 
   // Children view size
   int widthChildView = TMath::FloorNint((float) width / 3.0);
   int heightChildView = TMath::FloorNint((float) height / viewersCount);
   float childAspectRatio = (float) widthChildView / (float) heightChildView;
-  LOG(INFO) << "Child size: " << widthChildView << " x " << heightChildView << " ratio: " << childAspectRatio;
 
   int index = 0;            // iteration counter
   int x = width3DView;    // x position of the child view
@@ -298,8 +297,6 @@ void EventManagerFrame::saveScreenshot()
 
   for (TEveElement::List_i i = viewers->BeginChildren(); i != viewers->EndChildren(); i++) {
     TEveViewer* view = ((TEveViewer * ) * i);
-
-    LOG(INFO) << "Processing view: " << view->GetName();
 
     // Save OpenGL view in file and read it back using BB (missing method in Root returning TASImage)
 //    TString viewFilename = Form("view-%d.png", index);
@@ -317,14 +314,12 @@ void EventManagerFrame::saveScreenshot()
     int currentX, currentY;
 
     if (index == 0) {
-//      LOG(INFO) << "Using main settings";
       currentHeight = height3DView;
       currentWidth = width3DView;
       currentAspectRatio = aspectRatio;
       currentX = 0;
       currentY = 0;
     } else {
-//      LOG(INFO) << "Using child settings";
       currentHeight = heightChildView;
       currentWidth = widthChildView;
       currentAspectRatio = childAspectRatio;
@@ -333,7 +328,6 @@ void EventManagerFrame::saveScreenshot()
     }
 
     TASImage* viewImg = (TASImage*)view->GetGLViewer()->GetPictureUsingFBO(currentWidth, currentHeight);
-    LOG(INFO) << "Created view image of size: " << currentWidth << " x " << currentHeight;
 
     if (viewImg) {
       if (viewImg->GetWidth() < currentAspectRatio * viewImg->GetHeight()) {
@@ -348,13 +342,9 @@ void EventManagerFrame::saveScreenshot()
       viewImg->CopyArea(compositeImg, 0, 0, viewImg->GetWidth(), viewImg->GetHeight(), currentX, currentY);
 
       TString viewFilename = Form("view-%s.png", view->GetName());
-      viewImg->WriteImage(viewFilename);
-      TString compositeFilename = Form("composite-%s.png", view->GetName());
-      compositeImg->WriteImage(compositeFilename);
 
       if (index != 0) {
-        compositeImg->DrawRectangle(currentX, currentY, currentWidth, currentHeight,
-                                    "#C0C0C0"); // draw a border around child views
+        compositeImg->DrawRectangle(currentX, currentY, currentWidth, currentHeight, "#C0C0C0"); // draw a border around child views
       }
       delete viewImg;
     }
@@ -363,10 +353,9 @@ void EventManagerFrame::saveScreenshot()
       y += heightChildView;
     }
 
-//    if (!projections) {
-//      LOG(INFO) << "No projections, breaking the loop";
+    if (!projections) {
       break;
-//    }
+    }
 
     index++;
   }
@@ -384,48 +373,39 @@ void EventManagerFrame::saveScreenshot()
   }
 
   // Draw info
-//  if(info)
-//  {
-//    TTimeStamp ts(fESDEvent->GetTimeStamp());
-//    const char *runNumber = Form("Run:%d",fESDEvent->GetRunNumber());
-//    const char *timeStamp = Form("Timestamp:%s(UTC)",ts.AsString("s"));
-//    const char *system;
-//
-//    if(strcmp(fESDEvent->GetBeamType(), "")!=0)
-//    {
-//      if(strcmp(fESDEvent->GetBeamType(), "A-A"))
-//      {
-//        system = "Colliding system:Pb-Pb";
-//      }
-//      else
-//      {
-//        system = Form("Colliding system:%s", fESDEvent->GetBeamType());
-//      }
-//    }
-//    else
-//    {
-//      system = systemLabel;
-//    }
+  if(info)
+  {
+    auto& currentEvent = mEventManager->getCurrentEvent();
+    TTimeStamp ts(currentEvent.getTimeStamp());
+    const char *runNumber = Form("Run: %d", currentEvent.getRunNumber());
+    const char *timeStamp = Form("Timestamp: %s (UTC)", ts.AsString("s"));
 
-//    system = "Colliding system:p-p";
+    const char *system;
+    if (currentEvent.getCollidingSystem() == "") {
+      system = systemLabel;
+    }
+    else {
+      system = Form("Colliding system: %s", currentEvent.getCollidingSystem().data());
+    }
 
-//    const char *energy;
-//    if(fESDEvent->GetBeamEnergy()>=0.0000001)
-//    {
-//      energy = Form("Energy:%.0f TeV",2*fESDEvent->GetBeamEnergy()/1000);
-//    }
-//    else
-//    {
-//      energy = energyLabel;
-//    }
-//    int fontSize = 0.015*height;
-//    compositeImg->BeginPaint();
-//    compositeImg->DrawText(10, height-25-4*fontSize, runNumber, fontSize, "#BBBBBB", "FreeSansBold.otf");
-//    compositeImg->DrawText(10, height-20-3*fontSize, timeStamp, fontSize, "#BBBBBB", "FreeSansBold.otf");
-//    compositeImg->DrawText(10, height-15-2*fontSize, system,    fontSize, "#BBBBBB", "FreeSansBold.otf");
-//    compositeImg->DrawText(10, height-10-1*fontSize, energy,    fontSize, "#BBBBBB", "FreeSansBold.otf");
-//    compositeImg->EndPaint();
-//  }
+    const char *energy;
+    if (currentEvent.getEnergy() >= 0.0000001)
+    {
+      energy = Form("Energy: %.0f TeV", currentEvent.getEnergy() / 1000);
+    }
+    else
+    {
+      energy = energyLabel;
+    }
+
+    int fontSize = 0.015*height;
+    compositeImg->BeginPaint();
+    compositeImg->DrawText(10, height-25-4*fontSize, runNumber, fontSize, "#BBBBBB", "FreeSansBold.otf");
+    compositeImg->DrawText(10, height-20-3*fontSize, timeStamp, fontSize, "#BBBBBB", "FreeSansBold.otf");
+    compositeImg->DrawText(10, height-15-2*fontSize, system,    fontSize, "#BBBBBB", "FreeSansBold.otf");
+    compositeImg->DrawText(10, height-10-1*fontSize, energy,    fontSize, "#BBBBBB", "FreeSansBold.otf");
+    compositeImg->EndPaint();
+  }
 
   // Save screenshot to file
   TGFileInfo fileinfo;
@@ -434,7 +414,7 @@ void EventManagerFrame::saveScreenshot()
   fileinfo.fIniDir = StrDup(".");
   new TGFileDialog(gClient->GetDefaultRoot(), gClient->GetDefaultRoot(), kFDOpen, &fileinfo);
   if (!fileinfo.fFilename) {
-    LOG(WARNING) << "SaveScreenshot: Couldn't get path from dialog window!!!";
+    LOG(WARNING) << "SaveScreenshot: Couldn't get image path from dialog window!!!";
     return;
   }
   compositeImg->WriteImage(fileinfo.fFilename);
