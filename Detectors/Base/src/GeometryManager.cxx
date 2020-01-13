@@ -19,6 +19,7 @@
 #include <TGeoPhysicalNode.h> // for TGeoPhysicalNode, TGeoPNEntry
 #include <TObjArray.h>        // for TObjArray
 #include <TObject.h>          // for TObject
+#include <TSystem.h>          // for gSystem
 
 #include <cassert>
 #include <cstddef> // for NULL
@@ -445,13 +446,18 @@ o2::base::MatBudget GeometryManager::meanMaterialBudget(float x0, float y0, floa
 //_________________________________
 void GeometryManager::loadGeometry(std::string geomFileName, std::string geomName)
 {
-  ///< load geometry from file
-  LOG(INFO) << "Loading geometry " << geomName << " from " << geomFileName;
-  TFile flGeom(geomFileName.data());
-  if (flGeom.IsZombie()) {
-    LOG(FATAL) << "Failed to open file " << geomFileName;
+  if (sGeometry && sGeometry->IsLocked()) {
+    LOG(ERROR) << "Cannot load a new geometry, the current one being locked. Setting internal geometry to null!!";
+    sGeometry = nullptr;
+    return;
   }
-  if (!flGeom.Get(geomName.data())) {
+
+  sGeometry = nullptr;
+  if (geomFileName.data() && (!gSystem->AccessPathName(geomFileName.data()))) {
+    sGeometry = TGeoManager::Import(geomFileName.data(), geomName.data());
+    LOG(INFO) << "From now on using geometry: " << geomName << " from custom geometry file: " << geomFileName;
+  }
+  else {
     LOG(FATAL) << "Did not find geometry named " << geomName;
   }
 }
