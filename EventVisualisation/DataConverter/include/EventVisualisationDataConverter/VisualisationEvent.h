@@ -55,8 +55,18 @@ class VisualisationEvent
   // Adds minimalistic calorimeter cell to a minimalistic event
   void addCaloCell(const VisualisationCaloCell& caloCell) { mCaloCells.push_back(caloCell); }
 
+  // Event number getter
+  inline int getEventNumber() { return mEventNumber; }
+  // Run number getter
+  inline int getRunNumber() { return mRunNumber; }
+  // Energy getter
+  inline double getEnergy() { return mEnergy; }
   // Multiplicity getter
   inline int getMultiplicity() { return mMultiplicity; }
+  // Colliding system getter
+  inline std::string getCollidingSystem() { return mCollidingSystem; }
+  // TimeStamp getter
+  inline std::time_t getTimeStamp() { return mTimeStamp; }
 
   // Returns track with index i
   const VisualisationTrack& getTrack(int i) const;
