@@ -22,6 +22,7 @@
 #include "EventVisualisationView/EventManager.h"
 
 #include <TGMdiMainFrame.h>
+#include <TASImage.h>
 
 #include <tuple>
 
@@ -41,6 +42,20 @@ class EventManagerFrame : public TGMainFrame
   static TGTextButton* makeButton(TGCompositeFrame* p, const char* txt, Int_t width = 0,
                                   Int_t lo = 0, Int_t ro = 0, Int_t to = 0, Int_t bo = 0);
 
+  /// Loads geometry for all detectors
+  void setupGeometry();
+  /// Sets up background color
+  void setupBackground();
+  /// Sets up camera position
+  void setupCamera();
+
+  /// Saves a screenshot
+  void saveScreenshot();
+  std::tuple<int, int, bool, bool, bool, const char*, const char*> getScreenshotOptions();
+  void drawScreenshotLogo(TASImage* compositeImg, int width);
+  void drawScreenshotInfo(TASImage* compositeImg, const char* energyLabel, const char* systemLabel, int height);
+  void saveScreenshotToFile(TASImage* compositeImg);
+
  protected:
   o2::event_visualisation::EventManager* mEventManager; // Model object.
   TGNumberEntry* mEventId;                              // Display/edit current event id
@@ -50,17 +65,8 @@ class EventManagerFrame : public TGMainFrame
   ~EventManagerFrame() override = default;
   ClassDefOverride(EventManagerFrame, 0); // GUI window for EventManager.
 
-  /// Loads geometry for all detectors
-  void setupGeometry();
-  /// Sets up background color
-  void setupBackground();
-  /// Sets up camera position
-  void setupCamera();
   /// Clears and draws everything anew, used also by Initializer on startup
   void refresh(bool firstTime);
-  /// Saves a screenshot
-  void saveScreenshot();
-  std::tuple<int, int, bool, bool, bool, const char*, const char*> getScreenshotOptions();
 
  public: // slots
   void DoFirstEvent();
