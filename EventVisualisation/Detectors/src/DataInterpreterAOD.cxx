@@ -18,6 +18,7 @@
 #include "EventVisualisationDetectors/DataReaderAOD.h"
 #include "EventVisualisationBase/ConfigurationManager.h"
 #include "EventVisualisationDataConverter/VisualisationEvent.h"
+#include "EventVisualisationDataConverter/ConversionConstants.h"
 #include "EventVisualisationDetectors/CaloMatrix.h"
 #include "ReconstructionDataFormats/Track.h"
 #include "ReconstructionDataFormats/PID.h"
@@ -139,7 +140,8 @@ void DataInterpreterAOD::interpretAODTracks(TFile* AODFile, Int_t eventId, Visua
   Float_t trkTgl;       // fP[3] tangent of the track momentum dip angle
   Float_t trkSigned1Pt; // fP[4] 1/pt (1/(GeV/c))
   o2::track::PID trkPID;
-  ULong64_t trkFlags; // Reconstruction status flags - track quality parameters
+  ULong64_t trkFlags;   // Reconstruction status flags - track quality parameters
+  Float_t trkC1Pt21Pt2; // fC[14]
   tracks->SetBranchAddress("fID4Tracks", &trkID);
   tracks->SetBranchAddress("fX", &trkX);
   tracks->SetBranchAddress("fAlpha", &trkAlpha);
@@ -150,6 +152,7 @@ void DataInterpreterAOD::interpretAODTracks(TFile* AODFile, Int_t eventId, Visua
   tracks->SetBranchAddress("fSigned1Pt", &trkSigned1Pt);
   tracks->SetBranchAddress("fPID", &trkPID);
   tracks->SetBranchAddress("fFlags", &trkFlags);
+  tracks->SetBranchAddress("fC1Pt21Pt2", &trkC1Pt21Pt2);
 
   TEveTrackList* trackList = new TEveTrackList("tracks");
   trackList->IncDenyDestroy();
@@ -157,6 +160,7 @@ void DataInterpreterAOD::interpretAODTracks(TFile* AODFile, Int_t eventId, Visua
   prop->SetMagField(0.5);
 
   int tracksCount = tracks->GetEntriesFast();
+  int trkInd = 0;
   for (int i = 0; i < tracksCount; i++) {
     tracks->GetEntry(i);
 
@@ -169,10 +173,13 @@ void DataInterpreterAOD::interpretAODTracks(TFile* AODFile, Int_t eventId, Visua
 
     o2::track::TrackPar rec(trkX, trkAlpha, {trkY, trkZ, trkSnp, trkTgl, trkSigned1Pt});
     std::array<float, 3> p;
+    std::array<float, 3> v;
     rec.getPxPyPzGlo(p);
+    rec.getXYZGlo(v);
 
     TEveRecTrackD t;
     t.fP = {p[0], p[1], p[2]};
+    t.fV = {v[0], v[1], v[2]};
     t.fSign = (rec.getSign() < 0) ? -1 : 1;
     TEveTrack* eve_track = new TEveTrack(&t, prop);
     eve_track->MakeTrack();
@@ -182,17 +189,24 @@ void DataInterpreterAOD::interpretAODTracks(TFile* AODFile, Int_t eventId, Visua
     double track_start[3] = {start.fX, start.fY, start.fZ};
     double track_end[3] = {end.fX, end.fY, end.fZ};
     double track_p[3] = {p[0], p[1], p[2]};
+    double mass = trkPID.getMass();
+    double momentum = rec.getP();
+    double energy = TMath::Sqrt(momentum * momentum + mass * mass);
+    // FIXME: Temporarily harcoded magnetic field
+    float bz = 5.0f;
 
-    VisualisationTrack track(rec.getSign(), 0.0, trkID, trkPID, 0.0, trkSigned1Pt, track_start, track_end, track_p, 0, 0.0, 0.0, 0.0, 0, trkFlags);
+    // int ID, int type, int charge, double energy, int parentID, o2::track::PID PID, double signedPT, double mass, double pxpypz[], double startXYZ[], double endXYZ[], double helixCurvature, double theta, double phi, float C1Pt21Pt2, unsigned long long flags
+    VisualisationTrack track(trkInd, ETrackType::Standard, eve_track->GetCharge(), energy, -1, trkPID, 1.0 / trkSigned1Pt, mass, track_p, track_start, track_end, rec.getCurvature(bz), rec.getTheta(), rec.getPhi(), trkC1Pt21Pt2, trkFlags);
 
-    for (Int_t i = 0; i < eve_track->GetN(); ++i) {
+    for (int j = 0; j < eve_track->GetN(); j++) {
       Float_t x, y, z;
-      eve_track->GetPoint(i, x, y, z);
+      eve_track->GetPoint(j, x, y, z);
       track.addPolyPoint(x, y, z);
     }
     delete eve_track;
 
     event.addTrack(track);
+    trkInd++;
   }
   delete trackList;
 }
@@ -266,10 +280,7 @@ void DataInterpreterAOD::interpretEMCALCell(Int_t absId, Float_t amplitude, Visu
     return;
   }
 
-  // Gives label of cell in eta-phi position per each supermodule
-  //auto [iphi, ieta] = mEMCALGeom->GetCellPhiEtaIndexInSModule(iSupMod, iTower, iIphi, iIeta);
   auto [eta, phi] = mEMCALGeom->EtaPhiFromIndex(absId);
-
   const auto& pos = mEMCALGeom->RelPosCellInSModule(absId);
   double posArr[3] = {pos.X(), pos.Y(), pos.Z()};
 
@@ -294,15 +305,10 @@ void DataInterpreterAOD::interpretPHOSCell(Int_t absId, Float_t amplitude, Visua
 
   VisualisationCaloCell cell(absId, relId[0] - 1, posArr, amplitude, 0, relId[1], 0);
 
-  //  printf("\t PHOS cell: ID %d, energy %2.2f,eta %2.2f, phi %2.2f, phi not modified: %2.2f\n",
-  //         absId, amplitude, eta, cell.getPhi()*TMath::RadToDeg(), phi);
-  //  printf("\t SM %d iEta %d,  iPhi %d, x %3.3f, y %3.3f, z %3.3f \n",
-  //         iSupMod, ieta, iphi, pos.X(), pos.Y(), pos.Z());
-
   event.addCaloCell(cell);
 }
 
-// TODO: Provisional cuts for all cells - in AliRoot cuts were applied for each cluster separately.
+// TODO: Provisional cuts for all cells - in AliRoot cuts were applied for each cluster separately. No cluster information in AOD.
 Bool_t DataInterpreterAOD::cutCell(std::vector<Float_t> caloAmplitudes, std::vector<Int_t> caloAbsIds, int caloCount, Float_t amplitude, Char_t caloType, Float_t maxCellEnergy, Int_t maxCellEnergyAbsId)
 {
   //  if(caloCount < mNumMinCellsCut[caloType]) return kTRUE;
@@ -329,10 +335,10 @@ Bool_t DataInterpreterAOD::cutCell(std::vector<Float_t> caloAmplitudes, std::vec
 }
 
 /// Adapted from emcal_esdclustercells.C in AliRoot
-/// Get for a given cell absolute ID the (super)module number, column and row
+/// Get for a given cell absolute ID its (super)module number, column and row
 ///
 /// \param absId absolute cell identity number
-/// \param type 1 for EMCAL, 0 for PHOS
+/// \param caloType 1 for EMCAL, 0 for PHOS
 /// \return tuple with reference cell module, row and column
 std::tuple<Int_t, Int_t, Int_t> DataInterpreterAOD::getModuleNumberColAndRow(Int_t absId, Char_t caloType)
 {
@@ -340,31 +346,24 @@ std::tuple<Int_t, Int_t, Int_t> DataInterpreterAOD::getModuleNumberColAndRow(Int
   if (absId < 0)
     return std::make_tuple(-1, -1, -1);
 
-  if (caloType == 1) {
+  if (caloType == 1) { // EMCAL
     auto [iSupMod, iTower, iIphi, iIeta] = mEMCALGeom->GetCellIndex(absId);
     if (iSupMod >= mEMCALGeom->GetNumberOfSuperModules())
       return std::make_tuple(-1, -1, -1);
     std::tie(irow, icol) = mEMCALGeom->GetCellPhiEtaIndexInSModule(iSupMod, iTower, iIphi, iIeta);
-  }    // EMCAL
-  else // PHOS
+  } else // PHOS
   {
     Int_t relId[4];
     mPHOSGeom->AbsToRelNumbering(absId, relId);
     irow = relId[2];
     icol = relId[3];
     iSM = relId[0] - 1;
-  } // PHOS
+  }
   return std::make_tuple(iSM, irow, icol);
 }
 
 /// Adapted from emcal_esdclustercells.C in AliRoot
 /// \return sum of energy in neighbor cells (cross) to the reference cell
-///
-/// \param isEMCAL bool true for EMCAL, false for PHOS
-/// \param imod reference cell module
-/// \param icol reference cell column
-/// \param irow reference cell row
-///
 Float_t DataInterpreterAOD::getECross(std::vector<Float_t>& caloAmplitudes, std::vector<Int_t>& caloAbsIds,
                                       Char_t caloType, Int_t imod, Int_t icol, Int_t irow)
 {
@@ -454,9 +453,6 @@ void DataInterpreterAOD::interpretMuonTracks(TFile* AODFile, Int_t eventId, Visu
   Float_t muonZ;                      // Z coordinate (cm)
   Float_t muonBendingCoor;            // bending coordinate (cm)
   Float_t muonNonBendingCoor;         // non bending coordinate (cm)
-  Float_t muonCovariances[15];        // reduced covariance matrix of UNCORRECTED track parameters AT FIRST CHAMBER
-  Float_t muonChi2;                   // chi2 in the MUON track fit
-  Float_t muonChi2MatchTrigger;       // chi2 of trigger/track matching
   muon->SetBranchAddress("fID4mu", &muonID);
   muon->SetBranchAddress("fInverseBendingMomentum", &muonInverseBendingMomentum);
   muon->SetBranchAddress("fThetaX", &muonThetaX);
@@ -464,30 +460,15 @@ void DataInterpreterAOD::interpretMuonTracks(TFile* AODFile, Int_t eventId, Visu
   muon->SetBranchAddress("fZ", &muonZ);
   muon->SetBranchAddress("fBendingCoor", &muonBendingCoor);
   muon->SetBranchAddress("fNonBendingCoor", &muonNonBendingCoor);
-  muon->SetBranchAddress("fCovariances", &muonCovariances);
-  muon->SetBranchAddress("fChi2", &muonChi2);
-  muon->SetBranchAddress("fChi2MatchTrigger", &muonChi2MatchTrigger);
 
-  // load trigger circuit
-  //    static AliMUONTriggerCircuit* gTriggerCircuit = 0x0;
-  //    if (!gTriggerCircuit)
-  //    {
-  //      AliEveEventManager::Instance()->AssertGeometry();
-  //      AliMUONGeometryTransformer* fMUONGeometryTransformer = new AliMUONGeometryTransformer();
-  //      fMUONGeometryTransformer->LoadGeometryData();
-  //      gTriggerCircuit = new AliMUONTriggerCircuit(fMUONGeometryTransformer);
-  //    }
-
-  TEveRecTrack recTrack;
-  TEveTrack* track;
-  //TEveTrackList* matchedList;
-  //TEveTrackList* unmatchedList;
+  // FIXME: What about recognizing and displaying matched / unmatched tracks? Trigger info?
   TEveTrackList* ghostList = new TEveTrackList("ghost");
   ghostList->IncDenyDestroy();
   auto prop = ghostList->GetPropagator();
   prop->SetMagField(0.5);
 
   int muonCount = muon->GetEntriesFast();
+  int muonInd = 1;
   for (int i = 0; i < muonCount; i++) {
     muon->GetEntry(i);
 
@@ -498,57 +479,60 @@ void DataInterpreterAOD::interpretMuonTracks(TFile* AODFile, Int_t eventId, Visu
     if (muonID != eventId)
       continue;
 
-    //recTrack.fIndex = muonID;
-    //recTrack.fLabel = emt->GetLabel();
-    //recTrack.fV.Set(muonNonBendingCoor, muonBendingCoor, muonZ);
-    //      recTrack.fStatus = emt->GetMatchTrigger();
-    //      recTrack.fSign = emt->Charge();
-    //      recTrack.fP.Set(emt->PxAtDCA(),emt->PyAtDCA(),emt->PzAtDCA());
-    //      recTrack.fBeta = ( emt->E() > 0 ) ? emt->P()/emt->E() : 0;
+    // From AliESDMuonTrack
+    double nonBendingSlope = TMath::Tan(muonThetaX);
+    double bendingSlope = TMath::Tan(muonThetaY);
+    double pyz = (muonInverseBendingMomentum != 0.) ? TMath::Abs(1. / muonInverseBendingMomentum) : -FLT_MAX;
+    double pz = -pyz / TMath::Sqrt(1.0 + bendingSlope * bendingSlope); // spectro. (z<0)
+    double px = pz * nonBendingSlope;
+    double py = pz * bendingSlope;
 
-    //track = new TEveTrack(&recTrack, matched->GetPropagator());
-    //track->SetName(Form("%cmu", emt->Charge()>0 ? '+':'-'));
-    //track->SetStdTitle();
-    //track->SetSourceObject(emt); // WARNING: Change the UniqueID of the object!!
+    double momentum = -pz * TMath::Sqrt(1.0 + bendingSlope * bendingSlope + nonBendingSlope * nonBendingSlope);
+    double pt = TMath::Sqrt(px * px + py * py);
+    int charge = muonInverseBendingMomentum > 0 ? 1 : -1;
+    double signedPt = pt * charge;
+    double phi = TMath::Pi() + TMath::ATan2(-py, -px);
+    double theta = TMath::ATan2(pt, pz);
 
-    // TODO: Recognize different kinds of muons - matched / unmatched / ghost
-    // TODO: Chi test for tracker??
+    TEveRecTrackD t;
 
-    // Lines from ghost muon tracks
-    recTrack.fStatus = 0;
-    //recTrack.fSign = emt->Charge();
-    //Double_t z11 = (muonZ < -1.0) ? muonZ : (Double_t)AliMUONConstants::DefaultChamberZ(10);
-    recTrack.fV.Set(muonNonBendingCoor, muonBendingCoor, muonZ);
-    recTrack.fP.Set(-TMath::Tan(muonThetaX), -TMath::Tan(muonThetaY), -1.0);
+    t.fStatus = 0;
+    t.fSign = charge;
+    t.fV = {muonNonBendingCoor, muonBendingCoor, muonZ};
 
-    // produce eve track
-    track = new TEveTrack(&recTrack, prop);
-    track->SetName("mu");
-    track->SetTitle("Trigger only");
-    //track->SetSourceObject(emt);
+    // For ghost muon tracks
+    // FIXME: Should use ThetaXAtDCA etc., how to get proper values from AOD?
+    t.fP = {-TMath::Tan(muonThetaX), -TMath::Tan(muonThetaY), -1.0};
 
-    // add the track to proper list
-    //      track->SetAttLineAttMarker(ghostList);
-    //      ghost->AddElement(track);
+    // For matched, unmatched muon tracks
+    // t.fP = {px, py, pz};
 
-    // TODO: How to get proper track coordinates??
-    track->MakeTrack();
-    auto start = track->GetLineStart();
-    auto end = track->GetLineEnd();
+    TEveTrack* eve_track = new TEveTrack(&t, prop);
+    eve_track->MakeTrack();
+
+    auto start = eve_track->GetLineStart();
+    auto end = eve_track->GetLineEnd();
     double track_start[3] = {start.fX, start.fY, start.fZ};
     double track_end[3] = {end.fX, end.fY, end.fZ};
-    double track_p[3] = {0.0, 0.0, 0.0}; // { p[0], p[1], p[2] };
+    double track_p[3] = {t.fP[0], t.fP[1], t.fP[2]};
+    o2::track::PID pid(o2::track::PID::Muon);
+    double mass = pid.getMass();
+    double energy = TMath::Sqrt(momentum * momentum + mass * mass);
+    // FIXME: Temporarily harcoded magnetic field
+    float bz = 5.0f;
 
-    VisualisationTrack visTrack(recTrack.fSign, 0.0, 0, o2::track::PID::Muon, 0.0, 0.0, track_start, track_end, track_p, 0, 0.0, 0.0, 0.0, 0, 0);
+    // int ID, int type, int charge, double energy, int parentID, o2::track::PID PID, double signedPT, double mass, double pxpypz[], double startXYZ[], double endXYZ[], double helixCurvature, double theta, double phi, float C1Pt21Pt2, unsigned long long flags
+    VisualisationTrack track(muonInd, ETrackType::MuonGhost, charge, energy, -1, pid, signedPt, mass, track_p, track_start, track_end, 0.0, theta, phi, 0.0f, 0);
 
-    for (Int_t i = 0; i < track->GetN(); ++i) {
+    for (int j = 0; j < eve_track->GetN(); j++) {
       Float_t x, y, z;
-      track->GetPoint(i, x, y, z);
-      visTrack.addPolyPoint(x, y, z);
+      eve_track->GetPoint(j, x, y, z);
+      track.addPolyPoint(x, y, z);
     }
+    delete eve_track;
 
-    delete track;
-    event.addMuonTrack(visTrack);
+    event.addMuonTrack(track);
+    muonInd++;
   }
   delete ghostList;
 }

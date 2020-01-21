@@ -46,20 +46,21 @@ class VisualisationTrack
 
   // Constructor with properties initialisation
   VisualisationTrack(
+    int ID,
+    int type,
     int charge,
     double energy,
-    int ID,
+    int parentID,
     o2::track::PID PID,
-    double mass,
     double signedPT,
+    double mass,
+    double pxpypz[],
     double startXYZ[],
     double endXYZ[],
-    double pxpypz[],
-    int parentID,
-    double phi,
-    double theta,
     double helixCurvature,
-    int type,
+    double theta,
+    double phi,
+    float C1Pt21Pt2,
     unsigned long long flags);
 
   // Add child particle (coming from decay of this particle)
@@ -71,22 +72,41 @@ class VisualisationTrack
   // Track type setter (standard track, V0, kink, cascade)
   void setTrackType(ETrackType type);
 
-  // Vertex getter
-  double* getVertex() { return mStartCoordinates; }
-  // Momentum vector getter
-  double* getMomentum() { return mMomentum; }
-  // Beta (velocity) getter
-  double getBeta() const { return sqrt(1 - std::pow(mMass / mEnergy, 2)); }
+  // ID getter
+  inline int getID() const { return mID; }
+  // Type getter
+  inline std::string getType() const { return mType; }
   // Charge getter
-  int getCharge() const { return mCharge; }
+  inline int getCharge() const { return mCharge; }
+  // Energy getter
+  inline double getEnergy() const { return mEnergy; }
+  // Parent ID getter
+  inline int getParentID() const { return mParentID; }
   // PID (particle identification code) getter
-  o2::track::PID getPID() const { return mPID; }
+  inline o2::track::PID getPID() const { return mPID; }
   // Signed transverse momentum getter
-  double getSignedPt() const { return mSignedPT; }
+  inline double getSignedPt() const { return mSignedPT; }
+  // Mass getter
+  inline double getMass() const { return mMass; }
+  // Momentum vector getter
+  inline double* getMomentum() { return mMomentum; }
+  // Vertex getter
+  inline double* getVertex() { return mStartCoordinates; }
+  // Helix curvature getter
+  inline double getHelixCurvature() const { return mHelixCurvature; }
+  // Theta getter
+  inline double getTheta() const { return mTheta; }
+  // Phi getter
+  inline double getPhi() const { return mPhi; }
+  // Momentum sigma getter
+  inline float getC1Pt21Pt2() const { return mC1Pt21Pt2; }
   // Reconstruction flags getter
-  unsigned long long getFlags() const { return mFlags; }
+  inline unsigned long long getFlags() const { return mFlags; }
+
+  // Beta (velocity) getter
+  inline double getBeta() const { return sqrt(1 - std::pow(mMass / mEnergy, 2)); }
   // Checks if there was specific flag set for reconstruction
-  bool isRecoFlagSet(unsigned long long mask) const { return (mFlags & mask & 0xffff) > 0; }
+  inline bool isRecoFlagSet(unsigned long long mask) const { return (mFlags & mask & 0xffff) > 0; }
 
   size_t getPointCount() { return mPolyX.size(); }
   std::array<double, 3> getPoint(size_t i) { return std::array<double, 3>{mPolyX[i], mPolyY[i], mPolyZ[i]}; }
@@ -104,7 +124,7 @@ class VisualisationTrack
   int mCharge;                 /// Charge of the particle
   double mEnergy;              /// Energy of the particle
   int mParentID;               /// ID of the parent-track (-1 means no parent)
-  o2::track::PID mPID;         /// PDG code of the particle
+  o2::track::PID mPID;         /// Particle ID
   double mSignedPT;            /// Signed transverse momentum
   double mMass;                /// Mass of the particle
   double mMomentum[3];         /// Momentum vector
@@ -113,6 +133,7 @@ class VisualisationTrack
   double mHelixCurvature;      /// Helix curvature of the trajectory
   double mTheta;               /// An angle from Z-axis to the radius vector pointing to the particle
   double mPhi;                 /// An angle from X-axis to the radius vector pointing to the particle
+  float mC1Pt21Pt2;            /// Momentum sigma, 14th element of covariance matrix
   unsigned long long mFlags;   /// Reconstruction status flags - track quality parameters
 
   std::vector<int> mChildrenIDs; /// Uniqe IDs of children particles

@@ -30,6 +30,7 @@
 #include <TEveQuadSet.h>
 #include <TEveTrackPropagator.h>
 #include <TH2F.h>
+#include <TString.h>
 
 #include <string>
 
@@ -114,6 +115,8 @@ class EventManager : public TEveEventManager
   void displayTracks(VisualisationEvent& event, const std::string& detectorName);
   void displayTracksByPt(VisualisationEvent& event, const std::string& detectorName);
   void displayTracksByType(VisualisationEvent& event, const std::string& detectorName);
+  TString getTrackTitle(VisualisationTrack& track);
+
   bool trackSelected(const VisualisationTrack& track);
   void animateTracks();
 

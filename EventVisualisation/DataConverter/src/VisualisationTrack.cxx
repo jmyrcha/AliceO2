@@ -25,20 +25,21 @@ namespace event_visualisation
 VisualisationTrack::VisualisationTrack() = default;
 
 VisualisationTrack::VisualisationTrack(
+  int ID,
+  int type,
   int charge,
   double energy,
-  int ID,
+  int parentID,
   o2::track::PID PID,
-  double mass,
   double signedPT,
+  double mass,
+  double pxpypz[],
   double startXYZ[],
   double endXYZ[],
-  double pxpypz[],
-  int parentID,
-  double phi,
-  double theta,
   double helixCurvature,
-  int type,
+  double theta,
+  double phi,
+  float C1Pt21Pt2,
   unsigned long long flags)
   : mID(ID),
     mCharge(charge),
@@ -50,12 +51,13 @@ VisualisationTrack::VisualisationTrack(
     mHelixCurvature(helixCurvature),
     mTheta(theta),
     mPhi(phi),
+    mC1Pt21Pt2(C1Pt21Pt2),
     mFlags(flags)
 {
+  setTrackType((ETrackType)type);
   setMomentum(pxpypz);
   setStartCoordinates(startXYZ);
   setEndCoordinates(endXYZ);
-  mType = gTrackTypes[type];
 }
 
 void VisualisationTrack::addChild(int childID)

@@ -13,6 +13,7 @@
 /// \brief   Converting TPC data to Event Visualisation primitives
 /// \author  julian.myrcha@cern.ch
 /// \author  p.nowakowski@cern.ch
+/// \author  Maja Kabus <maja.kabus@cern.ch>
 ///
 
 #include "EventVisualisationDetectors/DataInterpreterTPC.h"
@@ -95,6 +96,7 @@ void DataInterpreterTPC::interpretDataForType(TObject* data, EVisualisationDataT
     int startTime = 2 * mTPCReadoutCycle * eventId;
     int endTime = startTime + 2 * mTPCReadoutCycle;
 
+    int trkInd = 0;
     for (int i = 0; i < trkArr->size(); i++) {
       const auto& rec = (*trkArr)[i];
 
@@ -115,18 +117,25 @@ void DataInterpreterTPC::interpretDataForType(TObject* data, EVisualisationDataT
       double track_start[3] = {start.fX, start.fY, start.fZ};
       double track_end[3] = {end.fX, end.fY, end.fZ};
       double track_p[3] = {p[0], p[1], p[2]};
+      o2::track::PID pid;
+      double mass = pid.getMass();
+      double momentum = rec.getP();
+      double energy = TMath::Sqrt(momentum * momentum + mass * mass);
+      // FIXME: Temporarily harcoded magnetic field
+      float bz = 5.0f;
 
-      VisualisationTrack track(rec.getSign(), 0.0, 0, 0, 0.0, 0.0, track_start, track_end, track_p, 0, 0.0, 0.0,
-                               0.0, 0, 0);
+      // int ID, int type, int charge, double energy, int parentID, o2::track::PID PID, double signedPT, double mass, double pxpypz[], double startXYZ[], double endXYZ[], double helixCurvature, double theta, double phi, float C1Pt21Pt2, unsigned long long flags
+      VisualisationTrack track(trkInd, ETrackType::Standard, eve_track->GetCharge(), energy, -1, pid, 1.0 / rec.getQ2Pt(), mass, track_p, track_start, track_end, rec.getCurvature(bz), rec.getTheta(), rec.getPhi(), rec.getSigma1Pt2(), 0);
 
-      for (Int_t i = 0; i < eve_track->GetN(); ++i) {
-        Float_t x, y, z;
-        eve_track->GetPoint(i, x, y, z);
+      for (int j = 0; j < eve_track->GetN(); j++) {
+        float x, y, z;
+        eve_track->GetPoint(j, x, y, z);
         track.addPolyPoint(x, y, z);
       }
       delete eve_track;
 
       event.addTrack(track);
+      trkInd++;
     }
     delete trackList;
   }

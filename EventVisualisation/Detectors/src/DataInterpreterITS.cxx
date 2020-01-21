@@ -13,11 +13,13 @@
 /// \brief   Converting ITS data to Event Visualisation primitives
 /// \author  julian.myrcha@cern.ch
 /// \author  p.nowakowski@cern.ch
+/// \author  Maja Kabus <maja.kabus@cern.ch>
 ///
 
 #include "EventVisualisationDetectors/DataInterpreterITS.h"
 #include "EventVisualisationBase/ConfigurationManager.h"
 #include "EventVisualisationDataConverter/VisualisationEvent.h"
+#include "EventVisualisationDataConverter/ConversionConstants.h"
 
 #include "DataFormatsITS/TrackITS.h"
 #include "DataFormatsITSMFT/Cluster.h"
@@ -87,31 +89,31 @@ void DataInterpreterITS::interpretDataForType(TObject* data, EVisualisationDataT
     TFile* trackFile = (TFile*)list->At(0);
     TFile* clustFile = (TFile*)list->At(1);
 
-    TTree* tracks = (TTree*)trackFile->Get("o2sim");
-    TTree* tracksRof = (TTree*)trackFile->Get("ITSTracksROF");
+    TTree* tracksTree = (TTree*)trackFile->Get("o2sim");
+    TTree* tracksRofTree = (TTree*)trackFile->Get("ITSTracksROF");
 
-    TTree* clusters = (TTree*)clustFile->Get("o2sim");
-    TTree* clustersRof = (TTree*)clustFile->Get("ITSClustersROF");
+    TTree* clustersTree = (TTree*)clustFile->Get("o2sim");
+    TTree* clustersRofTree = (TTree*)clustFile->Get("ITSClustersROF");
 
     //Read all tracks to a buffer
     std::vector<its::TrackITS>* trkArr = nullptr;
-    tracks->SetBranchAddress("ITSTrack", &trkArr);
-    tracks->GetEntry(0);
+    tracksTree->SetBranchAddress("ITSTrack", &trkArr);
+    tracksTree->GetEntry(0);
 
     //Read all track RO frames to a buffer
     std::vector<itsmft::ROFRecord>* trackROFrames = nullptr;
-    tracksRof->SetBranchAddress("ITSTracksROF", &trackROFrames);
-    tracksRof->GetEntry(0);
+    tracksRofTree->SetBranchAddress("ITSTracksROF", &trackROFrames);
+    tracksRofTree->GetEntry(0);
 
     //Read all clusters to a buffer
     std::vector<itsmft::Cluster>* clusArr = nullptr;
-    clusters->SetBranchAddress("ITSCluster", &clusArr);
-    clusters->GetEntry(0);
+    clustersTree->SetBranchAddress("ITSCluster", &clusArr);
+    clustersTree->GetEntry(0);
 
     //Read all cluster RO frames to a buffer
     std::vector<itsmft::ROFRecord>* clusterROFrames = nullptr;
-    clustersRof->SetBranchAddress("ITSClustersROF", &clusterROFrames);
-    clustersRof->GetEntry(0);
+    clustersRofTree->SetBranchAddress("ITSClustersROF", &clusterROFrames);
+    clustersRofTree->GetEntry(0);
 
     TEveTrackList* trackList = new TEveTrackList("tracks");
     trackList->IncDenyDestroy();
@@ -125,9 +127,10 @@ void DataInterpreterITS::interpretDataForType(TObject* data, EVisualisationDataT
     first = currentTrackROF.getROFEntry().getIndex();
     last = first + currentTrackROF.getNROFEntries();
 
-    gsl::span<its::TrackITS> mTracks = gsl::make_span(&(*trkArr)[first], last - first);
+    gsl::span<its::TrackITS> tracks = gsl::make_span(&(*trkArr)[first], last - first);
 
-    for (const auto& rec : mTracks) {
+    int trkInd = 0;
+    for (const auto& rec : tracks) {
       std::array<float, 3> p;
       rec.getPxPyPzGlo(p);
       TEveRecTrackD t;
@@ -141,12 +144,19 @@ void DataInterpreterITS::interpretDataForType(TObject* data, EVisualisationDataT
       double track_start[3] = {start.fX, start.fY, start.fZ};
       double track_end[3] = {end.fX, end.fY, end.fZ};
       double track_p[3] = {p[0], p[1], p[2]};
+      o2::track::PID pid;
+      double mass = pid.getMass();
+      double momentum = rec.getP();
+      double energy = TMath::Sqrt(momentum * momentum + mass * mass);
+      // FIXME: Temporarily harcoded magnetic field
+      float bz = 5.0f;
 
-      VisualisationTrack track(rec.getSign(), 0.0, 0, 0, 0.0, 0.0, track_start, track_end, track_p, 0, 0.0, 0.0, 0.0, 0, 0);
+      // int ID, int type, int charge, double energy, int parentID, o2::track::PID PID, double signedPT, double mass, double pxpypz[], double startXYZ[], double endXYZ[], double helixCurvature, double theta, double phi, float C1Pt21Pt2, unsigned long long flags
+      VisualisationTrack track(trkInd, ETrackType::Standard, eve_track->GetCharge(), energy, -1, pid, 1.0 / rec.getQ2Pt(), mass, track_p, track_start, track_end, rec.getCurvature(bz), rec.getTheta(), rec.getPhi(), rec.getSigma1Pt2(), 0);
 
-      for (Int_t i = 0; i < eve_track->GetN(); ++i) {
-        Float_t x, y, z;
-        eve_track->GetPoint(i, x, y, z);
+      for (int j = 0; j < eve_track->GetN(); j++) {
+        float x, y, z;
+        eve_track->GetPoint(j, x, y, z);
         track.addPolyPoint(x, y, z);
       }
       delete eve_track;
@@ -161,6 +171,7 @@ void DataInterpreterITS::interpretDataForType(TObject* data, EVisualisationDataT
       //                    }
 
       event.addTrack(track);
+      trkInd++;
     }
     delete trackList;
   }

@@ -234,7 +234,7 @@ void EventManager::displayTracks(VisualisationEvent& event, const std::string& d
     displayTracksByPt(event, detectorName);
     return;
   }
-  if (settings.GetValue("tracks.byType.show", false)) {
+  if (settings.GetValue("tracks.byType.show", false) && detectorName == "AOD") {
     displayTracksByType(event, detectorName);
     return;
   }
@@ -356,6 +356,7 @@ void EventManager::displayTracksByPt(VisualisationEvent& event, const std::strin
       vistrack->SetNextPoint(point[0], point[1], point[2]);
     }
     vistrack->SetName(Form("Track no = %lu, pt = %f", i, pt));
+    vistrack->SetTitle(Form("Track no = %lu, pt = %f", i, pt));
     vistrack->SetAttLineAttMarker(tlist);
     tlist->AddElement(vistrack);
   }
@@ -487,6 +488,7 @@ void EventManager::displayTracksByType(VisualisationEvent& event, const std::str
     }
 
     vistrack->SetName(Form("Track no = %lu, PID = %d", i, pid));
+    vistrack->SetTitle(getTrackTitle(track));
     tlist->AddElement(vistrack);
   }
 
@@ -501,32 +503,68 @@ void EventManager::displayTracksByType(VisualisationEvent& event, const std::str
   mDataTypeLists[EVisualisationDataType::Tracks]->AddElement(trackList);
 }
 
+// From AliRoot/EVE/EveBase/AliEveESDTracks.cxx
+// Used for drawing ESD tracks by PID, TPC, ITS, ITS standalone tracks
+TString EventManager::getTrackTitle(VisualisationTrack& track)
+{
+  TString s;
+
+  Int_t index = track.getID();
+  TString idx(index == kMinInt ? "<undef>" : Form("%d", index));
+
+  double* v = track.getVertex();
+  double* p = track.getMomentum();
+  double pt = TMath::Abs(track.getSignedPt());
+  double ptsig = TMath::Sqrt(track.getC1Pt21Pt2());
+  double ptsq = pt * pt;
+  double ptm = pt / (1.0 + pt * ptsig);
+  double ptM = pt / (1.0 - pt * ptsig);
+
+  // FIXME: Label and PDG to be completed once available
+  s = Form(
+    "Index=%s, Label=%s\nChg=%d, Pdg=%d\n"
+    "pT = %.3f + %.3f - %.3f [%.3f]\n"
+    "P  = (%.3f, %.3f, %.3f)\n"
+    "V  = (%.3f, %.3f, %.3f)\n",
+    idx.Data(), "0", track.getCharge(), 0,
+    pt, ptM - pt, pt - ptm, ptsig * ptsq,
+    p[0], p[1], p[2],
+    v[0], v[1], v[2]);
+
+  int o;
+  s += "Det (in, out, refit, pid):\n";
+  o = ERecoFlag::kITSin;
+  s += Form("ITS (%d, %d, %d, %d)  ", track.isRecoFlagSet(o), track.isRecoFlagSet(o << 1), track.isRecoFlagSet(o << 2), track.isRecoFlagSet(o << 3));
+  o = ERecoFlag::kTPCin;
+  s += Form("TPC(%d, %d, %d, %d)\n", track.isRecoFlagSet(o), track.isRecoFlagSet(o << 1), track.isRecoFlagSet(o << 2), track.isRecoFlagSet(o << 3));
+  o = ERecoFlag::kTRDin;
+  s += Form("TRD(%d, %d, %d, %d) ", track.isRecoFlagSet(o), track.isRecoFlagSet(o << 1), track.isRecoFlagSet(o << 2), track.isRecoFlagSet(o << 3));
+  o = ERecoFlag::kTOFin;
+  s += Form("TOF(%d, %d, %d, %d)\n", track.isRecoFlagSet(o), track.isRecoFlagSet(o << 1), track.isRecoFlagSet(o << 2), track.isRecoFlagSet(o << 3));
+  o = ERecoFlag::kHMPIDout;
+  s += Form("HMPID(out = %d, pid = %d)\n", track.isRecoFlagSet(o), track.isRecoFlagSet(o << 1));
+  s += Form("ESD pid = %d", track.isRecoFlagSet(ERecoFlag::kESDpid));
+
+  return s;
+}
+
 bool EventManager::trackSelected(const VisualisationTrack& track)
 {
-  // TODO: No reconstruction flag constants available yet??
-  //  Remove the enum below once it is done
-  enum {
-    kITSin = 0x1,
-    kITSrefit = 0x4,
-    kTPCin = 0x10,
-    kTPCrefit = 0x40,
-    kITSpureSA = 0x10000000
-  };
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);
   std::string trackSelection = settings.GetValue("tracks.selection", "");
 
   if (trackSelection == "ITSin_noTPCin") {
-    return track.isRecoFlagSet(kITSin) && !track.isRecoFlagSet(kTPCin);
+    return track.isRecoFlagSet(ERecoFlag::kITSin) && !track.isRecoFlagSet(ERecoFlag::kTPCin);
   }
   if (trackSelection == "noTISpureSA") {
-    return !track.isRecoFlagSet(kITSpureSA);
+    return !track.isRecoFlagSet(ERecoFlag::kITSpureSA);
   }
   if (trackSelection == "TPCrefit") {
-    return track.isRecoFlagSet(kTPCrefit);
+    return track.isRecoFlagSet(ERecoFlag::kTPCrefit);
   }
   if (trackSelection == "TPCrefit_ITSrefit") {
-    return track.isRecoFlagSet(kTPCrefit) && track.isRecoFlagSet(kITSrefit);
+    return track.isRecoFlagSet(ERecoFlag::kTPCrefit) && track.isRecoFlagSet(ERecoFlag::kITSrefit);
   }
   return true;
 }
@@ -600,8 +638,10 @@ void EventManager::displayMuonTracks(VisualisationEvent& event)
     TEveRecTrackD t;
     double* p = track.getMomentum();
     t.fP = {p[0], p[1], p[2]};
+    t.fV = track.getVertex();
     t.fSign = track.getCharge() > 0 ? 1 : -1;
-    auto* vistrack = new TEveTrack(&t, ghost->GetPropagator()); // &TEveTrackPropagator::fgDefault);
+    t.fIndex = track.getID();
+    auto* vistrack = new TEveTrack(&t, ghost->GetPropagator());
     size_t pointCount = track.getPointCount();
     vistrack->Reset(pointCount);
 
@@ -610,8 +650,18 @@ void EventManager::displayMuonTracks(VisualisationEvent& event)
       vistrack->SetNextPoint(point[0], point[1], point[2]);
     }
     vistrack->SetAttLineAttMarker(ghost);
+
+    // For ghost muon tracks
+    vistrack->SetName("mu");
+    vistrack->SetTitle("Trigger only");
+    // For other muon tracks
+    //vistrack->SetName(Form("%cmu", track.getCharge() > 0 ? '+' : '-'));
+    //vistrack->SetStdTitle();
+
     ghost->AddElement(vistrack);
   }
+
+  ghost->SetTitle(Form("N all tracks = %lu", muonCount));
 
   if (muonCount != 0) {
     mDataTypeLists[EVisualisationDataType::Muon]->AddElement(match);
@@ -623,14 +673,6 @@ void EventManager::displayMuonTracks(VisualisationEvent& event)
 void EventManager::setupMuonTrackPropagator(TEveTrackPropagator* prop, Bool_t tracker, Bool_t trigger)
 {
   // TODO: Set magnetic field properly
-  //  if (AliMUONTrackExtrap::IsFieldON())
-  //  {
-  //    prop->SetMagFieldObj(new AliEveMagField);
-  //  }
-  //  else
-  //  {
-  //    prop->SetMagField(0.0);
-  //  }
   prop->SetMagField(0.5);
   prop->SetStepper(TEveTrackPropagator::kRungeKutta);
 
