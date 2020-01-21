@@ -23,6 +23,7 @@
 #include "EventVisualisationDataConverter/VisualisationEvent.h"
 
 #include <TEveElement.h>
+#include <TFile.h>
 
 namespace o2
 {
@@ -44,7 +45,22 @@ class DataInterpreter
   virtual ~DataInterpreter() = default;
 
   // Should return visualisation objects for required data type
-  virtual void interpretDataForType(TObject* data, EVisualisationDataType type, VisualisationEvent& event) = 0;
+  virtual void interpretDataForType(TObject* data, EVisualisationDataType type, VisualisationEvent& event)
+  {
+    TList* list = (TList*)data;
+    Int_t eventId = ((TVector2*)list->At(1))->X();
+    TFile* file = (TFile*)list->At(0);
+
+    if (type == Tracks) {
+      interpretTracks(file, eventId, event);
+    } else if (type == Clusters) {
+      interpretClusters(file, eventId, event);
+    }
+  }
+
+ private:
+  virtual void interpretTracks(TFile* file, Int_t eventId, VisualisationEvent& event){};
+  virtual void interpretClusters(TFile* file, Int_t eventId, VisualisationEvent& event){};
 };
 
 } // namespace event_visualisation

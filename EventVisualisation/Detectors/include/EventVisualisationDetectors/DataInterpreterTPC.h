@@ -13,6 +13,7 @@
 /// \brief   Converting TPC data to Event Visualisation primitives
 /// \author  julian.myrcha@cern.ch
 /// \author  p.nowakowski@cern.ch
+/// \author  Maja Kabus <maja.kabus@cern.ch>
 ///
 
 #ifndef ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAINTERPRETERTPC_H
@@ -42,7 +43,9 @@ class DataInterpreterTPC : public DataInterpreter
   // Default destructor
   ~DataInterpreterTPC() final = default;
 
-  void interpretDataForType(TObject* data, EVisualisationDataType type, VisualisationEvent& event) final;
+ private:
+  void interpretTracks(TFile* file, Int_t eventId, VisualisationEvent& event) final;
+  void interpretClusters(TFile* file, Int_t eventId, VisualisationEvent& event) final;
 };
 
 } // namespace event_visualisation

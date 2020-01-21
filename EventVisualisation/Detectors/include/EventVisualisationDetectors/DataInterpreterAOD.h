@@ -44,7 +44,7 @@ class DataInterpreterAOD : public DataInterpreter
   void interpretDataForType(TObject* data, EVisualisationDataType type, VisualisationEvent& event) final;
 
  private:
-  void interpretAODTracks(TFile* AODFile, Int_t eventId, VisualisationEvent& event);
+  void interpretTracks(TFile* AODFile, Int_t eventId, VisualisationEvent& event) final;
 
   void interpretAODCaloCells(TFile* AODFile, Int_t eventId, VisualisationEvent& event);
   void interpretEMCALCell(Int_t absID, Float_t amplitude, VisualisationEvent& event);

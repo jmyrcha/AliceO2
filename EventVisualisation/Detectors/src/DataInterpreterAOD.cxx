@@ -118,7 +118,7 @@ void DataInterpreterAOD::interpretDataForType(TObject* data, EVisualisationDataT
   TFile* AODFile = (TFile*)list->At(0);
 
   if (type == Tracks) {
-    interpretAODTracks(AODFile, eventId, event);
+    interpretTracks(AODFile, eventId, event);
   } else if (type == Calo) {
     interpretAODCaloCells(AODFile, eventId, event);
   } else if (type == Muon) {
@@ -126,7 +126,7 @@ void DataInterpreterAOD::interpretDataForType(TObject* data, EVisualisationDataT
   }
 }
 
-void DataInterpreterAOD::interpretAODTracks(TFile* AODFile, Int_t eventId, VisualisationEvent& event)
+void DataInterpreterAOD::interpretTracks(TFile* AODFile, Int_t eventId, VisualisationEvent& event)
 {
   TTree* tracks = (TTree*)AODFile->Get("O2tracks");
 
