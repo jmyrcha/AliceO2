@@ -26,9 +26,11 @@
 
 #include "DetectorsBase/GeometryManager.h"
 #include "DetectorsCommonDataFormats/AlignParam.h"
+#include "CCDB/BasicCCDBManager.h"
 
 using namespace o2::detectors;
 using namespace o2::base;
+using namespace o2::ccdb;
 
 /// Implementation of GeometryManager, the geometry manager class which interfaces to TGeo and
 /// the look-up table mapping unique volume indices to symbolic volume names. For that, it
@@ -453,11 +455,20 @@ void GeometryManager::loadGeometry(std::string geomFileName, std::string geomNam
   }
 
   sGeometry = nullptr;
+  LOG(INFO) << "Loading geometry from CDB";
+  auto& ccdbManager = BasicCCDBManager::instance();
+  auto geometry = ccdbManager.get<TGeoManager>("GRP/Geometry/Data");
+  if (geometry) {
+    sGeometry = geometry;
+    LOG(INFO) << "From now on using geometry from CDB base folder: " << ccdbManager.getURL();
+  } else {
+    LOG(WARNING) << "Couldn't load geometry data from CDB!";
+  }
+
   if (geomFileName.data() && (!gSystem->AccessPathName(geomFileName.data()))) {
     sGeometry = TGeoManager::Import(geomFileName.data(), geomName.data());
     LOG(INFO) << "From now on using geometry: " << geomName << " from custom geometry file: " << geomFileName;
-  }
-  else {
+  } else {
     LOG(FATAL) << "Did not find geometry named " << geomName;
   }
 }
