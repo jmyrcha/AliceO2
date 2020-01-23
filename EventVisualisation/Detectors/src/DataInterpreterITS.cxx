@@ -68,7 +68,7 @@ void DataInterpreterITS::interpretTracks(TFile* file, Int_t eventId, Visualisati
   trackList->IncDenyDestroy();
   auto prop = trackList->GetPropagator();
   prop->SetMagField(0.5);
-  prop->SetMaxR(50.);
+  prop->SetMaxR(40.0);
 
   auto currentTrackROF = trackROFrames->at(eventId);
 

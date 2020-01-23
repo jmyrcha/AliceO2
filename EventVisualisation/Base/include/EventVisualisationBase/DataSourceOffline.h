@@ -47,7 +47,6 @@ class DataSourceOffline : public DataSource
   void registerReader(DataReader* reader, EVisualisationGroup detector) override
   {
     sInstance[detector] = reader;
-    reader->open();
   }
 
   bool hasEventData(int eventNumber, EVisualisationGroup detector) override;

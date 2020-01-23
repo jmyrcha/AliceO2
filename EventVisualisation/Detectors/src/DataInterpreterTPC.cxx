@@ -46,7 +46,7 @@ void DataInterpreterTPC::interpretTracks(TFile* file, Int_t eventId, Visualisati
 {
   TTree* tracks = (TTree*)file->Get("tpcrec");
 
-  //Read all tracks to a buffer
+  // Read all tracks to a buffer
   std::vector<tpc::TrackTPC>* trkArr = nullptr;
   tracks->SetBranchAddress("TPCTracks", &trkArr);
   tracks->GetEntry(0);
@@ -54,7 +54,8 @@ void DataInterpreterTPC::interpretTracks(TFile* file, Int_t eventId, Visualisati
   TEveTrackList* trackList = new TEveTrackList("tracks");
   trackList->IncDenyDestroy();
   auto prop = trackList->GetPropagator();
-  prop->SetMagField(0.5);
+  prop->SetMagField(0.5); // 0.1 * field in simulation workflow (different units)
+  prop->SetMaxR(250.0);
 
   // Tracks are not in order
   int startTime = 2 * mTPCReadoutCycle * eventId;
@@ -70,6 +71,7 @@ void DataInterpreterTPC::interpretTracks(TFile* file, Int_t eventId, Visualisati
 
     std::array<float, 3> p;
     rec.getPxPyPzGlo(p);
+
     TEveRecTrackD t;
     t.fP = {p[0], p[1], p[2]};
     t.fSign = (rec.getSign() < 0) ? -1 : 1;

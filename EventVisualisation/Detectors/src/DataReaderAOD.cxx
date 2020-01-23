@@ -52,11 +52,11 @@ void DataReaderAOD::open()
   muon->SetBranchAddress("fID4mu", &muonEventID);
   Int_t maxEventID = 0;
 
-  int numTrackEvents = trec->GetEntriesFast();
-  int numCaloEvents = calo->GetEntriesFast();
-  int numMuonEvents = muon->GetEntriesFast();
+  int numTracks = trec->GetEntriesFast();
+  int numCalo = calo->GetEntriesFast();
+  int numMuon = muon->GetEntriesFast();
 
-  for (int i = numTrackEvents - 1; i >= 0; i--) {
+  for (int i = numTracks - 1; i >= 0; i--) {
     trec->GetEntry(i);
     if (trackEventID > maxEventID)
       maxEventID = trackEventID;
@@ -65,7 +65,7 @@ void DataReaderAOD::open()
       break;
   }
 
-  for (int i = numCaloEvents - 1; i >= 0; i--) {
+  for (int i = numCalo - 1; i >= 0; i--) {
     calo->GetEntry(i);
     if (caloEventID > maxEventID)
       maxEventID = caloEventID;
@@ -74,7 +74,7 @@ void DataReaderAOD::open()
       break;
   }
 
-  for (int i = numMuonEvents - 1; i >= 0; i--) {
+  for (int i = numMuon - 1; i >= 0; i--) {
     muon->GetEntry(i);
     if (muonEventID > maxEventID)
       maxEventID = muonEventID;
@@ -84,7 +84,7 @@ void DataReaderAOD::open()
   }
 
   // TODO: Slow method. How to get events number?
-  LOG(INFO) << "Setting max ev to: " << maxEventID + 1;
+  LOG(INFO) << "Setting event count to: " << maxEventID;
   setEventCount(maxEventID + 1);
 }
 
@@ -96,9 +96,9 @@ TObject* DataReaderAOD::getEventData(int eventNumber, EVisualisationDataType dat
 
   /// FIXME: Redesign the data reader class
   TList* list = new TList();
-  list->Add(this->mAODFile);
   TVector2* v = new TVector2(eventNumber, 0);
   list->Add(v);
+  list->Add(this->mAODFile);
   return list;
 }
 } // namespace event_visualisation

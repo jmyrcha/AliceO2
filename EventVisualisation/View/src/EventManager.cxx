@@ -91,8 +91,8 @@ void EventManager::Open()
       DataSourceOffline* source = new DataSourceOffline();
       for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; i++) {
         if (mDataReaders[i] != nullptr) {
-          mDataReaders[i]->open();
           source->registerReader(mDataReaders[i], static_cast<EVisualisationGroup>(i));
+          mDataReaders[i]->open();
         }
       }
       setDataSource(source);
@@ -247,8 +247,8 @@ void EventManager::displayTracks(VisualisationEvent& event, const std::string& d
   list->IncDenyDestroy();
   list->SetLineWidth(mWidth);
 
-  const Float_t magF = 0.1 * 5; // FIXME: Get it from OCDB / event
-  const Float_t maxR = settings.GetValue("tracks.animate", false) ? 0 : 520;
+  const float magF = 0.1 * 5; // FIXME: Get it from OCDB / event
+  const float maxR = settings.GetValue("tracks.animate", false) ? 0 : 520;
   auto prop = list->GetPropagator();
   prop->SetMagField(magF);
   prop->SetMaxR(maxR);
@@ -287,8 +287,8 @@ void EventManager::displayTracksByPt(VisualisationEvent& event, const std::strin
   trackList->IncDenyDestroy();
 
   const Int_t nCont = 6;
-  const Float_t magF = 0.1 * 5; // FIXME: Get it from OCDB / event
-  const Float_t maxR = settings.GetValue("tracks.animate", false) ? 0 : 520;
+  const float magF = 0.1 * 5; // FIXME: Get it from OCDB / event
+  const float maxR = settings.GetValue("tracks.animate", false) ? 0 : 520;
 
   TEveTrackList* tl[nCont];
   Int_t tc[nCont];
@@ -385,8 +385,8 @@ void EventManager::displayTracksByType(VisualisationEvent& event, const std::str
   trackList->IncDenyDestroy();
 
   const Int_t nCont = 15;
-  const Float_t magF = 0.1 * 5; // FIXME: Get it from OCDB / event
-  const Float_t maxR = settings.GetValue("tracks.animate", false) ? 0 : 520;
+  const float magF = 0.1 * 5; // FIXME: Get it from OCDB / event
+  const float maxR = settings.GetValue("tracks.animate", false) ? 0 : 520;
 
   TEveTrackList* tl[nCont];
   Int_t tc[nCont];
@@ -752,8 +752,8 @@ void EventManager::displayCalo(VisualisationEvent& event)
   memset(phosQuads, 0, 4 * sizeof(TEveQuadSet*));
 
   // Quad size
-  Float_t quadSizeEMCAL = 6; // cm, tower side size
-  Float_t quadSizePHOS = 2.2;
+  float quadSizeEMCAL = 6; // cm, tower side size
+  float quadSizePHOS = 2.2;
 
   for (Int_t sm = 0; sm < numberOfSuperModules; ++sm) {
     emcalQuads[sm] = new TEveQuadSet(Form("SM %d", sm + 1));
@@ -827,7 +827,7 @@ void EventManager::displayCalo(VisualisationEvent& event)
   mDataTypeLists[EVisualisationDataType::Calo]->AddElement(phosList);
 }
 
-void EventManager::setCaloQuadSet(const Float_t quadSize, const TGeoHMatrix* matrix, TEveQuadSet* quadSet)
+void EventManager::setCaloQuadSet(const float quadSize, const TGeoHMatrix* matrix, TEveQuadSet* quadSet)
 {
   quadSet->SetOwnIds(kTRUE);
   // Type of object to be displayed, rectangle with cell size

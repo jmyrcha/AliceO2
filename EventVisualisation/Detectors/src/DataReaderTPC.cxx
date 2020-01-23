@@ -49,7 +49,6 @@ void DataReaderTPC::open()
   }
 
   std::vector<tpc::TrackTPC>* trackBuffer = nullptr;
-
   trec->SetBranchAddress("TPCTracks", &trackBuffer);
   trec->GetEntry(0);
 
@@ -75,10 +74,10 @@ TObject* DataReaderTPC::getEventData(int eventNumber, EVisualisationDataType dat
 
   /// FIXME: Redesign the data reader class
   TList* list = new TList();
-  list->Add(this->mTracFile);
-  list->Add(this->mClusFile);
   TVector2* v = new TVector2(eventNumber, 0);
   list->Add(v);
+  list->Add(this->mTracFile);
+  list->Add(this->mClusFile);
   return list;
 }
 

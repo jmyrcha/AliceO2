@@ -48,12 +48,13 @@ class DataInterpreter
   virtual void interpretDataForType(TObject* data, EVisualisationDataType type, VisualisationEvent& event)
   {
     TList* list = (TList*)data;
-    Int_t eventId = ((TVector2*)list->At(1))->X();
-    TFile* file = (TFile*)list->At(0);
+    Int_t eventId = ((TVector2*)list->At(0))->X();
 
     if (type == Tracks) {
+      TFile* file = (TFile*)list->At(1);
       interpretTracks(file, eventId, event);
     } else if (type == Clusters) {
+      TFile* file = (TFile*)list->At(2);
       interpretClusters(file, eventId, event);
     }
   }

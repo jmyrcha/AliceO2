@@ -61,6 +61,7 @@ void DataReaderITS::open()
   clustersRof->GetEntry(0);
 
   if (trackROFrames->size() == clusterROFrames->size()) {
+    LOG(INFO) << "Setting event count to: " << trackROFrames->size();
     setEventCount(trackROFrames->size());
   } else {
     LOG(FATAL) << "DataReaderITS: Inconsistent number of readout frames in files";
@@ -75,10 +76,10 @@ TObject* DataReaderITS::getEventData(int eventNumber, EVisualisationDataType dat
 
   /// FIXME: Redesign the data reader class
   TList* list = new TList();
-  list->Add(this->mTracFile);
-  list->Add(this->mClusFile);
   TVector2* v = new TVector2(eventNumber, 0);
   list->Add(v);
+  list->Add(this->mTracFile);
+  list->Add(this->mClusFile);
   return list;
 }
 } // namespace event_visualisation

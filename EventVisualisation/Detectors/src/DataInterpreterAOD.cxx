@@ -114,8 +114,8 @@ DataInterpreterAOD::DataInterpreterAOD()
 void DataInterpreterAOD::interpretDataForType(TObject* data, EVisualisationDataType type, VisualisationEvent& event)
 {
   TList* list = (TList*)data;
-  Int_t eventId = ((TVector2*)list->At(1))->X();
-  TFile* AODFile = (TFile*)list->At(0);
+  Int_t eventId = ((TVector2*)list->At(0))->X();
+  TFile* AODFile = (TFile*)list->At(1);
 
   if (type == Tracks) {
     interpretTracks(AODFile, eventId, event);
@@ -132,16 +132,16 @@ void DataInterpreterAOD::interpretTracks(TFile* AODFile, Int_t eventId, Visualis
 
   // Read all tracks parameters to buffers
   Int_t trkID;          // The index of the collision vertex, to which the track is attached
-  Float_t trkX;         // X coordinate for the point of parametrisation
-  Float_t trkAlpha;     // Local <--> global coor.system rotation angle
-  Float_t trkY;         // fP[0] local Y-coordinate of a track (cm)
-  Float_t trkZ;         // fP[1] local Z-coordinate of a track (cm)
-  Float_t trkSnp;       // fP[2] local sine of the track momentum azimuthal angle
-  Float_t trkTgl;       // fP[3] tangent of the track momentum dip angle
-  Float_t trkSigned1Pt; // fP[4] 1/pt (1/(GeV/c))
+  float trkX;           // X coordinate for the point of parametrisation
+  float trkAlpha;       // Local <--> global coor.system rotation angle
+  float trkY;           // fP[0] local Y-coordinate of a track (cm)
+  float trkZ;           // fP[1] local Z-coordinate of a track (cm)
+  float trkSnp;         // fP[2] local sine of the track momentum azimuthal angle
+  float trkTgl;         // fP[3] tangent of the track momentum dip angle
+  float trkSigned1Pt;   // fP[4] 1/pt (1/(GeV/c))
   o2::track::PID trkPID;
   ULong64_t trkFlags;   // Reconstruction status flags - track quality parameters
-  Float_t trkC1Pt21Pt2; // fC[14]
+  float trkC1Pt21Pt2;   // fC[14]
   tracks->SetBranchAddress("fID4Tracks", &trkID);
   tracks->SetBranchAddress("fX", &trkX);
   tracks->SetBranchAddress("fAlpha", &trkAlpha);
@@ -199,7 +199,7 @@ void DataInterpreterAOD::interpretTracks(TFile* AODFile, Int_t eventId, Visualis
     VisualisationTrack track(trkInd, ETrackType::Standard, eve_track->GetCharge(), energy, -1, trkPID, 1.0 / trkSigned1Pt, mass, track_p, track_start, track_end, rec.getCurvature(bz), rec.getTheta(), rec.getPhi(), trkC1Pt21Pt2, trkFlags);
 
     for (int j = 0; j < eve_track->GetN(); j++) {
-      Float_t x, y, z;
+      float x, y, z;
       eve_track->GetPoint(j, x, y, z);
       track.addPolyPoint(x, y, z);
     }
@@ -216,7 +216,7 @@ void DataInterpreterAOD::interpretAODCaloCells(TFile* AODFile, Int_t eventId, Vi
   TTree* calo = (TTree*)AODFile->Get("O2calo");
   Int_t caloID;           // The index of the collision vertex, to which the cell is attached
   Short_t caloCellNumber; // Cell absolute Id. number
-  Float_t caloAmplitude;  // Cell amplitude (= energy!)
+  float caloAmplitude;    // Cell amplitude (= energy!)
   Char_t caloType;        // Cell type (-1 is undefined, 0 is PHOS, 1 is EMCAL)
   calo->SetBranchAddress("fID4Calo", &caloID);
   calo->SetBranchAddress("fCellNumber", &caloCellNumber);
@@ -230,7 +230,7 @@ void DataInterpreterAOD::interpretAODCaloCells(TFile* AODFile, Int_t eventId, Vi
   int maxCellEnergyAbsId = -1;
   // Storing values in vectors so as the file will not have to be traversed multiple times
   std::vector<Int_t> caloAbsIds = std::vector<Int_t>();
-  std::vector<Float_t> caloAmplitudes = std::vector<Float_t>();
+  std::vector<float> caloAmplitudes = std::vector<float>();
   std::vector<Char_t> caloTypes = std::vector<Char_t>();
 
   for (int i = 0; i < caloCount; i++) {
@@ -270,7 +270,7 @@ void DataInterpreterAOD::interpretAODCaloCells(TFile* AODFile, Int_t eventId, Vi
   }
 }
 
-void DataInterpreterAOD::interpretEMCALCell(Int_t absId, Float_t amplitude, VisualisationEvent& event)
+void DataInterpreterAOD::interpretEMCALCell(Int_t absId, float amplitude, VisualisationEvent& event)
 {
   auto [iSupMod, iTower, iIphi, iIeta] = mEMCALGeom->GetCellIndex(absId);
   // It should not happen, but in case the OCDB file is not the correct one.
@@ -289,7 +289,7 @@ void DataInterpreterAOD::interpretEMCALCell(Int_t absId, Float_t amplitude, Visu
   event.addCaloCell(cell);
 }
 
-void DataInterpreterAOD::interpretPHOSCell(Int_t absId, Float_t amplitude, VisualisationEvent& event)
+void DataInterpreterAOD::interpretPHOSCell(Int_t absId, float amplitude, VisualisationEvent& event)
 {
   TVector3 xyz;
   Int_t relId[3];
@@ -309,7 +309,7 @@ void DataInterpreterAOD::interpretPHOSCell(Int_t absId, Float_t amplitude, Visua
 }
 
 // TODO: Provisional cuts for all cells - in AliRoot cuts were applied for each cluster separately. No cluster information in AOD.
-Bool_t DataInterpreterAOD::cutCell(std::vector<Float_t> caloAmplitudes, std::vector<Int_t> caloAbsIds, int caloCount, Float_t amplitude, Char_t caloType, Float_t maxCellEnergy, Int_t maxCellEnergyAbsId)
+Bool_t DataInterpreterAOD::cutCell(std::vector<float> caloAmplitudes, std::vector<Int_t> caloAbsIds, int caloCount, float amplitude, Char_t caloType, float maxCellEnergy, Int_t maxCellEnergyAbsId)
 {
   //  if(caloCount < mNumMinCellsCut[caloType]) return kTRUE;
   //  if(caloCount > mNumMaxCellsCut[caloType]) return kTRUE;
@@ -326,7 +326,7 @@ Bool_t DataInterpreterAOD::cutCell(std::vector<Float_t> caloAmplitudes, std::vec
   //  }
 
   //    auto [ism, irow, icol] = getModuleNumberColAndRow(amplitude, caloType);
-  //    Float_t eCross = getECross(caloAmplitudes, caloAbsIds, caloType, ism, icol, irow);
+  //    float eCross = getECross(caloAmplitudes, caloAbsIds, caloType, ism, icol, irow);
   //    if (1 - eCross / maxCellEnergy > mExoCut) {
   //      return kTRUE;
   //    }
@@ -364,10 +364,10 @@ std::tuple<Int_t, Int_t, Int_t> DataInterpreterAOD::getModuleNumberColAndRow(Int
 
 /// Adapted from emcal_esdclustercells.C in AliRoot
 /// \return sum of energy in neighbor cells (cross) to the reference cell
-Float_t DataInterpreterAOD::getECross(std::vector<Float_t>& caloAmplitudes, std::vector<Int_t>& caloAbsIds,
-                                      Char_t caloType, Int_t imod, Int_t icol, Int_t irow)
+float DataInterpreterAOD::getECross(std::vector<float>& caloAmplitudes, std::vector<Int_t>& caloAbsIds,
+                                    Char_t caloType, Int_t imod, Int_t icol, Int_t irow)
 {
-  Float_t ecell1 = 0, ecell2 = 0, ecell3 = 0, ecell4 = 0;
+  float ecell1 = 0, ecell2 = 0, ecell3 = 0, ecell4 = 0;
   Int_t absId1 = -1, absId2 = -1, absId3 = -1, absId4 = -1;
 
   if (caloType == 1) {
@@ -430,8 +430,8 @@ Float_t DataInterpreterAOD::getECross(std::vector<Float_t>& caloAmplitudes, std:
   return ecell1 + ecell2 + ecell3 + ecell4;
 }
 
-Float_t DataInterpreterAOD::getCaloCellAmplitude(std::vector<Float_t> caloAmplitudes,
-                                                 std::vector<Int_t> caloAbsIds, Int_t absId)
+float DataInterpreterAOD::getCaloCellAmplitude(std::vector<float> caloAmplitudes,
+                                               std::vector<Int_t> caloAbsIds, Int_t absId)
 {
   auto it = std::find_if(caloAbsIds.begin(), caloAbsIds.end(), [absId](int id) { return id == absId; });
   if (it == caloAbsIds.end()) {
@@ -447,12 +447,12 @@ void DataInterpreterAOD::interpretMuonTracks(TFile* AODFile, Int_t eventId, Visu
   TTree* muon = (TTree*)AODFile->Get("O2mu");
 
   Int_t muonID;                       // The index of the collision vertex, to which the muon is attached
-  Float_t muonInverseBendingMomentum; // Inverse bending momentum (GeV/c ** -1) times the charge
-  Float_t muonThetaX;                 // Angle of track at vertex in X direction (rad)
-  Float_t muonThetaY;                 // Angle of track at vertex in Y direction (rad)
-  Float_t muonZ;                      // Z coordinate (cm)
-  Float_t muonBendingCoor;            // bending coordinate (cm)
-  Float_t muonNonBendingCoor;         // non bending coordinate (cm)
+  float muonInverseBendingMomentum;   // Inverse bending momentum (GeV/c ** -1) times the charge
+  float muonThetaX;                   // Angle of track at vertex in X direction (rad)
+  float muonThetaY;                   // Angle of track at vertex in Y direction (rad)
+  float muonZ;                        // Z coordinate (cm)
+  float muonBendingCoor;              // bending coordinate (cm)
+  float muonNonBendingCoor;           // non bending coordinate (cm)
   muon->SetBranchAddress("fID4mu", &muonID);
   muon->SetBranchAddress("fInverseBendingMomentum", &muonInverseBendingMomentum);
   muon->SetBranchAddress("fThetaX", &muonThetaX);
@@ -525,7 +525,7 @@ void DataInterpreterAOD::interpretMuonTracks(TFile* AODFile, Int_t eventId, Visu
     VisualisationTrack track(muonInd, ETrackType::MuonGhost, charge, energy, -1, pid, signedPt, mass, track_p, track_start, track_end, 0.0, theta, phi, 0.0f, 0);
 
     for (int j = 0; j < eve_track->GetN(); j++) {
-      Float_t x, y, z;
+      float x, y, z;
       eve_track->GetPoint(j, x, y, z);
       track.addPolyPoint(x, y, z);
     }
