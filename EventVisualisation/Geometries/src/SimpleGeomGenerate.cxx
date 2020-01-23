@@ -10,9 +10,10 @@
 
 ///
 /// \file    SimpleGeomGenerate.cxx
-/// \author  Maja Kabus <maja.kabus@cern.ch>
 /// \brief   Generating root simple geometry files for event display
+/// \author  Maja Kabus <maja.kabus@cern.ch>
 /// \remarks Based on simple_geom_generate macro by Jeremi Niedziela on 09/02/2016.
+///
 
 #include "EventVisualisationBase/ConfigurationManager.h"
 #include "EventVisualisationBase/GeometryManager.h"

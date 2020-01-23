@@ -134,7 +134,7 @@ void EventManager::GotoEvent(int no)
             }
           }
         }
-        displayVisualisationEvent(*mCurrentEvent, gVisualisationGroupName[i]);
+        displayVisualisationEvent(*mCurrentEvent, (EVisualisationGroup)i);
       }
     }
   }
@@ -204,18 +204,18 @@ EventManager::~EventManager()
   sInstance = nullptr;
 }
 
-void EventManager::displayVisualisationEvent(VisualisationEvent& event, const std::string& detectorName)
+void EventManager::displayVisualisationEvent(VisualisationEvent& event, EVisualisationGroup detector)
 {
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);
   if (settings.GetValue("tracks.show", false)) {
-    displayTracks(event, detectorName);
+    displayTracks(event, detector);
   }
   if (settings.GetValue("clusters.show", false)) {
-    displayClusters(event, detectorName);
+    displayClusters(event, gVisualisationGroupName[detector]);
   }
 
-  if (detectorName == "AOD") {
+  if (detector == EVisualisationGroup::AOD) {
     if (settings.GetValue("calo.show", false)) {
       displayCalo(event);
     }
@@ -225,17 +225,19 @@ void EventManager::displayVisualisationEvent(VisualisationEvent& event, const st
   }
 }
 
-void EventManager::displayTracks(VisualisationEvent& event, const std::string& detectorName)
+void EventManager::displayTracks(VisualisationEvent& event, EVisualisationGroup detector)
 {
+  const std::string& detectorName = gVisualisationGroupName[detector];
+
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);
 
   if (settings.GetValue("tracks.byPt.show", false)) {
-    displayTracksByPt(event, detectorName);
+    displayTracksByPt(event, detector);
     return;
   }
   if (settings.GetValue("tracks.byType.show", false) && detectorName == "AOD") {
-    displayTracksByType(event, detectorName);
+    displayTracksByType(event, detector);
     return;
   }
 
@@ -248,7 +250,7 @@ void EventManager::displayTracks(VisualisationEvent& event, const std::string& d
   list->SetLineWidth(mWidth);
 
   const float magF = 0.1 * 5; // FIXME: Get it from OCDB / event
-  const float maxR = settings.GetValue("tracks.animate", false) ? 0 : 520;
+  const float maxR = settings.GetValue("tracks.animate", false) ? 0 : gVisualisationGroupMaxR[detector];
   auto prop = list->GetPropagator();
   prop->SetMagField(magF);
   prop->SetMaxR(maxR);
@@ -274,11 +276,13 @@ void EventManager::displayTracks(VisualisationEvent& event, const std::string& d
   mDataTypeLists[EVisualisationDataType::Tracks]->AddElement(list);
 }
 
-void EventManager::displayTracksByPt(VisualisationEvent& event, const std::string& detectorName)
+void EventManager::displayTracksByPt(VisualisationEvent& event, EVisualisationGroup detector)
 {
   size_t trackCount = event.getTrackCount();
   if (trackCount == 0)
     return;
+
+  const std::string& detectorName = gVisualisationGroupName[detector];
 
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);
@@ -288,7 +292,7 @@ void EventManager::displayTracksByPt(VisualisationEvent& event, const std::strin
 
   const int nCont = 6;
   const float magF = 0.1 * 5; // FIXME: Get it from OCDB / event
-  const float maxR = settings.GetValue("tracks.animate", false) ? 0 : 520;
+  const float maxR = settings.GetValue("tracks.animate", false) ? 0 : gVisualisationGroupMaxR[detector];
 
   TEveTrackList* tl[nCont];
   int tc[nCont];
@@ -372,11 +376,13 @@ void EventManager::displayTracksByPt(VisualisationEvent& event, const std::strin
   mDataTypeLists[EVisualisationDataType::Tracks]->AddElement(trackList);
 }
 
-void EventManager::displayTracksByType(VisualisationEvent& event, const std::string& detectorName)
+void EventManager::displayTracksByType(VisualisationEvent& event, EVisualisationGroup detector)
 {
   size_t trackCount = event.getTrackCount();
   if (trackCount == 0)
     return;
+
+  const std::string& detectorName = gVisualisationGroupName[detector];
 
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);
@@ -386,7 +392,7 @@ void EventManager::displayTracksByType(VisualisationEvent& event, const std::str
 
   const int nCont = 15;
   const float magF = 0.1 * 5; // FIXME: Get it from OCDB / event
-  const float maxR = settings.GetValue("tracks.animate", false) ? 0 : 520;
+  const float maxR = settings.GetValue("tracks.animate", false) ? 0 : gVisualisationGroupMaxR[detector];
 
   TEveTrackList* tl[nCont];
   int tc[nCont];
@@ -592,7 +598,7 @@ void EventManager::animateTracks()
           propagators.push_back(trkList->GetPropagator());
         }
         int animationSpeed = settings.GetValue("tracks.animation.speed", 10);
-        for (int R = 0; R <= 520; R += animationSpeed) {
+        for (int R = 0; R <= gVisualisationGroupMaxR[i]; R += animationSpeed) {
           animationSpeed -= 10;
           if (animationSpeed < 10)
             animationSpeed = 10;

@@ -12,6 +12,7 @@
 /// \file    VisualisationConstants.h
 /// \author  Jeremi Niedziela
 /// \author  julian.myrcha@cern.ch
+/// \author  Maja Kabus <maja.kabus@cern.ch>
 ///
 
 #ifndef ALICE_O2_EVENTVISUALISATION_BASE_VISUALISATIONCONSTANTS_H
@@ -57,6 +58,23 @@ const std::string gVisualisationGroupName[NvisualisationGroups] = {
   "TPC",
   "TRD",
   "AOD"};
+
+const float gVisualisationGroupMaxR[NvisualisationGroups] = {
+  520, // ACO
+  520, // EMC
+  520, // HMP
+  520, // MCH
+  520, // PHS
+  520, // RPH
+  520, // TOF
+  520, // SDD
+  520, // SPD
+  520, // SSD
+  40,  // ITS
+  250, // TPC
+  520, // TRD
+  520, // AOD
+};
 
 enum EVisualisationDataType {
   Raw,       ///< Raw data

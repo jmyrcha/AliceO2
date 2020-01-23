@@ -381,6 +381,7 @@ void EventManagerFrame::saveScreenshot()
       currentY = y;
     }
 
+    // For FBO version
     //TASImage* viewImg = (TASImage*)view->GetGLViewer()->GetPictureUsingFBO(currentWidth, currentHeight);
 
     if (viewImg) {

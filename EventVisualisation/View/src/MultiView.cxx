@@ -11,6 +11,7 @@
 ///
 /// \file    MultiView.cxx
 /// \author  Jeremi Niedziela
+/// \author  Maja Kabus <maja.kabus@cern.ch>
 ///
 
 #include "EventVisualisationView/MultiView.h"
@@ -196,9 +197,6 @@ void MultiView::destroyAllGeometries()
       mGeomVector[i] = nullptr;
     }
   }
-  //  getScene(Scene3dGeom)->DestroyElements();
-  //  getScene(SceneRphiGeom)->DestroyElements();
-  //  getScene(SceneZrhoGeom)->DestroyElements();
 }
 
 void MultiView::registerElement(TEveElement* event)

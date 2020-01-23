@@ -108,7 +108,6 @@ void DataInterpreterTPC::interpretTracks(TFile* file, int eventId, Visualisation
 
 void DataInterpreterTPC::interpretClusters(TFile* file, int eventId, VisualisationEvent& event)
 {
-  //Why cannot TPC clusters be read like other clusters?
   auto reader = new tpc::ClusterNativeHelper::Reader();
   reader->init(file->GetName());
   reader->read(0);

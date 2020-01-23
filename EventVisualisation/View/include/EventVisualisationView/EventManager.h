@@ -110,11 +110,11 @@ class EventManager : public TEveEventManager
   void operator=(EventManager const&) = delete;
 
   /// Display visualisation event
-  void displayVisualisationEvent(VisualisationEvent& event, const std::string& detectorName);
+  void displayVisualisationEvent(VisualisationEvent& event, EVisualisationGroup detector);
 
-  void displayTracks(VisualisationEvent& event, const std::string& detectorName);
-  void displayTracksByPt(VisualisationEvent& event, const std::string& detectorName);
-  void displayTracksByType(VisualisationEvent& event, const std::string& detectorName);
+  void displayTracks(VisualisationEvent& event, EVisualisationGroup detector);
+  void displayTracksByPt(VisualisationEvent& event, EVisualisationGroup detector);
+  void displayTracksByType(VisualisationEvent& event, EVisualisationGroup detector);
   TString getTrackTitle(VisualisationTrack& track);
 
   bool trackSelected(const VisualisationTrack& track);

@@ -12,6 +12,7 @@
 /// \file    GeometryManager.cxx
 /// \author  Jeremi Niedziela
 /// \author  Julian Myrcha
+/// \author  Maja Kabus <maja.kabus@cern.ch>
 ///
 
 #include "EventVisualisationBase/GeometryManager.h"

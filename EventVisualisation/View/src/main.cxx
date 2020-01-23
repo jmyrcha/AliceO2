@@ -13,6 +13,7 @@
 /// \author  Jeremi Niedziela
 /// \author  julian.myrcha@cern.ch
 /// \author  p.nowakowski@cern.ch
+/// \author  Maja Kabus <maja.kabus@cern.ch>
 ///
 
 #include "EventVisualisationView/Initializer.h"
@@ -25,19 +26,9 @@
 #include <TEveManager.h>
 #include <TEnv.h>
 
-#include <string>
 #include <unistd.h>
 
 using namespace o2::event_visualisation;
-
-std::string printOptions(Options* o)
-{
-  std::string res;
-  res.append(std::string("its         : ") + (o->its ? "true" : "false") + "\n");
-  res.append(std::string("tpc         : ") + (o->tpc ? "true" : "false") + "\n");
-  res.append(std::string("aod         : ") + (o->aod ? "true" : "false") + "\n");
-  return res;
-}
 
 Options* processCommandLine(int argc, char* argv[])
 {

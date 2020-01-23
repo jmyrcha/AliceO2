@@ -8,9 +8,11 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
+///
 /// \file    CaloMatrix.h
 /// \brief   Temporary, to provide alignment matrix for event display
 /// \author  Maja Kabus <maja.kabus@cern.ch>
+///
 
 #ifndef ALICE_O2_EVENTVISUALISATION_DETECTORS_CALOMATRIX_H
 #define ALICE_O2_EVENTVISUALISATION_DETECTORS_CALOMATRIX_H

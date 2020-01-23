@@ -10,8 +10,9 @@
 
 ///
 /// \file    FillO2CDBGeometry.cxx
-/// \author  Maja Kabus <maja.kabus@cern.ch>
 /// \brief   Creating O2CDB entry for O2geometry.root
+/// \author  Maja Kabus <maja.kabus@cern.ch>
+///
 
 #include "CCDB/CcdbApi.h"
 #include "EventVisualisationBase/ConfigurationManager.h"

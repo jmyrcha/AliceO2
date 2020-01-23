@@ -44,6 +44,7 @@ class VisualisationCluster
   void setCoordinates(double xyz[3]);
   double mCoordinates[3]; /// Vector of cluster's coordinates
 };
+
 } // namespace event_visualisation
 } // namespace o2
 #endif //ALICE_O2_EVENTVISUALISATION_DATACONVERTER_VISUALISATIONCLUSTER_H
