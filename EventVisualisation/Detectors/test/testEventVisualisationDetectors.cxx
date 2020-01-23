@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(Should_SetProperEventCount_When_DataFileIsCorrect_Test)
 
   // Arrange
   DataReader* readers[] = {new DataReaderAOD(), new DataReaderITS(), new DataReaderTPC};
-  int eventCounts[] = {150, 10, 10, 3865};
+  int eventCounts[] = {150, 51, 12};
 
   // Act
   for (int i = 0; i < 3; i++) {
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(Should_ReturnEventData_When_EventNumberInRange_Test)
 
   // Arrange
   DataReader* readers[] = {new DataReaderAOD(), new DataReaderITS(), new DataReaderTPC};
-  int eventCounts[] = {150, 10, 10, 3865};
+  int eventCounts[] = {150, 51, 12};
 
   // Act
   for (int i = 0; i < 3; i++) {
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(Should_ReturnEmpty_When_EventNumberOutsideRange_Test)
 
   // Arrange
   DataReader* readers[] = {new DataReaderAOD(), new DataReaderITS(), new DataReaderTPC};
-  int eventCounts[] = {150, 10, 10, 3865};
+  int eventCounts[] = {150, 51, 12};
 
   // Act
   for (int i = 0; i < 3; i++) {
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(Should_ReturnEmpty_When_EventNumberOutsideRange_Test)
 
   // Assert
   for (int i = 0; i < 3; i++) {
-    TList* data = (TList*)readers[i]->getEventData(eventCounts[i], EVisualisationDataType::Tracks);
+    TList* data = (TList*)readers[i]->getEventData(eventCounts[i] + 1, EVisualisationDataType::Tracks);
     BOOST_CHECK_EQUAL(data->IsEmpty(), true);
   }
 
@@ -142,8 +142,8 @@ BOOST_AUTO_TEST_CASE(Should_InterpreEventTracks_When_CorrectEvent_Test)
   // Arrange
   DataReader* readers[] = {new DataReaderAOD(), new DataReaderITS(), new DataReaderTPC};
   DataInterpreter* interpreters[] = {new DataInterpreterAOD(), new DataInterpreterITS(), new DataInterpreterTPC};
-  int testedEvents[] = {140, 5, 5, 5};
-  int trackCounts[] = {5946, 10, 33, 2};
+  int testedEvents[] = {140, 18, 7};
+  int trackCounts[] = {5946, 9, 16};
 
   std::vector<std::unique_ptr<VisualisationEvent>> events(3);
   for (int i = 0; i < 3; i++) {
@@ -175,8 +175,8 @@ BOOST_AUTO_TEST_CASE(Should_InterpreEventClusters_When_CorrectEvent_Test)
   // Arrange
   DataReader* readers[] = {new DataReaderAOD(), new DataReaderITS(), new DataReaderTPC};
   DataInterpreter* interpreters[] = {new DataInterpreterAOD(), new DataInterpreterITS(), new DataInterpreterTPC};
-  int testedEvents[] = {140, 5, 5, 5};
-  int clusterCounts[] = {0, 1393, 5472, 1};
+  int testedEvents[] = {140, 5, 5};
+  int clusterCounts[] = {0, 1248, 5472};
 
   std::vector<std::unique_ptr<VisualisationEvent>> events(3);
   for (int i = 0; i < 3; i++) {

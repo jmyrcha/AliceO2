@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(Should_DisplayITSTracksAccordingToSettings_Test)
 
   // Act
   // Event with ITS tracks only
-  eventManager.GotoEvent(1);
+  eventManager.GotoEvent(17);
   TEveElementList* tracks = (TEveElementList*)(gEve->GetCurrentEvent()->FindChild("Tracks"));
 
   TEnv settings;
@@ -143,8 +143,8 @@ BOOST_AUTO_TEST_CASE(Should_DisplayITSTracksAccordingToSettings_Test)
   TEveElementList* ITSTracks;
   if (settings.GetValue("tracks.byPt.show", false)) {
     ITSTracks = (TEveElementList*)(tracks->FindChild("ITS tracks by Pt"));
-  } else if (settings.GetValue("tracks.byType.show", false)) {
-    ITSTracks = (TEveElementList*)(tracks->FindChild("ITS tracks by type"));
+  } else {
+    ITSTracks = (TEveElementList*)(tracks->FindChild("ITS"));
   }
 
   // Assert
@@ -169,8 +169,8 @@ BOOST_AUTO_TEST_CASE(Should_DisplayTPCTracksAccordingToSettings_Test)
   TEveElementList* TPCTracks;
   if (settings.GetValue("tracks.byPt.show", false)) {
     TPCTracks = (TEveElementList*)(tracks->FindChild("TPC tracks by Pt"));
-  } else if (settings.GetValue("tracks.byType.show", false)) {
-    TPCTracks = (TEveElementList*)(tracks->FindChild("TPC tracks by type"));
+  } else {
+    TPCTracks = (TEveElementList*)(tracks->FindChild("TPC"));
   }
 
   // Assert
