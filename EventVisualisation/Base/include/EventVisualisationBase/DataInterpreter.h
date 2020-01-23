@@ -48,7 +48,7 @@ class DataInterpreter
   virtual void interpretDataForType(TObject* data, EVisualisationDataType type, VisualisationEvent& event)
   {
     TList* list = (TList*)data;
-    Int_t eventId = ((TVector2*)list->At(0))->X();
+    int eventId = ((TVector2*)list->At(0))->X();
 
     if (type == Tracks) {
       TFile* file = (TFile*)list->At(1);
@@ -60,8 +60,8 @@ class DataInterpreter
   }
 
  private:
-  virtual void interpretTracks(TFile* file, Int_t eventId, VisualisationEvent& event){};
-  virtual void interpretClusters(TFile* file, Int_t eventId, VisualisationEvent& event){};
+  virtual void interpretTracks(TFile* file, int eventId, VisualisationEvent& event){};
+  virtual void interpretClusters(TFile* file, int eventId, VisualisationEvent& event){};
 };
 
 } // namespace event_visualisation

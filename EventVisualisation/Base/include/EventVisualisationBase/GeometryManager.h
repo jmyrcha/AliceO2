@@ -52,7 +52,7 @@ class GeometryManager
   bool mR2Geometry;
 
   /// Goes through all children nodes of geometry shape and sets drawing options
-  void drawDeep(TEveGeoShape* geomShape, Color_t color, Char_t transparency, Color_t lineColor);
+  void drawDeep(TEveGeoShape* geomShape, Color_t color, char transparency, Color_t lineColor);
 
   /// Default constructor
   GeometryManager();

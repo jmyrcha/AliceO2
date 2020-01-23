@@ -44,13 +44,13 @@ void DataReaderAOD::open()
     LOG(FATAL) << "Incorrect AOD file format, branch missing!";
   }
 
-  Int_t trackEventID;
-  Int_t caloEventID;
-  Int_t muonEventID;
+  int trackEventID;
+  int caloEventID;
+  int muonEventID;
   trec->SetBranchAddress("fID4Tracks", &trackEventID);
   calo->SetBranchAddress("fID4Calo", &caloEventID);
   muon->SetBranchAddress("fID4mu", &muonEventID);
-  Int_t maxEventID = 0;
+  int maxEventID = 0;
 
   int numTracks = trec->GetEntriesFast();
   int numCalo = calo->GetEntriesFast();

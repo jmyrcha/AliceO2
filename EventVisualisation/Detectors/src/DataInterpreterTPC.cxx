@@ -42,7 +42,7 @@ namespace o2
 namespace event_visualisation
 {
 
-void DataInterpreterTPC::interpretTracks(TFile* file, Int_t eventId, VisualisationEvent& event)
+void DataInterpreterTPC::interpretTracks(TFile* file, int eventId, VisualisationEvent& event)
 {
   TTree* tracks = (TTree*)file->Get("tpcrec");
 
@@ -106,7 +106,7 @@ void DataInterpreterTPC::interpretTracks(TFile* file, Int_t eventId, Visualisati
   delete trackList;
 }
 
-void DataInterpreterTPC::interpretClusters(TFile* file, Int_t eventId, VisualisationEvent& event)
+void DataInterpreterTPC::interpretClusters(TFile* file, int eventId, VisualisationEvent& event)
 {
   //Why cannot TPC clusters be read like other clusters?
   auto reader = new tpc::ClusterNativeHelper::Reader();

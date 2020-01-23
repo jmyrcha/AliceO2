@@ -54,7 +54,7 @@ EventManagerFrame::EventManagerFrame(o2::event_visualisation::EventManager& even
   TGTextButton* b = nullptr;
   TGHorizontalFrame* f = new TGHorizontalFrame(this);
   {
-    Int_t width = 50;
+    int width = 50;
     this->AddFrame(f, new TGLayoutHints(kLHintsExpandX, 0, 0, 2, 2));
 
     b = EventManagerFrame::makeButton(f, "First", width);
@@ -89,7 +89,7 @@ EventManagerFrame::EventManagerFrame(o2::event_visualisation::EventManager& even
 }
 
 TGTextButton* EventManagerFrame::makeButton(TGCompositeFrame* p, const char* txt,
-                                            Int_t width, Int_t lo, Int_t ro, Int_t to, Int_t bo)
+                                            int width, int lo, int ro, int to, int bo)
 {
   TGTextButton* b = new TGTextButton(p, txt);
 

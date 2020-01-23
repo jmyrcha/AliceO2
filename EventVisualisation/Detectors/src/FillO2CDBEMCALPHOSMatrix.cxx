@@ -46,13 +46,13 @@ int main(int argc, char** argv)
   o2::detectors::AlignParam a;
 
   // Null shifts and rotations
-  Double_t dx = 0., dy = 0., dz = 0., dpsi = 0., dtheta = 0., dphi = 0.;
+  double dx = 0., dy = 0., dz = 0., dpsi = 0., dtheta = 0., dphi = 0.;
   // Dummy volume identity
-  Int_t uid = o2::base::GeometryManager::getSensID(o2::detectors::DetID::EMC, 0);
+  int uid = o2::base::GeometryManager::getSensID(o2::detectors::DetID::EMC, 0);
 
   // EMCAL
   TString basePath = "EMCAL/FullSupermodule";
-  for (Int_t iModule = 0; iModule < 10; iModule++) {
+  for (int iModule = 0; iModule < 10; iModule++) {
     TString newPath = basePath;
     newPath += iModule + 1;
 
@@ -68,7 +68,7 @@ int main(int argc, char** argv)
 
   // DCal
   basePath = "EMCAL/DCALSupermodule";
-  for (Int_t iModule = 0; iModule < 6; iModule++) {
+  for (int iModule = 0; iModule < 6; iModule++) {
     TString newPath = basePath;
     newPath += iModule + 1;
     new (alobj[12 + iModule]) o2::detectors::AlignParam(newPath.Data(),
@@ -94,9 +94,9 @@ int main(int argc, char** argv)
   uid = o2::base::GeometryManager::getSensID(o2::detectors::DetID::PHS, 0);
 
   basePath = "PHOS/Module";
-  const Int_t nModules = 5;
+  const int nModules = 5;
 
-  for (Int_t iModule = 1; iModule <= nModules; iModule++) {
+  for (int iModule = 1; iModule <= nModules; iModule++) {
     TString newPath = basePath;
     newPath += iModule;
     new (alobj[iModule - 1]) o2::detectors::AlignParam(newPath.Data(),

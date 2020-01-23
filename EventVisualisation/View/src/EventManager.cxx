@@ -102,7 +102,7 @@ void EventManager::Open()
   }
 }
 
-void EventManager::GotoEvent(Int_t no)
+void EventManager::GotoEvent(int no)
 {
   //-1 means last event
   if (no == -1) {
@@ -151,7 +151,7 @@ void EventManager::GotoEvent(Int_t no)
 
 void EventManager::NextEvent()
 {
-  Int_t event = (mCurrentEventNumber + 1) % getDataSource()->getEventCount();
+  int event = (mCurrentEventNumber + 1) % getDataSource()->getEventCount();
   GotoEvent(event);
 }
 
@@ -286,13 +286,13 @@ void EventManager::displayTracksByPt(VisualisationEvent& event, const std::strin
   auto* trackList = new TEveElementList(Form("%s tracks by Pt", detectorName.c_str()));
   trackList->IncDenyDestroy();
 
-  const Int_t nCont = 6;
+  const int nCont = 6;
   const float magF = 0.1 * 5; // FIXME: Get it from OCDB / event
   const float maxR = settings.GetValue("tracks.animate", false) ? 0 : 520;
 
   TEveTrackList* tl[nCont];
-  Int_t tc[nCont];
-  Int_t count = 0;
+  int tc[nCont];
+  int count = 0;
 
   Color_t colors[nCont];
   // default color scheme by type:
@@ -361,7 +361,7 @@ void EventManager::displayTracksByPt(VisualisationEvent& event, const std::strin
     tlist->AddElement(vistrack);
   }
 
-  for (Int_t ti = 0; ti < nCont; ++ti) {
+  for (int ti = 0; ti < nCont; ++ti) {
     TEveTrackList* tlist = tl[ti];
     tlist->SetName(Form("%s [%d]", tlist->GetName(), tlist->NumChildren()));
     tlist->SetTitle(Form("N tracks = %d", tc[ti]));
@@ -384,13 +384,13 @@ void EventManager::displayTracksByType(VisualisationEvent& event, const std::str
   auto* trackList = new TEveElementList(Form("%s tracks by type", detectorName.c_str()));
   trackList->IncDenyDestroy();
 
-  const Int_t nCont = 15;
+  const int nCont = 15;
   const float magF = 0.1 * 5; // FIXME: Get it from OCDB / event
   const float maxR = settings.GetValue("tracks.animate", false) ? 0 : 520;
 
   TEveTrackList* tl[nCont];
-  Int_t tc[nCont];
-  Int_t count = 0;
+  int tc[nCont];
+  int count = 0;
 
   Color_t colors[15];
   // default color scheme by type:
@@ -492,7 +492,7 @@ void EventManager::displayTracksByType(VisualisationEvent& event, const std::str
     tlist->AddElement(vistrack);
   }
 
-  for (Int_t ti = 0; ti < nCont; ++ti) {
+  for (int ti = 0; ti < nCont; ++ti) {
     TEveTrackList* tlist = tl[ti];
     tlist->SetName(Form("%s [%d]", tlist->GetName(), tlist->NumChildren()));
     tlist->SetTitle(Form("N tracks = %d", tc[ti]));
@@ -509,7 +509,7 @@ TString EventManager::getTrackTitle(VisualisationTrack& track)
 {
   TString s;
 
-  Int_t index = track.getID();
+  int index = track.getID();
   TString idx(index == kMinInt ? "<undef>" : Form("%d", index));
 
   double* v = track.getVertex();
@@ -670,7 +670,7 @@ void EventManager::displayMuonTracks(VisualisationEvent& event)
   }
 }
 
-void EventManager::setupMuonTrackPropagator(TEveTrackPropagator* prop, Bool_t tracker, Bool_t trigger)
+void EventManager::setupMuonTrackPropagator(TEveTrackPropagator* prop, bool tracker, bool trigger)
 {
   // TODO: Set magnetic field properly
   prop->SetMagField(0.5);
@@ -755,7 +755,7 @@ void EventManager::displayCalo(VisualisationEvent& event)
   float quadSizeEMCAL = 6; // cm, tower side size
   float quadSizePHOS = 2.2;
 
-  for (Int_t sm = 0; sm < numberOfSuperModules; ++sm) {
+  for (int sm = 0; sm < numberOfSuperModules; ++sm) {
     emcalQuads[sm] = new TEveQuadSet(Form("SM %d", sm + 1));
 
     // Warning: It will crash if there is no matrix.
@@ -764,7 +764,7 @@ void EventManager::displayCalo(VisualisationEvent& event)
     gEve->AddElement(emcalQuads[sm], emcalList);
   }
 
-  for (Int_t mod = 0; mod < 4; ++mod) {
+  for (int mod = 0; mod < 4; ++mod) {
     phosQuads[mod] = new TEveQuadSet(Form("Mod %d", mod + 1)); // Why just mod in AliRoot?
 
     // TODO: Setting PHOS matrices once it will be possible
@@ -837,8 +837,8 @@ void EventManager::setCaloQuadSet(const float quadSize, const TGeoHMatrix* matri
   quadSet->RefMainTrans().SetFrom(*matrix);
 
   // Define energy range for the color palette
-  Int_t maxEMCalE = 2000; // MeV
-  Int_t minEMCalE = 100;  // MeV
+  int maxEMCalE = 2000; // MeV
+  int minEMCalE = 100;  // MeV
 
   gStyle->SetPalette(1, 0);
   TEveRGBAPalette* pal = new TEveRGBAPalette(minEMCalE, maxEMCalE);

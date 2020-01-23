@@ -49,7 +49,7 @@ DataInterpreterITS::DataInterpreterITS()
   gman->fillMatrixCache(o2::utils::bit2Mask(o2::TransformType::T2GRot));
 }
 
-void DataInterpreterITS::interpretTracks(TFile* file, Int_t eventId, VisualisationEvent& event)
+void DataInterpreterITS::interpretTracks(TFile* file, int eventId, VisualisationEvent& event)
 {
   TTree* tracksTree = (TTree*)file->Get("o2sim");
   TTree* tracksRofTree = (TTree*)file->Get("ITSTracksROF");
@@ -116,7 +116,7 @@ void DataInterpreterITS::interpretTracks(TFile* file, Int_t eventId, Visualisati
   delete trackList;
 }
 
-void DataInterpreterITS::interpretClusters(TFile* file, Int_t eventId, VisualisationEvent& event)
+void DataInterpreterITS::interpretClusters(TFile* file, int eventId, VisualisationEvent& event)
 {
   its::GeometryTGeo* gman = its::GeometryTGeo::Instance();
 

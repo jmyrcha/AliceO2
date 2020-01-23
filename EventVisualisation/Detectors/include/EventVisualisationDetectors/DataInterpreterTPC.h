@@ -34,7 +34,7 @@ namespace event_visualisation
 class DataInterpreterTPC : public DataInterpreter
 {
  private:
-  Int_t mTPCReadoutCycle = 100; // ms, provisional
+  int mTPCReadoutCycle = 100; // ms, provisional
 
  public:
   // Default constructor
@@ -44,8 +44,8 @@ class DataInterpreterTPC : public DataInterpreter
   ~DataInterpreterTPC() final = default;
 
  private:
-  void interpretTracks(TFile* file, Int_t eventId, VisualisationEvent& event) final;
-  void interpretClusters(TFile* file, Int_t eventId, VisualisationEvent& event) final;
+  void interpretTracks(TFile* file, int eventId, VisualisationEvent& event) final;
+  void interpretClusters(TFile* file, int eventId, VisualisationEvent& event) final;
 };
 
 } // namespace event_visualisation

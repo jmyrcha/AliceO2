@@ -63,14 +63,14 @@ class EventManager : public TEveEventManager
     mCcdbApi.init(path.Data());
   }
 
-  Int_t getCurrentEventNumber() const { return mCurrentEventNumber; }
+  int getCurrentEventNumber() const { return mCurrentEventNumber; }
   VisualisationEvent& getCurrentEvent() const { return *mCurrentEvent; }
 
   DataSource* getDataSource() const { return mDataSource; }
   void setDataSource(DataSource* dataSource) { this->mDataSource = dataSource; }
 
   void Open() override;
-  void GotoEvent(Int_t event) override;
+  void GotoEvent(int event) override;
   void NextEvent() override;
   void PrevEvent() override;
   void Close() override;
@@ -95,7 +95,7 @@ class EventManager : public TEveEventManager
   EDataSource mCurrentDataSourceType = EDataSource::SourceOffline;
   DataSource* mDataSource = nullptr;
 
-  Int_t mCurrentEventNumber = 0;
+  int mCurrentEventNumber = 0;
   std::unique_ptr<VisualisationEvent> mCurrentEvent = nullptr;
 
   Width_t mWidth;
@@ -121,9 +121,9 @@ class EventManager : public TEveEventManager
   void animateTracks();
 
   void displayMuonTracks(VisualisationEvent& event);
-  void setupMuonTrackPropagator(TEveTrackPropagator* prop, Bool_t tracker, Bool_t trigger);
+  void setupMuonTrackPropagator(TEveTrackPropagator* prop, bool tracker, bool trigger);
   void displayCalo(VisualisationEvent& event);
-  void setCaloQuadSet(const Float_t quadSize, const TGeoHMatrix* matrix, TEveQuadSet* quadSet);
+  void setCaloQuadSet(const float quadSize, const TGeoHMatrix* matrix, TEveQuadSet* quadSet);
   TH2F* mEmcalHistogram;
   TH2F* mPhosHistogram;
 

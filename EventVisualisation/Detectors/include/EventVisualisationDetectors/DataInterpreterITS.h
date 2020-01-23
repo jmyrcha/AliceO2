@@ -41,8 +41,8 @@ class DataInterpreterITS : public DataInterpreter
   ~DataInterpreterITS() final = default;
 
  private:
-  void interpretTracks(TFile* file, Int_t eventId, VisualisationEvent& event) final;
-  void interpretClusters(TFile* file, Int_t eventId, VisualisationEvent& event) final;
+  void interpretTracks(TFile* file, int eventId, VisualisationEvent& event) final;
+  void interpretClusters(TFile* file, int eventId, VisualisationEvent& event) final;
 };
 
 } // namespace event_visualisation

@@ -46,7 +46,7 @@ struct Options {
   int runNumber;         // -r 3
 };
 
-void addNodes(TGeoNode* node, TEveGeoNode* parent, Int_t depth, Int_t depthmax, TObjArray* list)
+void addNodes(TGeoNode* node, TEveGeoNode* parent, int depth, int depthmax, TObjArray* list)
 {
   if (--depth <= 0)
     return;
@@ -139,7 +139,7 @@ void generateSimpleGeometry(const char* detectorName = "", const int runNumber =
   for (int i = 0; i < detectorsList.size(); i++) {
     TString path;
     TObjArray* list;
-    Int_t depth;
+    int depth;
     std::string line;
 
     const char* currentDetector;

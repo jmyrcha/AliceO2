@@ -86,7 +86,7 @@ TEveGeoShape* GeometryManager::getGeometryForDetector(std::string detectorName)
   return geomShape;
 }
 
-void GeometryManager::drawDeep(TEveGeoShape* geomShape, Color_t color, Char_t transparency, Color_t lineColor)
+void GeometryManager::drawDeep(TEveGeoShape* geomShape, Color_t color, char transparency, Color_t lineColor)
 {
   if (geomShape->HasChildren()) {
     geomShape->SetRnrSelf(false);

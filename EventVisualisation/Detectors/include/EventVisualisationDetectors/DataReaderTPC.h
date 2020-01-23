@@ -32,7 +32,7 @@ class DataReaderTPC : public DataReader
  private:
   TFile* mClusFile;
   TFile* mTracFile;
-  Int_t mTPCReadoutCycle = 100; // ms, provisional
+  int mTPCReadoutCycle = 100; // ms, provisional
 
  public:
   DataReaderTPC() = default;

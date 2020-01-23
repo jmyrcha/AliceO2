@@ -39,8 +39,8 @@ namespace event_visualisation
 class EventManagerFrame : public TGMainFrame
 {
  private:
-  static TGTextButton* makeButton(TGCompositeFrame* p, const char* txt, Int_t width = 0,
-                                  Int_t lo = 0, Int_t ro = 0, Int_t to = 0, Int_t bo = 0);
+  static TGTextButton* makeButton(TGCompositeFrame* p, const char* txt, int width = 0,
+                                  int lo = 0, int ro = 0, int to = 0, int bo = 0);
 
   /// Loads geometry for all detectors
   void setupGeometry();
