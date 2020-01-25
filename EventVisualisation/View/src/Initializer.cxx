@@ -55,7 +55,7 @@ void Initializer::setup(const Options options, EDataSource defaultDataSource)
   ConfigurationManager::getInstance().getConfig(settings);
 
   const bool fullscreen = settings.GetValue("fullscreen.mode", false);                                // hide left and bottom tabs
-  const std::string ocdbStorage = settings.GetValue("OCDB.default.path", "local://$ALICE_ROOT/OCDB"); // default path to OCDB
+  const std::string ocdbStorage = settings.GetValue("OCDB.default.path", "http://ccdb-test.cern.ch:8080"); // default path to OCDB
   LOG(INFO) << "Initializer -- OCDB path:" << ocdbStorage;
 
   auto& eventManager = EventManager::getInstance();

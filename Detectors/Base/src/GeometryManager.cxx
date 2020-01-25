@@ -463,12 +463,12 @@ void GeometryManager::loadGeometry(std::string geomFileName, std::string geomNam
     LOG(INFO) << "From now on using geometry from CDB base folder: " << ccdbManager.getURL();
   } else {
     LOG(WARNING) << "Couldn't load geometry data from CDB!";
-  }
 
-  if (geomFileName.data() && (!gSystem->AccessPathName(geomFileName.data()))) {
-    sGeometry = TGeoManager::Import(geomFileName.data(), geomName.data());
-    LOG(INFO) << "From now on using geometry: " << geomName << " from custom geometry file: " << geomFileName;
-  } else {
-    LOG(FATAL) << "Did not find geometry named " << geomName;
+    if (geomFileName.data() && (!gSystem->AccessPathName(geomFileName.data()))) {
+      sGeometry = TGeoManager::Import(geomFileName.data(), geomName.data());
+      LOG(INFO) << "From now on using geometry: " << geomName << " from custom geometry file: " << geomFileName;
+    } else {
+      LOG(FATAL) << "Did not find geometry named " << geomName;
+    }
   }
 }

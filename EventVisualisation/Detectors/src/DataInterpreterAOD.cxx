@@ -26,6 +26,7 @@
 #include "PHOSBase/Geometry.h"
 #include "DataFormatsEMCAL/Constants.h"
 #include "CCDB/CcdbApi.h"
+#include "CCDB/CCDBTimeStampUtils.h"
 
 #include "FairLogger.h"
 
@@ -46,6 +47,8 @@
 #include <string>
 #include <map>
 
+using namespace o2::ccdb;
+
 namespace o2
 {
 namespace event_visualisation
@@ -59,15 +62,15 @@ DataInterpreterAOD::DataInterpreterAOD()
 
   // Version 1: EMCAL alignment matrices from O2CDB
   // Use o2-fill-o2cdb-emcal-phos-matrix to put ideal alignment matrices into O2CDB.
-  //  LOG(INFO) << "Loading matrices from OCDB";
+  // LOG(INFO) << "Loading matrices from OCDB";
   // CcdbApi api;
   // std::map<std::string, std::string> metadata; // can be empty
   // TEnv settings;
   // ConfigurationManager::getInstance().getConfig(settings);
-  // const std::string ocdbStorage = settings.GetValue("OCDB.default.path", "local://$ALICE_ROOT/OCDB"); // default path to OCDB
+  // const std::string ocdbStorage = settings.GetValue("OCDB.default.path", "http://ccdb-test.cern.ch:8080"); // default path to OCDB
   // api.init(ocdbStorage);
   //
-  // auto array = api.retrieveFromTFileAny<TClonesArray*>("EMCAL/Align/Data", metadata);
+  // auto array = api.retrieveFromTFileAny<TClonesArray>("EMCAL/Align/Data", metadata, createTimestamp(2020, 1, 1, 0, 0, 0));
   // if (!array) {
   //   LOG(WARNING) << "Could not get EMCAL alignment matrix from OCDB, falling to default";
   //   for (int mod = 0; mod < mEMCALGeom->GetNumberOfSuperModules(); mod++) {
@@ -79,13 +82,12 @@ DataInterpreterAOD::DataInterpreterAOD()
   // }
   // else {
   //   TClonesArray& alobj = *array;
-  //
-  //    for (int mod = 0; mod < mEMCALGeom->GetNumberOfSuperModules(); mod++) {
-  //      if (!mEMCALGeom->GetMatrixForSuperModuleFromArray(mod)) {
+  //   for (int mod = 0; mod < mEMCALGeom->GetNumberOfSuperModules(); mod++) {
+  //     if (!mEMCALGeom->GetMatrixForSuperModuleFromArray(mod)) {
   //        TGeoHMatrix* matrix = (TGeoHMatrix*)alobj[mod];
   //        mEMCALGeom->SetMisalMatrix(matrix, mod);
-  //      }
-  //    }
+  //     }
+  //   }
   // }
 
   // Version 2: EMCAL hardcoded matrices from sample ESD (for visual comparison)
@@ -99,16 +101,16 @@ DataInterpreterAOD::DataInterpreterAOD()
 
   // TODO: Setting PHOS matrices once it will be possible
   // Currently no setter and getter for PHOS matrices in PHOS geometry
-  //  array->Clear();
-  //  array = api.retrieveFromTFileAny<TClonesArray*>("PHOS/Align/Data", metadata);
-  //  alobj = *array;
+  // array->Clear();
+  // array = api.retrieveFromTFileAny<TClonesArray>("PHOS/Align/Data", metadata, createTimestamp(2020, 1, 1, 0, 0, 0));
+  // alobj = *array;
   //
-  //  for (int mod = 0; mod < 5; mod++) {
-  //    if (!mPHOSGeom->GetMatrixForSuperModuleFromArray(mod)) {
-  //      TGeoHMatrix* matrix = (TGeoHMatrix*) alobj[mod];
-  //      mPHOSGeom->SetMisalMatrix(matrix, mod);
-  //    }
-  //  }
+  // for (int mod = 0; mod < 5; mod++) {
+  //   if (!mPHOSGeom->GetMatrixForSuperModuleFromArray(mod)) {
+  //     TGeoHMatrix* matrix = (TGeoHMatrix*) alobj[mod];
+  //     mPHOSGeom->SetMisalMatrix(matrix, mod);
+  //   }
+  // }
 }
 
 void DataInterpreterAOD::interpretDataForType(TObject* data, EVisualisationDataType type, VisualisationEvent& event)

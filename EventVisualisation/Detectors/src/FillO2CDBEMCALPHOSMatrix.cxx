@@ -15,6 +15,7 @@
 ///
 
 #include "CCDB/CcdbApi.h"
+#include "CCDB/CCDBTimeStampUtils.h"
 #include "DetectorsCommonDataFormats/AlignParam.h"
 #include "DetectorsCommonDataFormats/DetID.h"
 #include "DetectorsBase/GeometryManager.h"
@@ -37,7 +38,7 @@ int main(int argc, char** argv)
   std::map<std::string, std::string> metadata; // can be empty
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);
-  const std::string ocdbStorage = settings.GetValue("OCDB.default.path", "local://$ALICE_ROOT/OCDB"); // default path to OCDB
+  const std::string ocdbStorage = settings.GetValue("OCDB.default.path", "http://ccdb-test.cern.ch:8080"); // default path to OCDB
   api.init(ocdbStorage);
 
   TClonesArray* array = new TClonesArray("o2::detectors::AlignParam", 20);
@@ -81,8 +82,7 @@ int main(int argc, char** argv)
   new (alobj[19]) o2::detectors::AlignParam("EMCAL/OneThrdSupermodule4",
                                             uid, dx, dy, dz, dpsi, dtheta, dphi, kTRUE);
 
-  // Store arbitrary user object in strongly typed manner
-  api.storeAsTFileAny(array, "EMCAL/Align/Data", metadata);
+  api.storeAsTFileAny(array, "EMCAL/Align/Data", metadata, createTimestamp(2020, 1, 1, 0, 0, 0));
 
   array->Clear();
 
@@ -103,7 +103,7 @@ int main(int argc, char** argv)
                                                        uid, dx, dy, dz, dpsi, dtheta, dphi, kTRUE);
   }
 
-  api.storeAsTFileAny(array, "PHOS/Align/Data", metadata);
+  api.storeAsTFileAny(array, "PHOS/Align/Data", metadata, createTimestamp(2020, 1, 1, 0, 0, 0));
 
   array->Delete();
 

@@ -15,6 +15,7 @@
 ///
 
 #include "CCDB/CcdbApi.h"
+#include "CCDB/CCDBTimeStampUtils.h"
 #include "EventVisualisationBase/ConfigurationManager.h"
 #include "DetectorsBase/GeometryManager.h"
 
@@ -67,7 +68,7 @@ int main(int argc, char** argv)
   std::map<std::string, std::string> metadata; // can be empty
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);
-  const std::string ocdbStorage = settings.GetValue("OCDB.default.path", "local://$ALICE_ROOT/OCDB"); // default path to OCDB
+  const std::string ocdbStorage = settings.GetValue("OCDB.default.path", "http://ccdb-test.cern.ch:8080"); // default path to OCDB
   api.init(ocdbStorage);
 
   if (gSystem->AccessPathName(path.data())) {
@@ -81,7 +82,7 @@ int main(int argc, char** argv)
   o2::base::GeometryManager::loadGeometry(path);
   gGeoManager->DefaultColors();
 
-  api.storeAsTFileAny(gGeoManager, "GRP/Geometry/Data", metadata);
+  api.storeAsTFileAny(gGeoManager, "GRP/Geometry/Data", metadata, createTimestamp(2020, 1, 1, 0, 0, 0));
 
   return EXIT_SUCCESS;
 }
