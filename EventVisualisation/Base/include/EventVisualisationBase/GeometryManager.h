@@ -11,6 +11,8 @@
 ///
 /// \file    GeometryManager.h
 /// \author  Jeremi Niedziela
+/// \author  julian.myrcha@cern.ch
+///
 
 #ifndef ALICE_O2_EVENTVISUALISATION_BASE_GEOMETRYMANAGER_H
 #define ALICE_O2_EVENTVISUALISATION_BASE_GEOMETRYMANAGER_H
@@ -39,19 +41,21 @@ class GeometryManager
   /// Returns ROOT shapes describing simplified geometry of given detector
   TEveGeoShape* getGeometryForDetector(std::string detectorName);
 
-  /// sets geometry to R2/R3
+  /// Sets geometry to R2/R3
   void setR2Geometry(bool R2Geometry) { this->mR2Geometry = R2Geometry; }
   bool getR2Geometry() const { return this->mR2Geometry; }
 
  private:
-  /// using R2 geometry
-  bool mR2Geometry = true;
+  static GeometryManager* sInstance;
+
+  /// If using R2 geometry
+  bool mR2Geometry;
 
   /// Goes through all children nodes of geometry shape and sets drawing options
-  void drawDeep(TEveGeoShape* geomShape, Color_t color, Char_t transparency, Color_t lineColor);
+  void drawDeep(TEveGeoShape* geomShape, Color_t color, char transparency, Color_t lineColor);
 
   /// Default constructor
-  GeometryManager() = default;
+  GeometryManager();
   /// Default destructor
   ~GeometryManager() = default;
   /// Deleted copy constructor
@@ -63,4 +67,4 @@ class GeometryManager
 } // namespace event_visualisation
 } // namespace o2
 
-#endif // ALICE_O2_EVENTVISUALISATION_BASE_GEOMETRYMANAGER_H
+#endif //ALICE_O2_EVENTVISUALISATION_BASE_GEOMETRYMANAGER_H

@@ -8,47 +8,46 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-/// \file DataSourceOffline.h
-/// \brief Grouping reading from file(s)
-/// \author julian.myrcha@cern.ch
-/// \author p.nowakowski@cern.ch
+///
+/// \file    DataSourceOffline.cxx
+/// \brief   Group reading from file(s)
+/// \author  julian.myrcha@cern.ch
+/// \author  p.nowakowski@cern.ch
+/// \author  Maja Kabus <maja.kabus@cern.ch>
+///
 
-#include <EventVisualisationBase/DataSourceOffline.h>
-
-#include <TSystem.h>
-#include <TEveTreeTools.h>
-#include <TEveTrack.h>
-#include <TEveManager.h>
-#include <TFile.h>
-#include <TPRegexp.h>
-#include <TEveTrackPropagator.h>
-#include <TEveViewer.h>
-#include <TEveEventManager.h>
-#include <TEveVSD.h>
-#include <TVector3.h>
-#include <TObject.h>
+#include "EventVisualisationBase/DataSourceOffline.h"
 
 namespace o2
 {
 namespace event_visualisation
 {
 
-DataReader* DataSourceOffline::instance[EVisualisationGroup::NvisualisationGroups];
+DataReader* DataSourceOffline::sInstance[EVisualisationGroup::NvisualisationGroups];
 
-TObject* DataSourceOffline::getEventData(int no, EVisualisationGroup purpose)
+TObject* DataSourceOffline::getEventData(int no, EVisualisationGroup detector, EVisualisationDataType dataType)
 {
-  if (instance[purpose] == nullptr)
+  if (sInstance[detector] == nullptr)
     return nullptr;
-  return instance[purpose]->getEventData(no);
+  return sInstance[detector]->getEventData(no, dataType);
 }
 
-int DataSourceOffline::GetEventCount()
+bool DataSourceOffline::hasEventData(int eventNumber, EVisualisationGroup detector)
 {
+  if (sInstance[detector] == nullptr)
+    return false;
+  return sInstance[detector]->hasEventData(eventNumber);
+}
+
+int DataSourceOffline::getEventCount()
+{
+  int eventCount = 0;
   for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; i++) {
-    if (instance[i] != nullptr)
-      return instance[i]->GetEventCount();
+    if (sInstance[i] != nullptr && sInstance[i]->getEventCount() > eventCount) {
+      eventCount = sInstance[i]->getEventCount();
+    }
   }
-  return 1;
+  return eventCount;
 };
 
 } // namespace event_visualisation

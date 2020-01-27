@@ -8,10 +8,13 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-/// \file DataInterpreterITS.h
-/// \brief converting ITS data to Event Visualisation primitives
-/// \author julian.myrcha@cern.ch
-/// \author p.nowakowski@cern.ch
+///
+/// \file    DataInterpreterITS.h
+/// \brief   Converting ITS data to Event Visualisation primitives
+/// \author  julian.myrcha@cern.ch
+/// \author  p.nowakowski@cern.ch
+/// \author  Maja Kabus <maja.kabus@cern.ch>
+///
 
 #ifndef ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAINTERPRETERITS_H
 #define ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAINTERPRETERITS_H
@@ -37,11 +40,12 @@ class DataInterpreterITS : public DataInterpreter
   // Default destructor
   ~DataInterpreterITS() final = default;
 
-  // Returns a visualisation Event for this data type
-  std::unique_ptr<VisualisationEvent> interpretDataForType(TObject* data, EVisualisationDataType type) final;
+ private:
+  void interpretTracks(TFile* file, int eventId, VisualisationEvent& event) final;
+  void interpretClusters(TFile* file, int eventId, VisualisationEvent& event) final;
 };
 
 } // namespace event_visualisation
 } // namespace o2
 
-#endif //ALICE_O2_EVENTVISUALISATION_BASE_DATAINTERPRETERITS_H
+#endif //ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAINTERPRETERITS_H

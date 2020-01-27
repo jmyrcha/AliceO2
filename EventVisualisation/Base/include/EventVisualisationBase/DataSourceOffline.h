@@ -8,18 +8,20 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-/// \file DataSourceOffline.h
-/// \brief Grouping reading from file(s)
-/// \author julian.myrcha@cern.ch
-/// \author p.nowakowski@cern.ch
+///
+/// \file    DataSourceOffline.h
+/// \brief   Group reading from file(s)
+/// \author  julian.myrcha@cern.ch
+/// \author  p.nowakowski@cern.ch
+/// \author  Maja Kabus <maja.kabus@cern.ch>
+///
 
 #ifndef ALICE_O2_EVENTVISUALISATION_BASE_DATASOURCEOFFLINE_H
 #define ALICE_O2_EVENTVISUALISATION_BASE_DATASOURCEOFFLINE_H
 
-#include <EventVisualisationBase/DataSource.h>
-#include <EventVisualisationBase/DataReader.h>
+#include "EventVisualisationBase/DataSource.h"
 
-class TObject;
+#include <TObject.h>
 
 namespace o2
 {
@@ -29,7 +31,7 @@ namespace event_visualisation
 class DataSourceOffline : public DataSource
 {
  protected:
-  static DataReader* instance[EVisualisationGroup::NvisualisationGroups];
+  static DataReader* sInstance[EVisualisationGroup::NvisualisationGroups];
 
  public:
   DataSourceOffline() = default;
@@ -37,17 +39,18 @@ class DataSourceOffline : public DataSource
   ~DataSourceOffline() override = default;
   DataSourceOffline(DataSourceOffline const&) = delete;
 
-  /// Deleted assigment operator
+  /// Deleted assignment operator
   void operator=(DataSourceOffline const&) = delete;
 
-  int GetEventCount() override;
+  int getEventCount() override;
 
-  void registerReader(DataReader* reader, EVisualisationGroup purpose)
+  void registerReader(DataReader* reader, EVisualisationGroup detector) override
   {
-    instance[purpose] = reader;
+    sInstance[detector] = reader;
   }
 
-  TObject* getEventData(int no, EVisualisationGroup purpose) override;
+  bool hasEventData(int eventNumber, EVisualisationGroup detector) override;
+  TObject* getEventData(int no, EVisualisationGroup detector, EVisualisationDataType dataType) override;
 };
 
 } // namespace event_visualisation

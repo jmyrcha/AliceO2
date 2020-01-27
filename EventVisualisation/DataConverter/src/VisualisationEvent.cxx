@@ -12,11 +12,10 @@
 /// \file    VisualisationEvent.cxx
 /// \author  Jeremi Niedziela
 /// \author  Maciej Grochowicz
+/// \author  Maja Kabus <maja.kabus@cern.ch>
 ///
 
 #include "EventVisualisationDataConverter/VisualisationEvent.h"
-
-using namespace std;
 
 namespace o2
 {
@@ -28,7 +27,7 @@ VisualisationEvent::VisualisationEvent(int eventNumber,
                                        int runNumber,
                                        double energy,
                                        int multiplicity,
-                                       string collidingSystem,
+                                       std::string collidingSystem,
                                        time_t timeStamp) : mEventNumber(eventNumber),
                                                            mRunNumber(runNumber),
                                                            mEnergy(energy),
@@ -36,6 +35,26 @@ VisualisationEvent::VisualisationEvent(int eventNumber,
                                                            mCollidingSystem(collidingSystem),
                                                            mTimeStamp(timeStamp)
 {
+}
+
+const VisualisationTrack& VisualisationEvent::getTrack(int i) const
+{
+  return mTracks[i];
+}
+
+const VisualisationTrack& VisualisationEvent::getMuonTrack(int i) const
+{
+  return mMuonTracks[i];
+}
+
+const VisualisationCluster& VisualisationEvent::getCluster(int i) const
+{
+  return mClusters[i];
+}
+
+const VisualisationCaloCell& VisualisationEvent::getCaloCell(int i) const
+{
+  return mCaloCells[i];
 }
 
 } // namespace event_visualisation

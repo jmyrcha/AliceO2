@@ -8,15 +8,19 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-/// \file DataReaderITS.h
-/// \brief reading from file(s)
-/// \author julian.myrcha@cern.ch
-/// \author p.nowakowski@cern.ch
+///
+/// \file    DataSource.h
+/// \brief   Group data reading
+/// \author  julian.myrcha@cern.ch
+/// \author  p.nowakowski@cern.ch
+/// \author  Maja Kabus <maja.kabus@cern.ch>
+///
 
 #ifndef ALICE_O2_EVENTVISUALISATION_BASE_DATASOURCE_H
 #define ALICE_O2_EVENTVISUALISATION_BASE_DATASOURCE_H
 
-#include <EventVisualisationBase/VisualisationConstants.h>
+#include "EventVisualisationBase/VisualisationConstants.h"
+#include "EventVisualisationBase/DataReader.h"
 
 class TObject;
 
@@ -28,8 +32,10 @@ namespace event_visualisation
 class DataSource
 {
  public:
-  virtual TObject* getEventData(int /*no*/, EVisualisationGroup /*purpose*/) { return nullptr; };
-  virtual int GetEventCount() { return 0; };
+  virtual TObject* getEventData(int no, EVisualisationGroup detector, EVisualisationDataType dataType) = 0;
+  virtual bool hasEventData(int eventNumber, EVisualisationGroup detector) { return false; }
+  virtual int getEventCount() = 0;
+  virtual void registerReader(DataReader* reader, EVisualisationGroup detector) = 0;
 
   DataSource() = default;
 

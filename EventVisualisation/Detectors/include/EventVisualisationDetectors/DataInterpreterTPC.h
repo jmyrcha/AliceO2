@@ -8,10 +8,13 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-/// \file DataInterpreterTPC.h
-/// \brief converting TPC data to Event Visualisation primitives
-/// \author julian.myrcha@cern.ch
-/// \author p.nowakowski@cern.ch
+///
+/// \file    DataInterpreterTPC.h
+/// \brief   Converting TPC data to Event Visualisation primitives
+/// \author  julian.myrcha@cern.ch
+/// \author  p.nowakowski@cern.ch
+/// \author  Maja Kabus <maja.kabus@cern.ch>
+///
 
 #ifndef ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAINTERPRETERTPC_H
 #define ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAINTERPRETERTPC_H
@@ -22,7 +25,6 @@
 
 #include "EventVisualisationBase/DataInterpreter.h"
 #include "EventVisualisationBase/VisualisationConstants.h"
-#include "EventVisualisationDataConverter/VisualisationEvent.h"
 
 namespace o2
 {
@@ -31,15 +33,19 @@ namespace event_visualisation
 
 class DataInterpreterTPC : public DataInterpreter
 {
+ private:
+  int mTPCReadoutCycle = 100; // ms, provisional
+
  public:
   // Default constructor
   DataInterpreterTPC() = default;
 
   // Default destructor
-  ~DataInterpreterTPC() final;
+  ~DataInterpreterTPC() final = default;
 
-  // Returns a visualisation Event for this data type
-  std::unique_ptr<VisualisationEvent> interpretDataForType(TObject* data, EVisualisationDataType type) final;
+ private:
+  void interpretTracks(TFile* file, int eventId, VisualisationEvent& event) final;
+  void interpretClusters(TFile* file, int eventId, VisualisationEvent& event) final;
 };
 
 } // namespace event_visualisation

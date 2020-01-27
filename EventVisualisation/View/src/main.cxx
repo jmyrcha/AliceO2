@@ -11,12 +11,13 @@
 ///
 /// \file    main.cxx
 /// \author  Jeremi Niedziela
-/// \author julian.myrcha@cern.ch
-/// \author p.nowakowski@cern.ch
+/// \author  julian.myrcha@cern.ch
+/// \author  p.nowakowski@cern.ch
+/// \author  Maja Kabus <maja.kabus@cern.ch>
+///
 
 #include "EventVisualisationView/Initializer.h"
 #include "EventVisualisationBase/ConfigurationManager.h"
-#include "EventVisualisationBase/DataInterpreter.h"
 
 #include "FairLogger.h"
 
@@ -26,19 +27,8 @@
 #include <TEnv.h>
 
 #include <unistd.h>
-#include <ctime>
 
-using namespace std;
 using namespace o2::event_visualisation;
-
-std::string printOptions(Options* o)
-{
-  std::string res;
-  res.append(std::string("randomTracks: ") + (o->randomTracks ? "true" : "false") + "\n");
-  res.append(std::string("vds         : ") + (o->vsd ? "true" : "false") + "\n");
-  res.append(std::string("itc         : ") + (o->itc ? "true" : "false") + "\n");
-  return res;
-}
 
 Options* processCommandLine(int argc, char* argv[])
 {
@@ -47,26 +37,23 @@ Options* processCommandLine(int argc, char* argv[])
 
   // put ':' in the starting of the
   // string so that program can
-  //distinguish between '?' and ':'
-  while ((opt = getopt(argc, argv, ":if:rv")) != -1) {
+  // distinguish between '?' and ':'
+  while ((opt = getopt(argc, argv, ":ita")) != -1) {
     switch (opt) {
-      case 'r':
-        options.randomTracks = true;
-        break;
       case 'i':
-        options.itc = true;
+        options.its = true;
         break;
-      case 'v':
-        options.vsd = true;
+      case 't':
+        options.tpc = true;
         break;
-      case 'f':
-        options.fileName = optarg;
+      case 'a':
+        options.aod = true;
         break;
       case ':':
-        printf("option needs a value\n");
+        LOG(ERROR) << "Option needs a value";
         return nullptr;
       case '?':
-        printf("unknown option: %c\n", optopt);
+        LOG(ERROR) << "Unknown option: " << optopt;
         return nullptr;
     }
   }
@@ -74,7 +61,7 @@ Options* processCommandLine(int argc, char* argv[])
   // optind is for the extra arguments
   // which are not parsed
   for (; optind < argc; optind++) {
-    printf("extra arguments: %s\n", argv[optind]);
+    LOG(INFO) << "Extra arguments: " << argv[optind];
     return nullptr;
   }
 
@@ -85,29 +72,30 @@ int main(int argc, char** argv)
 {
   LOG(INFO) << "Welcome in O2 event visualisation tool";
   Options* options = processCommandLine(argc, argv);
-  if (options == nullptr)
-    exit(-1);
-
-  srand(static_cast<unsigned int>(time(nullptr)));
+  if (options == nullptr) {
+    LOG(FATAL) << "No options specified!";
+  }
 
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);
 
-  std::array<const char*, 7> keys = {"Gui.DefaultFont", "Gui.MenuFont", "Gui.MenuHiFont",
-                                     "Gui.DocFixedFont", "Gui.DocPropFont", "Gui.IconFont", "Gui.StatusFont"};
+  std::array<const char*, 7> keys = {
+    "Gui.DefaultFont", "Gui.MenuFont", "Gui.MenuHiFont",
+    "Gui.DocFixedFont", "Gui.DocPropFont", "Gui.IconFont", "Gui.StatusFont"};
   for (const auto& key : keys) {
-    if (settings.Defined(key))
+    if (settings.Defined(key)) {
       gEnv->SetValue(key, settings.GetValue(key, ""));
+    }
   }
 
-  // create ROOT application environment
+  // Create ROOT application environment
+  argc = 0; // Do not let ROOT interpret our command-line options
   TApplication* app = new TApplication("o2eve", &argc, argv);
   app->Connect("TEveBrowser", "CloseWindow()", "TApplication", app, "Terminate()");
 
   LOG(INFO) << "Initializing TEveManager";
   if (!TEveManager::Create(kTRUE, "FI")) {
-    LOG(FATAL) << "Could not create TEveManager!!";
-    exit(0);
+    LOG(FATAL) << "Could not create TEveManager!";
   }
 
   // Initialize o2 Event Visualisation
@@ -116,7 +104,6 @@ int main(int argc, char** argv)
   // Start the application
   app->Run(kTRUE);
 
-  DataInterpreter::removeInstances();
   // Terminate application
   TEveManager::Terminate();
   app->Terminate(0);

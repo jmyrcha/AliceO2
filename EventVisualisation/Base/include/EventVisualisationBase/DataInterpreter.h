@@ -11,8 +11,10 @@
 ///
 /// \file    DataInterpreter.h
 /// \author  Jeremi Niedziela
-/// \author julian.myrcha@cern.ch
-/// \author p.nowakowski@cern.ch
+/// \author  julian.myrcha@cern.ch
+/// \author  p.nowakowski@cern.ch
+/// \author  Maja Kabus <maja.kabus@cern.ch>
+///
 
 #ifndef ALICE_O2_EVENTVISUALISATION_BASE_DATAINTERPRETER_H
 #define ALICE_O2_EVENTVISUALISATION_BASE_DATAINTERPRETER_H
@@ -21,6 +23,7 @@
 #include "EventVisualisationDataConverter/VisualisationEvent.h"
 
 #include <TEveElement.h>
+#include <TFile.h>
 
 namespace o2
 {
@@ -35,31 +38,33 @@ namespace event_visualisation
 
 class DataInterpreter
 {
- private:
-  static DataInterpreter* instance[EVisualisationGroup::NvisualisationGroups];
-
  public:
   // Default constructor
   DataInterpreter() = default;
   // Virtual destructor
   virtual ~DataInterpreter() = default;
-  static void removeInstances()
-  {
-    for (int i = 0; i < EVisualisationGroup::NvisualisationGroups; i++)
-      if (instance[i] != nullptr) {
-        delete instance[i];
-        instance[i] = nullptr;
-      }
-  }
 
   // Should return visualisation objects for required data type
-  virtual std::unique_ptr<VisualisationEvent> interpretDataForType(TObject* data, EVisualisationDataType type) = 0;
+  virtual void interpretDataForType(TObject* data, EVisualisationDataType type, VisualisationEvent& event)
+  {
+    TList* list = (TList*)data;
+    int eventId = ((TVector2*)list->At(0))->X();
 
-  static DataInterpreter* getInstance(EVisualisationGroup type) { return instance[type]; }
-  //static void setInstance(DataInterpreter* instance, EVisualisationGroup type) { DataInterpreter::instance[type] = instance; }
+    if (type == Tracks) {
+      TFile* file = (TFile*)list->At(1);
+      interpretTracks(file, eventId, event);
+    } else if (type == Clusters) {
+      TFile* file = (TFile*)list->At(2);
+      interpretClusters(file, eventId, event);
+    }
+  }
+
+ private:
+  virtual void interpretTracks(TFile* file, int eventId, VisualisationEvent& event){};
+  virtual void interpretClusters(TFile* file, int eventId, VisualisationEvent& event){};
 };
 
 } // namespace event_visualisation
 } // namespace o2
 
-#endif // ALICE_O2_EVENTVISUALISATION_BASE_DATAINTERPRETER_H
+#endif //ALICE_O2_EVENTVISUALISATION_BASE_DATAINTERPRETER_H

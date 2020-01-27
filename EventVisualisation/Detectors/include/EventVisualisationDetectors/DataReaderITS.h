@@ -8,15 +8,19 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-/// \file DataReaderITS.h
-/// \brief ITS Detector-specific reading from file(s)
-/// \author julian.myrcha@cern.ch
+///
+/// \file    DataReaderITS.h
+/// \brief   ITS detector-specific reading from file(s)
+/// \author  julian.myrcha@cern.ch
+/// \author  Maja Kabus <maja.kabus@cern.ch>
+///
 
-#ifndef O2EVE_EVENTVISUALISATION_DETECTORS_DATAREADERITS_H
-#define O2EVE_EVENTVISUALISATION_DETECTORS_DATAREADERITS_H
+#ifndef ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAREADERITS_H
+#define ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAREADERITS_H
+
+#include "EventVisualisationBase/DataReader.h"
 
 #include <TFile.h>
-#include "EventVisualisationBase/DataReader.h"
 
 namespace o2
 {
@@ -26,20 +30,16 @@ namespace event_visualisation
 class DataReaderITS : public DataReader
 {
  private:
-  Int_t mMaxEv;
   TFile* mClusFile;
   TFile* mTracFile;
 
  public:
   DataReaderITS() = default;
-  ;
-  void open() override;
-  int GetEventCount() const override { return mMaxEv; }
-
-  TObject* getEventData(int no) override;
+  void open() final;
+  TObject* getEventData(int eventNumber, EVisualisationDataType dataType) final;
 };
 
 } // namespace event_visualisation
 } // namespace o2
 
-#endif //O2EVE_DATAREADERITS_H
+#endif //ALICE_O2_EVENTVISUALISATION_DETECTORS_DATAREADERITS_H

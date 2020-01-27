@@ -12,12 +12,10 @@
 /// \file    VisualisationTrack.cxx
 /// \author  Jeremi Niedziela
 /// \author  Maciej Grochowicz
+/// \author  Maja Kabus <maja.kabus@cern.ch>
 ///
 
 #include "EventVisualisationDataConverter/VisualisationTrack.h"
-#include <iostream>
-
-using namespace std;
 
 namespace o2
 {
@@ -27,21 +25,24 @@ namespace event_visualisation
 VisualisationTrack::VisualisationTrack() = default;
 
 VisualisationTrack::VisualisationTrack(
+  int ID,
+  int type,
   int charge,
   double energy,
-  int ID,
-  int PID,
-  double mass,
+  int parentID,
+  o2::track::PID PID,
   double signedPT,
+  double mass,
+  double pxpypz[],
   double startXYZ[],
   double endXYZ[],
-  double pxpypz[],
-  int parentID,
-  double phi,
-  double theta,
   double helixCurvature,
-  int type)
-  : mCharge(charge),
+  double theta,
+  double phi,
+  float C1Pt21Pt2,
+  unsigned long long flags)
+  : mID(ID),
+    mCharge(charge),
     mEnergy(energy),
     mParentID(parentID),
     mPID(PID),
@@ -49,13 +50,14 @@ VisualisationTrack::VisualisationTrack(
     mMass(mass),
     mHelixCurvature(helixCurvature),
     mTheta(theta),
-    mPhi(phi)
+    mPhi(phi),
+    mC1Pt21Pt2(C1Pt21Pt2),
+    mFlags(flags)
 {
-  addMomentum(pxpypz);
-  addStartCoordinates(startXYZ);
-  addEndCoordinates(endXYZ);
-  mID = ID;
-  mType = gTrackTypes[type];
+  setTrackType((ETrackType)type);
+  setMomentum(pxpypz);
+  setStartCoordinates(startXYZ);
+  setEndCoordinates(endXYZ);
 }
 
 void VisualisationTrack::addChild(int childID)
@@ -63,19 +65,19 @@ void VisualisationTrack::addChild(int childID)
   mChildrenIDs.push_back(childID);
 }
 
-void VisualisationTrack::addMomentum(double pxpypz[3])
+void VisualisationTrack::setMomentum(double pxpypz[3])
 {
   for (int i = 0; i < 3; i++)
     mMomentum[i] = pxpypz[i];
 }
 
-void VisualisationTrack::addStartCoordinates(double xyz[3])
+void VisualisationTrack::setStartCoordinates(double xyz[3])
 {
   for (int i = 0; i < 3; i++)
     mStartCoordinates[i] = xyz[i];
 }
 
-void VisualisationTrack::addEndCoordinates(double xyz[3])
+void VisualisationTrack::setEndCoordinates(double xyz[3])
 {
   for (int i = 0; i < 3; i++)
     mEndCoordinates[i] = xyz[i];

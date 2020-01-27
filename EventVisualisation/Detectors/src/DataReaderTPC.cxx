@@ -9,23 +9,25 @@
 // or submit itself to any jurisdiction.
 
 ///
-/// \file   DataReaderTPC.cxx
-/// \brief  TPC Detector-specific reading from file(s)
-/// \author julian.myrcha@cern.ch
-/// \author p.nowakowski@cern.ch
+/// \file    DataReaderTPC.cxx
+/// \brief   TPC detector-specific reading from file(s)
+/// \author  julian.myrcha@cern.ch
+/// \author  p.nowakowski@cern.ch
+///
 
+#include "DataFormatsTPC/TrackTPC.h"
 #include "EventVisualisationDetectors/DataReaderTPC.h"
+
+#include "FairLogger.h"
+
+#include <TSystem.h>
 #include <TTree.h>
 #include <TVector2.h>
-#include <TError.h>
-#include "DataFormatsTPC/TrackTPC.h"
 
 namespace o2
 {
 namespace event_visualisation
 {
-
-DataReaderTPC::DataReaderTPC() = default;
 
 void DataReaderTPC::open()
 {
@@ -33,26 +35,51 @@ void DataReaderTPC::open()
   TString trackFile = "tpctracks.root";
 
   this->mTracFile = TFile::Open(trackFile);
+  if (!this->mTracFile) {
+    LOG(FATAL) << "There is no " << trackFile.Data() << " file in current directory!";
+  }
   this->mClusFile = TFile::Open(clusterFile);
+  if (!this->mClusFile) {
+    LOG(FATAL) << "There is no " << clusterFile.Data() << " file in current directory!";
+  }
 
-  TTree* trec = static_cast<TTree*>(this->mTracFile->Get("tpcrec"));
+  TTree* trec = dynamic_cast<TTree*>(this->mTracFile->Get("tpcrec"));
+  if (!trec) {
+    LOG(FATAL) << "Incorrect TPC file format, branch missing!";
+  }
+
   std::vector<tpc::TrackTPC>* trackBuffer = nullptr;
-
   trec->SetBranchAddress("TPCTracks", &trackBuffer);
   trec->GetEntry(0);
 
-  mMaxEv = trackBuffer->size();
+  int time = 0;
+  for (int i = 0; i < trackBuffer->size(); i++) {
+    int trackTime = (*trackBuffer)[i].getTime0();
+    if (trackTime > time)
+      time = trackTime;
+  }
+  int eventCount = time / (2 * mTPCReadoutCycle);
+  if (eventCount * 2 * mTPCReadoutCycle < time) {
+    eventCount++;
+  }
+  setEventCount(eventCount);
+  LOG(INFO) << "Setting event count to: " << eventCount << " max time: " << time;
 }
 
-TObject* DataReaderTPC::getEventData(int no)
+TObject* DataReaderTPC::getEventData(int eventNumber, EVisualisationDataType dataType)
 {
+  if (!this->hasEventData(eventNumber)) {
+    return new TList();
+  }
+
   /// FIXME: Redesign the data reader class
   TList* list = new TList();
+  TVector2* v = new TVector2(eventNumber, 0);
+  list->Add(v);
   list->Add(this->mTracFile);
   list->Add(this->mClusFile);
-  TVector2* v = new TVector2(no, 0);
-  list->Add(v);
   return list;
 }
+
 } // namespace event_visualisation
 } // namespace o2

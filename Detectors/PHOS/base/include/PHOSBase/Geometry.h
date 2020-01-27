@@ -67,7 +67,7 @@ class Geometry
   static Geometry* GetInstance(const std::string_view name)
   {
     if (sGeom) {
-      if (sGeom->GetName() == name) {
+      if (sGeom->GetName().data() == name.data()) {
         return sGeom;
       } else {
         delete sGeom;

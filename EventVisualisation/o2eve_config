@@ -17,35 +17,58 @@ camera.3D.zoom:                         1.0
 camera.R-Phi.zoom:                      1.0
 camera.Rho-Z.zoom:                      1.0
 
-simple.geom.default:                    R2
-simple.geom.R2.path:                    ${ALICE_ROOT}/EVE/resources/geometry/run2/
-simple.geom.R3.path:                    ${ALICE_ROOT}/EVE/resources/geometry/run3/
+simple.geom.default:                    R3
+simple.geom.R3.path:                    ${ALICE_ROOT}/EVE/resources/geometry/run3
+simple.geom.R2.path:                    ${ALICE_ROOT}/EVE/resources/geometry/run2
+
+tracks.selection:                       none
+# possible tracks selections: ITSin_noTPCin, noTISpureSA, TPCrefit, TPCrefit_ITSrefit
 
 tracks.width:                           2
+
+tracks.byPt.show:                       1
+tracks.byCategory.show:                 0
+tracks.byType.show:                     0
+
+tracks.animate:                         0
+tracks.animation.speed:                 10
 
 tracks.byType.electron:                 600
 tracks.byType.muon:                     416
 tracks.byType.pion:                     632
 tracks.byType.kaon:                     400
 tracks.byType.proton:                   797
+tracks.byType.deuteron:                 797
+tracks.byType.triton:                   797
+tracks.byType.he3:                      797
+tracks.byType.alpha:                    403
 tracks.byType.unknown:                  920
+
+muon.show:                              0
+calo.show:                              0
+tracks.show:                            1
+clusters.show:                          0
+digits.show:                            0
+hits.show:                              0
+raw.show:                               0
 
 PHS.draw:                               1
 TPC.draw:                               1
 HMP.draw:                               1
 TRD.draw:                               1
 MCH.draw:                               1
+MID.draw:                               1
 EMC.draw:                               1
 ACO.draw:                               0
+TOF.draw:                               1
 SPD.draw:                               1
 SDD.draw:                               1
 SSD.draw:                               1
-TOF.draw:                               1
+ITS.draw:                               1
 MFT.draw:                               1
 T00.draw:                               0
 FIT.draw:                               1
 AD0.draw:                               1
-ITS.draw:                               0
 FMD.draw:                               1
 
 PHS.color:                              53
@@ -53,12 +76,14 @@ TPC.color:                              3
 HMP.color:                              5
 TRD.color:                              921
 MCH.color:                              920
+MID.color:                              920
 EMC.color:                              53
 ACO.color:                              920
+TOF.color:                              634
 SPD.color:                              634
 SDD.color:                              3
 SSD.color:                              53
-TOF.color:                              634
+ITS.color:                              634
 MFT.color:                              920
 T00.color:                              2
 FIT.color:                              2
@@ -70,45 +95,55 @@ TPC.trans:                              60
 HMP.trans:                              70
 TRD.trans:                              80
 MCH.trans:                              80
+MID.trans:                              80
 EMC.trans:                              80
 ACO.trans:                              50
+TOF.trans:                              60
 SPD.trans:                              50
 SDD.trans:                              50
 SSD.trans:                              50
-TOF.trans:                              60
+ITS.trans:                              50
 MFT.trans:                              80
 T00.trans:                              70
 FIT.trans:                              40
 AD0.trans:                              40
 FMD.trans:                              50
 
-MCH.line.color:                         920
+PHS.line.color:                         1
 TPC.line.color:                         1
 HMP.line.color:                         1
-PHS.line.color:                         1
 TRD.line.color:                         1
-TOF.line.color:                         1
+MCH.line.color:                         920
+MID.line.color:                         920
 EMC.line.color:                         1
+ACO.line.color:                         1
+TOF.line.color:                         1
 SPD.line.color:                         1
 SDD.line.color:                         1
 SSD.line.color:                         1
+ITS.line.color:                         1
 MFT.line.color:                         0
 T00.line.color:                         1
 FIT.line.color:                         1
 AD0.line.color:                         1
 FMD.line.color:                         907
 
-OCDB.default.path:                      local:///local/cdb/
+OCDB.default.path:                      local:///local/cdb
 
+screenshot.logo.draw                    1
+screenshot.info.draw                    1
+screenshot.projections.draw             1
+screenshot.force.energy                 Energy: 13 TeV
+screenshot.force.system                 System: Pb-Pb
 
 # uncomment for 4K Displays
-Gui.DefaultFont:                        -*-helvetica-medium-r-*-*-20-*-*-*-*-*-iso8859-1
-Gui.MenuFont:                           -*-helvetica-medium-r-*-*-20-*-*-*-*-*-iso8859-1
-Gui.MenuHiFont:                         -*-helvetica-bold-r-*-*-20-*-*-*-*-*-iso8859-1
-Gui.DocFixedFont:                       -*-courier-medium-r-*-*-20-*-*-*-*-*-iso8859-1
-Gui.DocPropFont:                        -*-helvetica-medium-r-*-*-20-*-*-*-*-*-iso8859-1
-Gui.IconFont:                           -*-helvetica-medium-r-*-*-32-*-*-*-*-*-iso8859-1
-Gui.StatusFont:                         -*-helvetica-medium-r-*-*-20-*-*-*-*-*-iso8859-1
+# Gui.DefaultFont:                        -*-helvetica-medium-r-*-*-20-*-*-*-*-*-iso8859-1
+# Gui.MenuFont:                           -*-helvetica-medium-r-*-*-20-*-*-*-*-*-iso8859-1
+# Gui.MenuHiFont:                         -*-helvetica-bold-r-*-*-20-*-*-*-*-*-iso8859-1
+# Gui.DocFixedFont:                       -*-courier-medium-r-*-*-20-*-*-*-*-*-iso8859-1
+# Gui.DocPropFont:                        -*-helvetica-medium-r-*-*-20-*-*-*-*-*-iso8859-1
+# Gui.IconFont:                           -*-helvetica-medium-r-*-*-32-*-*-*-*-*-iso8859-1
+# Gui.StatusFont:                         -*-helvetica-medium-r-*-*-20-*-*-*-*-*-iso8859-1
 
 #
 # EOF

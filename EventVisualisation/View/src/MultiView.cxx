@@ -11,6 +11,8 @@
 ///
 /// \file    MultiView.cxx
 /// \author  Jeremi Niedziela
+/// \author  Maja Kabus <maja.kabus@cern.ch>
+///
 
 #include "EventVisualisationView/MultiView.h"
 
@@ -18,6 +20,8 @@
 #include "EventVisualisationView/EventManager.h"
 #include "EventVisualisationBase/GeometryManager.h"
 #include "EventVisualisationBase/VisualisationConstants.h"
+
+#include "FairLogger.h"
 
 #include <TBrowser.h>
 #include <TEnv.h>
@@ -27,9 +31,7 @@
 #include <TEveProjectionManager.h>
 #include <TEveWindowManager.h>
 
-#include "FairLogger.h"
-
-using namespace std;
+#include <string>
 
 namespace o2
 {
@@ -97,11 +99,6 @@ MultiView::MultiView()
   sInstance = this;
 }
 
-MultiView::~MultiView()
-{
-  destroyAllGeometries();
-}
-
 MultiView* MultiView::getInstance()
 {
   if (!sInstance) {
@@ -141,6 +138,12 @@ void MultiView::setupMultiview()
   mViews[ViewZrho]->AddScene(mScenes[SceneZrhoEvent]);
 }
 
+MultiView::~MultiView()
+{
+  destroyAllGeometries();
+  destroyAllEvents();
+}
+
 MultiView::EScenes MultiView::getSceneOfProjection(EProjections projection)
 {
   if (projection == ProjectionRphi) {
@@ -151,7 +154,7 @@ MultiView::EScenes MultiView::getSceneOfProjection(EProjections projection)
   return NumberOfScenes;
 }
 
-void MultiView::drawGeometryForDetector(string detectorName, bool threeD, bool rPhi, bool zRho)
+void MultiView::drawGeometryForDetector(std::string detectorName, bool threeD, bool rPhi, bool zRho)
 {
   auto& geometryManager = GeometryManager::getInstance();
   TEveGeoShape* shape = geometryManager.getGeometryForDetector(detectorName);
@@ -162,9 +165,9 @@ void MultiView::registerGeometry(TEveGeoShape* geom, bool threeD, bool rPhi, boo
 {
   if (!geom) {
     LOG(ERROR) << "MultiView::registerGeometry -- geometry is NULL!";
-    exit(-1);
+    return;
   }
-  //mGeomVector.push_back(geom);
+  mGeomVector.push_back(geom);
 
   TEveProjectionManager* projection;
 
@@ -187,16 +190,13 @@ void MultiView::registerGeometry(TEveGeoShape* geom, bool threeD, bool rPhi, boo
 
 void MultiView::destroyAllGeometries()
 {
-  //  for (unsigned int i = 0; i < mGeomVector.size(); ++i) {
-  //    if (mGeomVector[i]) {
-  //      mGeomVector[i]->DestroyElements();
-  //      gEve->RemoveElement(mGeomVector[i], getScene(Scene3dGeom));
-  //      mGeomVector[i] = nullptr;
-  //    }
-  //  }
-  getScene(Scene3dGeom)->DestroyElements();
-  getScene(SceneRphiGeom)->DestroyElements();
-  getScene(SceneZrhoGeom)->DestroyElements();
+  for (unsigned int i = 0; i < mGeomVector.size(); ++i) {
+    if (mGeomVector[i]) {
+      mGeomVector[i]->DestroyElements();
+      gEve->RemoveElement(mGeomVector[i], getScene(Scene3dGeom));
+      mGeomVector[i] = nullptr;
+    }
+  }
 }
 
 void MultiView::registerElement(TEveElement* event)
@@ -204,20 +204,23 @@ void MultiView::registerElement(TEveElement* event)
   gEve->GetCurrentEvent()->AddElement(event);
   getProjection(ProjectionRphi)->ImportElements(event, getScene(SceneRphiEvent));
   getProjection(ProjectionZrho)->ImportElements(event, getScene(SceneZrhoEvent));
-
-  gEve->Redraw3D();
 }
 
 void MultiView::destroyAllEvents()
 {
-  gEve->GetCurrentEvent()->RemoveElements();
-  getScene(SceneRphiEvent)->DestroyElements();
-  getScene(SceneZrhoEvent)->DestroyElements();
+  TEveEventManager* event = gEve->GetCurrentEvent();
+  if (event) {
+    event->DestroyElements();
+  }
+  if (mScenes[SceneRphiEvent])
+    mScenes[SceneRphiEvent]->DestroyElements();
+  if (mScenes[SceneZrhoEvent])
+    mScenes[SceneZrhoEvent]->DestroyElements();
 }
 
 void MultiView::redraw3D()
 {
-  gEve->Redraw3D();
+  gEve->DoRedraw3D();
 }
 
 } // namespace event_visualisation

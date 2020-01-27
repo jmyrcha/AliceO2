@@ -50,6 +50,9 @@ class GeometryManager : public TObject
   ///< load geometry from file
   static void loadGeometry(std::string geomFileName = "O2geometry.root", std::string geomName = "FAIRGeom");
 
+  /// Get loaded geometry
+  static TGeoManager* getGeometry() { return sGeometry; }
+
   ///< Get the global transformation matrix (ideal geometry) for a given alignable volume
   ///< The alignable volume is identified by 'symname' which has to be either a valid symbolic
   ///< name, the query being performed after alignment, or a valid volume path if the query is
@@ -131,6 +134,8 @@ class GeometryManager : public TObject
   static constexpr UInt_t sDetOffset = 15; /// detector identifier will start from this bit
   static constexpr UInt_t sSensorMask =
     (0x1 << sDetOffset) - 1; /// mask=max sensitive volumes allowed per detector (0xffff)
+
+  static TGeoManager* sGeometry; /// Geometry loaded from a file / OCDB
 
   ClassDefOverride(GeometryManager, 0); // Manager of geometry information for alignment
 };

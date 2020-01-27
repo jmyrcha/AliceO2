@@ -9,8 +9,11 @@
 # submit itself to any jurisdiction.
 
 o2_add_library(EventVisualisationDataConverter
-               SOURCES src/VisualisationEvent.cxx 
+               SOURCES src/VisualisationEvent.cxx
                        src/VisualisationTrack.cxx
+                       src/VisualisationCaloCell.cxx
                        src/VisualisationCluster.cxx
-
+               PUBLIC_LINK_LIBRARIES O2::ReconstructionDataFormats
+                                     ROOT::Eve
+                                     FairLogger::FairLogger
 )

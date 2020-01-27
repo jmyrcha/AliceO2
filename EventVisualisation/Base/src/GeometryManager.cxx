@@ -12,9 +12,12 @@
 /// \file    GeometryManager.cxx
 /// \author  Jeremi Niedziela
 /// \author  Julian Myrcha
+/// \author  Maja Kabus <maja.kabus@cern.ch>
+///
 
 #include "EventVisualisationBase/GeometryManager.h"
 #include "EventVisualisationBase/ConfigurationManager.h"
+
 #include "FairLogger.h"
 
 #include <TFile.h>
@@ -25,26 +28,35 @@
 #include <TEveProjectionManager.h>
 #include <TSystem.h>
 
-using namespace std;
-
 namespace o2
 {
 namespace event_visualisation
 {
 
-GeometryManager& GeometryManager::getInstance()
+GeometryManager* GeometryManager::sInstance = nullptr;
+
+GeometryManager::GeometryManager()
 {
-  static GeometryManager instance;
-  return instance;
+  TEnv settings;
+  ConfigurationManager::getInstance().getConfig(settings);
+  mR2Geometry = settings.GetValue("simple.geom.default", "R2") == "R2";
 }
 
-TEveGeoShape* GeometryManager::getGeometryForDetector(string detectorName)
+GeometryManager& GeometryManager::getInstance()
+{
+  if (sInstance == nullptr) {
+    sInstance = new GeometryManager();
+  }
+  return *sInstance;
+}
+
+TEveGeoShape* GeometryManager::getGeometryForDetector(std::string detectorName)
 {
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);
 
   // read geometry path from config file
-  string geomPath = settings.GetValue(this->mR2Geometry ? "simple.geom.R2.path" : "simple.geom.R3.path", "");
+  std::string geomPath = settings.GetValue(this->mR2Geometry ? "simple.geom.R2.path" : "simple.geom.R3.path", "");
 
   // load ROOT file with geometry
   TFile* f = TFile::Open(Form("%s/simple_geom_%s.root", geomPath.c_str(), detectorName.c_str()));
@@ -54,8 +66,8 @@ TEveGeoShape* GeometryManager::getGeometryForDetector(string detectorName)
   }
   LOG(INFO) << "GeometryManager::GetSimpleGeom for: " << detectorName << " from " << Form("%s/simple_geom_%s.root", geomPath.c_str(), detectorName.c_str());
 
-  TEveGeoShapeExtract* geomShapreExtract = static_cast<TEveGeoShapeExtract*>(f->Get(detectorName.c_str()));
-  TEveGeoShape* geomShape = TEveGeoShape::ImportShapeExtract(geomShapreExtract);
+  TEveGeoShapeExtract* geomShapeExtract = static_cast<TEveGeoShapeExtract*>(f->Get(detectorName.c_str()));
+  TEveGeoShape* geomShape = TEveGeoShape::ImportShapeExtract(geomShapeExtract);
   f->Close();
 
   geomShape->SetName(detectorName.c_str());
@@ -75,12 +87,12 @@ TEveGeoShape* GeometryManager::getGeometryForDetector(string detectorName)
   return geomShape;
 }
 
-void GeometryManager::drawDeep(TEveGeoShape* geomShape, Color_t color, Char_t transparency, Color_t lineColor)
+void GeometryManager::drawDeep(TEveGeoShape* geomShape, Color_t color, char transparency, Color_t lineColor)
 {
   if (geomShape->HasChildren()) {
     geomShape->SetRnrSelf(false);
 
-    if (strcmp(geomShape->GetElementName(), "TPC_Drift_1") == 0) { // hack for TPC drift chamber
+    if (mR2Geometry && strcmp(geomShape->GetElementName(), "TPC_Drift_1") == 0) { // hack for TPC drift chamber
       geomShape->SetRnrSelf(kTRUE);
       if (color >= 0)
         geomShape->SetMainColor(color);
@@ -114,7 +126,7 @@ void GeometryManager::drawDeep(TEveGeoShape* geomShape, Color_t color, Char_t tr
       geomShape->SetMainTransparency(transparency);
     }
 
-    if (strcmp(geomShape->GetElementName(), "PHOS_5") == 0) { // hack for PHOS module which is not installed
+    if (mR2Geometry && strcmp(geomShape->GetElementName(), "PHOS_5") == 0) { // hack for PHOS module which is not installed
       geomShape->SetRnrSelf(false);
     }
   }
