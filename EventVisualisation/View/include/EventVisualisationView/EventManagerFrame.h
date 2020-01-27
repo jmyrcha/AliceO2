@@ -25,6 +25,7 @@
 #include <TASImage.h>
 
 #include <tuple>
+#include <string>
 
 class TGTextButton;
 class TGCompositeFrame;
@@ -51,7 +52,7 @@ class EventManagerFrame : public TGMainFrame
 
   /// Saves a screenshot
   void saveScreenshot();
-  std::tuple<int, int, bool, bool, bool, const char*, const char*> getScreenshotOptions();
+  std::tuple<int, int, bool, bool, bool, std::string, std::string> getScreenshotOptions();
   void drawScreenshotLogo(TASImage* compositeImg, int width);
   void drawScreenshotInfo(TASImage* compositeImg, const char* energyLabel, const char* systemLabel, int height);
   void saveScreenshotToFile(TASImage* compositeImg);

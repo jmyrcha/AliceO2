@@ -36,8 +36,6 @@
 
 #include <Rtypes.h>
 
-#include <cstring>
-
 ClassImp(o2::event_visualisation::EventManagerFrame);
 
 namespace o2
@@ -242,7 +240,7 @@ void EventManagerFrame::refresh(bool firstTime)
   gEve->Redraw3D();
 }
 
-std::tuple<int, int, bool, bool, bool, const char*, const char*> EventManagerFrame::getScreenshotOptions()
+std::tuple<int, int, bool, bool, bool, std::string, std::string> EventManagerFrame::getScreenshotOptions()
 {
   // 1,440 x 0,900 (2K)
   // 3,840 × 2,160 (4K)
@@ -257,11 +255,11 @@ std::tuple<int, int, bool, bool, bool, const char*, const char*> EventManagerFra
   bool logo = settings.GetValue("screenshot.logo.draw", true);
   bool info = settings.GetValue("screenshot.info.draw", true);
   bool projections = settings.GetValue("screenshot.projections.draw", true);
-  const char* energyLabel = settings.GetValue("screenshot.force.energy", "Energy: unknown");
-  const char* systemLabel = settings.GetValue("screenshot.force.system", "Colliding system: unknown");
-  if (std::strcmp(energyLabel, "") == 0)
+  std::string energyLabel(settings.GetValue("screenshot.force.energy", "Energy: unknown"));
+  std::string systemLabel(settings.GetValue("screenshot.force.system", "Colliding system: unknown"));
+  if (energyLabel == "")
     energyLabel = "Energy: unknown";
-  if (std::strcmp(systemLabel, "") == 0)
+  if (systemLabel == "")
     systemLabel = "Colliding system: unknown";
 
   return std::make_tuple(width, height, logo, info, projections, energyLabel, systemLabel);
@@ -354,9 +352,9 @@ void EventManagerFrame::saveScreenshot()
     TEveViewer* view = ((TEveViewer*)*i);
 
     // Save OpenGL view in file and read it back using BB (missing method in Root returning TASImage)
-    TString viewFilename = Form("view-%d.png", index);
-    view->GetGLViewer()->SavePictureUsingBB(viewFilename);
-    TASImage* viewImg = new TASImage(viewFilename);
+    //TString viewFilename = Form("view-%d.png", index);
+    //view->GetGLViewer()->SavePictureUsingBB(viewFilename);
+    //TASImage* viewImg = new TASImage(viewFilename);
 
     // Second option is to use FBO instead of BB
     // This improves the quality of pictures in some specific cases
@@ -382,7 +380,7 @@ void EventManagerFrame::saveScreenshot()
     }
 
     // For FBO version
-    //TASImage* viewImg = (TASImage*)view->GetGLViewer()->GetPictureUsingFBO(currentWidth, currentHeight);
+    TASImage* viewImg = (TASImage*)view->GetGLViewer()->GetPictureUsingFBO(currentWidth, currentHeight);
 
     if (viewImg) {
       if (viewImg->GetWidth() < currentAspectRatio * viewImg->GetHeight()) {
@@ -419,7 +417,7 @@ void EventManagerFrame::saveScreenshot()
 
   // Draw info
   if (info) {
-    drawScreenshotInfo(compositeImg, energyLabel, systemLabel, height);
+    drawScreenshotInfo(compositeImg, energyLabel.data(), systemLabel.data(), height);
   }
 
   // Save screenshot to file
