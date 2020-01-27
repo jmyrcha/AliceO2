@@ -386,10 +386,10 @@ void EventManagerFrame::saveScreenshot()
 
     if (viewImg) {
       if (viewImg->GetWidth() < currentAspectRatio * viewImg->GetHeight()) {
-        viewImg->Crop(0, (viewImg->GetHeight() - viewImg->GetWidth() / currentAspectRatio), viewImg->GetWidth(),
+        viewImg->Crop(0, (viewImg->GetHeight() - viewImg->GetWidth() / currentAspectRatio) * 0.5, viewImg->GetWidth(),
                       viewImg->GetWidth() / currentAspectRatio);
       } else {
-        viewImg->Crop((viewImg->GetWidth() - viewImg->GetHeight() * currentAspectRatio), 0, viewImg->GetHeight() * currentAspectRatio,
+        viewImg->Crop((viewImg->GetWidth() - viewImg->GetHeight() * currentAspectRatio) * 0.5, 0, viewImg->GetHeight() * currentAspectRatio,
                       viewImg->GetHeight());
       }
       viewImg->Scale(currentWidth, currentHeight);
