@@ -8,9 +8,9 @@
 # granted to it by virtue of its status as an Intergovernmental Organization or
 # submit itself to any jurisdiction.
 
-add_subdirectory(DataConverter)
-add_subdirectory(Base)
-add_subdirectory(Geometries)
-add_subdirectory(Detectors)
-add_subdirectory(View)
-add_subdirectory(test)
+
+o2_add_executable(aod-view-test-workflow
+                  COMPONENT_NAME view
+                  SOURCES AODViewWorkflow.cxx AODReaderSpec.cxx AODViewerSpec.cxx
+
+                  PUBLIC_LINK_LIBRARIES O2::Framework O2::ReconstructionDataFormats)
