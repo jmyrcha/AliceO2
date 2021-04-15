@@ -11,10 +11,12 @@
 #ifndef ALICEO2_PHOS_DIGITIZER_H
 #define ALICEO2_PHOS_DIGITIZER_H
 
-#include "PHOSBase/Digit.h"
+#include "DataFormatsPHOS/Digit.h"
 #include "PHOSBase/Geometry.h"
+#include "PHOSCalib/CalibParams.h"
+#include "PHOSCalib/TriggerMap.h"
 #include "PHOSBase/Hit.h"
-#include "PHOSSimulation/MCLabel.h"
+#include "DataFormatsPHOS/MCLabel.h"
 #include "SimulationDataFormat/MCTruthContainer.h"
 
 namespace o2
@@ -33,44 +35,30 @@ class Digitizer : public TObject
   void finish();
 
   /// Steer conversion of hits to digits
-  void process(const std::vector<Hit>& hits, std::vector<Digit>& digits, o2::dataformats::MCTruthContainer<o2::phos::MCLabel>& labels);
-
-  void setEventTime(double t);
-  double getEventTime() const { return mEventTime; }
-
-  void setContinuous(bool v) { mContinuous = v; }
-  bool isContinuous() const { return mContinuous; }
-
-  //  void setCoeffToNanoSecond(double cf) { mCoeffToNanoSecond = cf; }
-  //  double getCoeffToNanoSecond() const { return mCoeffToNanoSecond; }
-
-  void setCurrSrcID(int v);
-  int getCurrSrcID() const { return mCurrSrcID; }
-
-  void setCurrEvID(int v);
-  int getCurrEvID() const { return mCurrEvID; }
-
-  void setCoeffToNanoSecond(double c) { mCoeffToNanoSecond = c; }
+  void processHits(const std::vector<Hit>* mHits, const std::vector<Digit>& digitsBg,
+                   std::vector<Digit>& digitsOut, o2::dataformats::MCTruthContainer<MCLabel>& mLabels,
+                   int source, int entry, double dt);
+  void processMC(bool mc) { mProcessMC = mc; }
 
  protected:
-  double NonLinearity(double e);
-  double DigitizeEnergy(double e);
-  double Decalibrate(double e);
-  double TimeResolution(double time, double e);
-  double SimulateNoiseEnergy();
-  double SimulateNoiseTime();
+  float nonLinearity(float e);
+  float uncalibrate(float e, int absId);
+  float uncalibrateT(float t, int absId);
+  float timeResolution(float time, float e);
+  float simulateNoiseEnergy(int absId);
+  float simulateNoiseTime();
 
  private:
-  const Geometry* mGeometry = nullptr; //!  PHOS geometry
-  double mEventTime = 0;               ///< global event time
-  double mCoeffToNanoSecond = 1.0;     ///< coefficient to convert event time (Fair) to ns
-  bool mContinuous = false;            ///< flag for continuous simulation
-  uint mROFrameMin = 0;                ///< lowest RO frame of current digits
-  uint mROFrameMax = 0;                ///< highest RO frame of current digits
-  int mCurrSrcID = 0;                  ///< current MC source from the manager
-  int mCurrEvID = 0;                   ///< current event ID from the manager
+  static constexpr short NCHANNELS = 12544; ///< Number of channels starting from 56*64*(4-0.5)
+  static constexpr short OFFSET = 1793;     ///< Non-existing channels 56*64*0.5+1
+  bool mProcessMC = true;
+  bool mTrig2x2 = true;                      ///< simulate 2x2 PHOS trigger
+  bool mTrig4x4 = false;                     ///< simulate 4x4 PHOS trigger
+  std::unique_ptr<CalibParams> mCalibParams; /// Calibration coefficients
+  std::unique_ptr<TriggerMap> mTrigUtils;    /// trigger bad map and turn-on curves
+  std::array<Digit, NCHANNELS> mArrayD;
 
-  ClassDefOverride(Digitizer, 2);
+  ClassDefOverride(Digitizer, 4);
 };
 } // namespace phos
 } // namespace o2

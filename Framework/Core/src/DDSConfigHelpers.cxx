@@ -11,49 +11,86 @@
 #include <map>
 #include <iostream>
 #include <cstring>
+#include <fmt/format.h>
+#include <libgen.h>
 
-namespace o2
-{
-namespace framework
+namespace o2::framework
 {
 
 void dumpDeviceSpec2DDS(std::ostream& out,
                         const std::vector<DeviceSpec>& specs,
                         const std::vector<DeviceExecution>& executions)
 {
-  out << R"(<topology id="o2-dataflow">)"
+  out << R"(<topology name="o2-dataflow">)"
          "\n";
   assert(specs.size() == executions.size());
 
   for (size_t di = 0; di < specs.size(); ++di) {
     auto& spec = specs[di];
     auto& execution = executions[di];
-
-    auto id = spec.id;
-    std::replace(id.begin(), id.end(), '-', '_'); // replace all 'x' to 'y'
+    if (execution.args.empty()) {
+      continue;
+    }
     out << "   "
-        << R"(<decltask id=")" << id << R"(">)"
-                                        "\n";
+        << fmt::format("<decltask name=\"{}\">\n", spec.name);
     out << "       "
         << R"(<exe reachable="true">)";
-    for (size_t ai = 0; ai < execution.args.size(); ++ai) {
+    std::string accumulatedChannelPrefix;
+    char* s = strdup(execution.args[0]);
+    out << basename(s) << " ";
+    free(s);
+    for (size_t ai = 1; ai < execution.args.size(); ++ai) {
       const char* arg = execution.args[ai];
       if (!arg) {
         break;
       }
-      // Do not print out channel information
-      if (strcmp(arg, "--channel-config") == 0) {
+      // Do not print out the driver client explicitly
+      if (strcmp(arg, "--driver-client-backend") == 0) {
         ai++;
         continue;
       }
-      out << arg << " ";
+      if (strcmp(arg, "--control") == 0) {
+        ai++;
+        continue;
+      }
+      if (strcmp(arg, "--channel-config") == 0) {
+        if ((ai + 1) < execution.args.size()) {
+          if (accumulatedChannelPrefix.empty() == false) {
+            accumulatedChannelPrefix += ";";
+          }
+          accumulatedChannelPrefix += execution.args[ai + 1];
+        }
+        ai++;
+        continue;
+      }
+      // If channel-prefix is empty do not print it out
+      if (strcmp(arg, "--channel-prefix") == 0 &&
+          ai + 1 < execution.args.size() &&
+          *execution.args[ai + 1] == 0) {
+        ai++;
+        continue;
+      }
+      if (strpbrk(arg, "' ;@") != nullptr || arg[0] == 0) {
+        out << fmt::format(R"("{}" )", arg);
+      } else if (strpbrk(arg, "\"") != nullptr || arg[0] == 0) {
+        out << fmt::format(R"('{}' )", arg);
+      } else {
+        out << fmt::format(R"({} )", arg);
+      }
     }
-    out << "--plugin-search-path $FAIRMQ_ROOT/lib --plugin dds";
+    out << "--plugin dds";
+    if (accumulatedChannelPrefix.empty() == false) {
+      out << " --channel-config \"" << accumulatedChannelPrefix << "\"";
+    }
     out << "</exe>\n";
     out << "   </decltask>\n";
   }
+  out << "   <declcollection name=\"DPL\">\n       <tasks>\n";
+  for (size_t di = 0; di < specs.size(); ++di) {
+    out << fmt::format("          <name>{}</name>\n", specs[di].name);
+  }
+  out << "       </tasks>\n   </declcollection>\n";
   out << "</topology>\n";
 }
 
-} // namespace framework
-} // namespace o2
+} // namespace o2::framework

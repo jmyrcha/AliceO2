@@ -9,50 +9,40 @@
 // or submit itself to any jurisdiction.
 
 #include "CPVBase/Geometry.h"
+#include "FairLogger.h"
 
 using namespace o2::cpv;
 
 ClassImp(Geometry);
 
-// these initialisations are needed for a singleton
-Geometry* Geometry::sGeom = nullptr;
-
-Geometry::Geometry(const std::string_view name) : mGeoName(name),
-                                                  mNumberOfCPVPadsPhi(128),
-                                                  mNumberOfCPVPadsZ(60),
-                                                  mCPVPadSizePhi(1.13),
-                                                  mCPVPadSizeZ(2.1093)
-{
-}
-
-int Geometry::RelToAbsId(int moduleNumber, int iphi, int iz) const
+unsigned short Geometry::relToAbsId(short moduleNumber, short iphi, short iz)
 {
   //converts module number, phi and z coordunates to absId
-  return mNumberOfCPVPadsPhi * mNumberOfCPVPadsZ * (moduleNumber - 1) + mNumberOfCPVPadsZ * (iz - 1) + iphi;
+  return kNumberOfCPVPadsPhi * kNumberOfCPVPadsZ * (moduleNumber - 2) + kNumberOfCPVPadsZ * iphi + iz;
 }
 
-bool Geometry::AbsToRelNumbering(int absId, int* relid) const
+bool Geometry::absToRelNumbering(unsigned short absId, short* relid)
 {
   // Converts the absolute numbering into the following array
   //  relid[0] = CPV Module number 1:fNModules
   //  relid[1] = Column number inside a CPV module (Phi coordinate)
   //  relid[2] = Row number inside a CPV module (Z coordinate)
 
-  double nCPV = mNumberOfCPVPadsPhi * mNumberOfCPVPadsZ;
-  relid[0] = (absId - 1) / nCPV + 1;
-  absId -= (relid[0] - 1) * nCPV;
-  relid[2] = absId / mNumberOfCPVPadsZ + 1;
-  relid[1] = absId - (relid[2] - 1) * mNumberOfCPVPadsZ;
+  const short nCPV = kNumberOfCPVPadsPhi * kNumberOfCPVPadsZ;
+  relid[0] = absId / nCPV + 2;
+  absId -= (relid[0] - 2) * nCPV;
+  relid[1] = absId / kNumberOfCPVPadsZ;
+  relid[2] = absId % kNumberOfCPVPadsZ;
 
   return true;
 }
-int Geometry::AbsIdToModule(int absId)
+short Geometry::absIdToModule(unsigned short absId)
 {
 
-  return (int)TMath::Ceil(absId / (mNumberOfCPVPadsPhi * mNumberOfCPVPadsZ));
+  return 2 + absId / (kNumberOfCPVPadsPhi * kNumberOfCPVPadsZ);
 }
 
-int Geometry::AreNeighbours(int absId1, int absId2) const
+short Geometry::areNeighbours(unsigned short absId1, unsigned short absId2)
 {
 
   // Gives the neighbourness of two digits = 0 are not neighbour but continue searching
@@ -64,15 +54,15 @@ int Geometry::AreNeighbours(int absId1, int absId2) const
   // The order of d1 and d2 is important: first (d1) should be a digit already in a cluster
   //                                      which is compared to a digit (d2)  not yet in a cluster
 
-  int relid1[3];
-  AbsToRelNumbering(absId1, relid1);
+  short relid1[3];
+  absToRelNumbering(absId1, relid1);
 
-  int relid2[3];
-  AbsToRelNumbering(absId2, relid2);
+  short relid2[3];
+  absToRelNumbering(absId2, relid2);
 
   if (relid1[0] == relid2[0]) { // inside the same CPV module
-    int rowdiff = TMath::Abs(relid1[1] - relid2[1]);
-    int coldiff = TMath::Abs(relid1[2] - relid2[2]);
+    short rowdiff = TMath::Abs(relid1[1] - relid2[1]);
+    short coldiff = TMath::Abs(relid1[2] - relid2[2]);
 
     if ((coldiff <= 1) && (rowdiff <= 1)) { // At least common vertex
       return 1;
@@ -91,13 +81,72 @@ int Geometry::AreNeighbours(int absId1, int absId2) const
   }
   return 0;
 }
-void Geometry::AbsIdToRelPosInModule(int absId, double& x, double& z) const
+void Geometry::absIdToRelPosInModule(unsigned short absId, float& x, float& z)
 {
   //Calculate from absId of a cell its position in module
 
-  int relid[3];
-  AbsToRelNumbering(absId, relid);
+  short relid[3];
+  absToRelNumbering(absId, relid);
 
-  x = (relid[1] - mNumberOfCPVPadsPhi / 2 - 0.5) * mCPVPadSizePhi;
-  z = (relid[2] - mNumberOfCPVPadsPhi / 2 - 0.5) * mCPVPadSizeZ;
+  x = (relid[1] - kNumberOfCPVPadsPhi / 2 + 0.5) * kCPVPadSizePhi;
+  z = (relid[2] - kNumberOfCPVPadsZ / 2 + 0.5) * kCPVPadSizeZ;
+}
+bool Geometry::relToAbsNumbering(const short* relId, unsigned short& absId)
+{
+
+  absId =
+    (relId[0] - 2) * kNumberOfCPVPadsPhi * kNumberOfCPVPadsZ + // the offset of PHOS modules
+    relId[1] * kNumberOfCPVPadsZ +                             // the offset along phi
+    relId[2];                                                  // the offset along z
+
+  return true;
+}
+void Geometry::hwaddressToAbsId(short ccId, short dil, short gas, short pad, unsigned short& absId)
+{
+
+  short pZ = mPadToZ[pad];
+  short pPhi = mPadToPhi[pad];
+  short relid[3] = {short(ccId / 8 + 2), short((ccId % 8) * 16 + (dil / 2) * 8 + 7 - pPhi), short((dil % 2) * 30 + gas * 6 + pZ)};
+
+  relToAbsNumbering(relid, absId);
+}
+
+void Geometry::absIdToHWaddress(unsigned short absId, short& ccId, short& dil, short& gas, short& pad)
+{
+  // Convert absId to hw address
+  // Arguments: ccId:  0 -- 7 - mod 2;  8...15 mod 3; 16...23 mod 4
+  //dilogic: 0..3, gas=0..5, pad:0..47
+
+  short relid[3];
+  absToRelNumbering(absId, relid);
+
+  ccId = (relid[0] - 2) * 8 + relid[1] / 16;
+  dil = 2 * ((relid[1] % 16) / 8) + relid[2] / 30; // Dilogic# 0..3
+  gas = (relid[2] % 30) / 6;                       // gasiplex# 0..4
+  pad = mPadMap[relid[2] % 6][7 - relid[1] % 8];   // pad 0..47
+
+  if (pad < 0 || pad > kNPAD) {
+    LOG(ERROR) << "Wrong pad address: pad=" << pad << " > kNPAD=" << kNPAD;
+    pad = 0;
+    dil = 0;
+    gas = 0;
+    ccId = 0;
+    return;
+  }
+  if (dil < 0 || dil >= kNDilogic) {
+    LOG(ERROR) << "Wrong dil address: dil=" << dil << " > kNDilogic=" << kNDilogic;
+    pad = 0;
+    dil = 0;
+    gas = 0;
+    ccId = 0;
+    return;
+  }
+  if (gas < 0 || gas >= kNGas) {
+    LOG(ERROR) << "Wrong gasiplex address: gas=" << gas << " > kNGas=" << kNGas;
+    pad = 0;
+    dil = 0;
+    gas = 0;
+    ccId = 0;
+    return;
+  }
 }

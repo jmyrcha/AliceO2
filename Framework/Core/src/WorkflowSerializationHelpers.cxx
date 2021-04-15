@@ -12,6 +12,8 @@
 #include "Framework/WorkflowSpec.h"
 #include "Framework/DataDescriptorQueryBuilder.h"
 #include "Framework/DataSpecUtils.h"
+#include "Framework/VariantJSONHelpers.h"
+#include "Framework/DataDescriptorMatcher.h"
 
 #include <rapidjson/reader.h>
 #include <rapidjson/prettywriter.h>
@@ -21,12 +23,11 @@
 #include <algorithm>
 #include <memory>
 
-namespace o2
-{
-namespace framework
+namespace o2::framework
 {
 
 using namespace rapidjson;
+using namespace o2::framework::data_matcher;
 
 struct WorkflowImporter : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>, WorkflowImporter> {
   enum struct State {
@@ -34,6 +35,7 @@ struct WorkflowImporter : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>,
     IN_EXECUTION,
     IN_WORKFLOW,
     IN_METADATA,
+    IN_COMMAND,
     IN_DATAPROCESSORS,
     IN_DATAPROCESSOR,
     IN_DATAPROCESSOR_NAME,
@@ -51,6 +53,7 @@ struct WorkflowImporter : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>,
     IN_INPUT_DESCRIPTION,
     IN_INPUT_SUBSPEC,
     IN_INPUT_LIFETIME,
+    IN_INPUT_OPTIONS,
     IN_OUTPUT,
     IN_OUTPUT_BINDING,
     IN_OUTPUT_ORIGIN,
@@ -62,11 +65,14 @@ struct WorkflowImporter : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>,
     IN_OPTION_TYPE,
     IN_OPTION_DEFAULT,
     IN_OPTION_HELP,
+    IN_OPTION_KIND,
     IN_METADATUM,
     IN_METADATUM_NAME,
     IN_METADATUM_EXECUTABLE,
     IN_METADATUM_ARGS,
     IN_METADATUM_ARG,
+    IN_METADATUM_CHANNELS,
+    IN_METADATUM_CHANNEL,
     IN_ERROR
   };
 
@@ -81,6 +87,9 @@ struct WorkflowImporter : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>,
         break;
       case State::IN_WORKFLOW:
         s << "IN_WORKFLOW";
+        break;
+      case State::IN_COMMAND:
+        s << "IN_COMMAND";
         break;
       case State::IN_DATAPROCESSORS:
         s << "IN_DATAPROCESSORS";
@@ -133,6 +142,9 @@ struct WorkflowImporter : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>,
       case State::IN_INPUT_LIFETIME:
         s << "IN_INPUT_LIFETIME";
         break;
+      case State::IN_INPUT_OPTIONS:
+        s << "IN_INPUT_OPTIONS";
+        break;
       case State::IN_OUTPUT:
         s << "IN_OUTPUT";
         break;
@@ -166,6 +178,9 @@ struct WorkflowImporter : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>,
       case State::IN_OPTION_HELP:
         s << "IN_OPTION_HELP";
         break;
+      case State::IN_OPTION_KIND:
+        s << "IN_OPTION_KIND";
+        break;
       case State::IN_ERROR:
         s << "IN_ERROR";
         break;
@@ -187,15 +202,23 @@ struct WorkflowImporter : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>,
       case State::IN_METADATUM_ARG:
         s << "IN_METADATUM_ARG";
         break;
+      case State::IN_METADATUM_CHANNELS:
+        s << "IN_METADATUM_CHANNELS";
+        break;
+      case State::IN_METADATUM_CHANNEL:
+        s << "IN_METADATUM_CHANNEL";
+        break;
     }
     return s;
   }
 
   WorkflowImporter(std::vector<DataProcessorSpec>& o,
-                   std::vector<DataProcessorInfo>& m)
+                   std::vector<DataProcessorInfo>& m,
+                   CommandInfo& c)
     : states{},
-      output{o},
-      metadata{m}
+      dataProcessors{o},
+      metadata{m},
+      command{c}
   {
     push(State::IN_START);
   }
@@ -207,16 +230,19 @@ struct WorkflowImporter : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>,
       push(State::IN_EXECUTION);
     } else if (in(State::IN_DATAPROCESSORS)) {
       push(State::IN_DATAPROCESSOR);
-      output.push_back(DataProcessorSpec{});
+      dataProcessors.push_back(DataProcessorSpec{});
     } else if (in(State::IN_DATAPROCESSOR)) {
-      output.push_back(DataProcessorSpec{});
+      dataProcessors.push_back(DataProcessorSpec{});
     } else if (in(State::IN_INPUTS)) {
       push(State::IN_INPUT);
+      inputHasDescription = false;
       inputHasSubSpec = false;
     } else if (in(State::IN_OUTPUTS)) {
       push(State::IN_OUTPUT);
       outputHasSubSpec = false;
     } else if (in(State::IN_OPTIONS)) {
+      push(State::IN_OPTION);
+    } else if (in(State::IN_INPUT_OPTIONS)) {
       push(State::IN_OPTION);
     } else if (in(State::IN_WORKFLOW_OPTIONS)) {
       push(State::IN_OPTION);
@@ -225,6 +251,8 @@ struct WorkflowImporter : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>,
       metadata.push_back(DataProcessorInfo{});
     } else if (in(State::IN_METADATUM)) {
       metadata.push_back(DataProcessorInfo{});
+    } else if (in(State::IN_COMMAND)) {
+      command = CommandInfo{};
     }
     return true;
   }
@@ -233,50 +261,105 @@ struct WorkflowImporter : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>,
   {
     enter("END_OBJECT");
     if (in(State::IN_INPUT)) {
-      if (inputHasSubSpec) {
-        output.back().inputs.push_back(InputSpec(binding, origin, description, subspec, lifetime));
-      } else {
-        output.back().inputs.push_back(InputSpec(binding, {origin, description}, lifetime));
+      if (!inputHasDescription && !inputHasSubSpec) {
+
+        DataDescriptorMatcher expectedMatcher00{
+          DataDescriptorMatcher::Op::And,
+          OriginValueMatcher{origin.str},
+          std::make_unique<DataDescriptorMatcher>(
+            DataDescriptorMatcher::Op::And,
+            DescriptionValueMatcher{ContextRef{1}},
+            std::make_unique<DataDescriptorMatcher>(
+              DataDescriptorMatcher::Op::And,
+              SubSpecificationTypeValueMatcher{ContextRef{2}},
+              std::make_unique<DataDescriptorMatcher>(DataDescriptorMatcher::Op::Just,
+                                                      StartTimeValueMatcher{ContextRef{0}})))};
+
+        dataProcessors.back().inputs.push_back(InputSpec({binding}, std::move(expectedMatcher00)));
       }
+      if (inputHasSubSpec) {
+        dataProcessors.back().inputs.push_back(InputSpec(binding, origin, description, subspec, lifetime, inputOptions));
+      } else {
+        dataProcessors.back().inputs.push_back(InputSpec(binding, {origin, description}, lifetime, inputOptions));
+      }
+      inputOptions.clear();
+      inputHasDescription = false;
       inputHasSubSpec = false;
     } else if (in(State::IN_OUTPUT)) {
       if (outputHasSubSpec) {
-        output.back().outputs.push_back(OutputSpec({binding}, origin, description, subspec, lifetime));
+        dataProcessors.back().outputs.push_back(OutputSpec({binding}, origin, description, subspec, lifetime));
       } else {
-        output.back().outputs.push_back(OutputSpec({binding}, {origin, description}, lifetime));
+        dataProcessors.back().outputs.push_back(OutputSpec({binding}, {origin, description}, lifetime));
       }
       outputHasSubSpec = false;
     } else if (in(State::IN_OPTION)) {
       std::unique_ptr<ConfigParamSpec> opt{nullptr};
 
       using HelpString = ConfigParamSpec::HelpString;
+      std::stringstream is;
+      is.str(optionDefault);
       switch (optionType) {
         case VariantType::String:
-          opt = std::make_unique<ConfigParamSpec>(optionName, optionType, optionDefault.c_str(), HelpString{optionHelp});
+          opt = std::make_unique<ConfigParamSpec>(optionName, optionType, optionDefault.c_str(), HelpString{optionHelp}, optionKind);
           break;
         case VariantType::Int:
-          opt = std::make_unique<ConfigParamSpec>(optionName, optionType, std::stoi(optionDefault, nullptr), HelpString{optionHelp});
+          opt = std::make_unique<ConfigParamSpec>(optionName, optionType, std::stoi(optionDefault, nullptr), HelpString{optionHelp}, optionKind);
           break;
         case VariantType::Int64:
-          opt = std::make_unique<ConfigParamSpec>(optionName, optionType, std::stol(optionDefault, nullptr), HelpString{optionHelp});
+          opt = std::make_unique<ConfigParamSpec>(optionName, optionType, std::stol(optionDefault, nullptr), HelpString{optionHelp}, optionKind);
           break;
         case VariantType::Float:
-          opt = std::make_unique<ConfigParamSpec>(optionName, optionType, std::stof(optionDefault, nullptr), HelpString{optionHelp});
+          opt = std::make_unique<ConfigParamSpec>(optionName, optionType, std::stof(optionDefault, nullptr), HelpString{optionHelp}, optionKind);
           break;
         case VariantType::Double:
-          opt = std::make_unique<ConfigParamSpec>(optionName, optionType, std::stod(optionDefault, nullptr), HelpString{optionHelp});
+          opt = std::make_unique<ConfigParamSpec>(optionName, optionType, std::stod(optionDefault, nullptr), HelpString{optionHelp}, optionKind);
           break;
         case VariantType::Bool:
-          opt = std::make_unique<ConfigParamSpec>(optionName, optionType, (bool)std::stoi(optionDefault, nullptr), HelpString{optionHelp});
+          opt = std::make_unique<ConfigParamSpec>(optionName, optionType, (bool)std::stoi(optionDefault, nullptr), HelpString{optionHelp}, optionKind);
+          break;
+        case VariantType::ArrayInt:
+          opt = std::make_unique<ConfigParamSpec>(optionName, optionType, VariantJSONHelpers::read<VariantType::ArrayInt>(is), HelpString{optionHelp}, optionKind);
+          break;
+        case VariantType::ArrayFloat:
+          opt = std::make_unique<ConfigParamSpec>(optionName, optionType, VariantJSONHelpers::read<VariantType::ArrayFloat>(is), HelpString{optionHelp}, optionKind);
+          break;
+        case VariantType::ArrayDouble:
+          opt = std::make_unique<ConfigParamSpec>(optionName, optionType, VariantJSONHelpers::read<VariantType::ArrayDouble>(is), HelpString{optionHelp}, optionKind);
+          break;
+          //        case VariantType::ArrayBool:
+          //          opt = std::make_unique<ConfigParamSpec>(optionName, optionType, VariantJSONHelpers::read<VariantType::ArrayBool>(is), HelpString{optionHelp}, optionKind);
+          //          break;
+        case VariantType::ArrayString:
+          opt = std::make_unique<ConfigParamSpec>(optionName, optionType, VariantJSONHelpers::read<VariantType::ArrayString>(is), HelpString{optionHelp}, optionKind);
+          break;
+        case VariantType::Array2DInt:
+          opt = std::make_unique<ConfigParamSpec>(optionName, optionType, VariantJSONHelpers::read<VariantType::Array2DInt>(is), HelpString{optionHelp}, optionKind);
+          break;
+        case VariantType::Array2DFloat:
+          opt = std::make_unique<ConfigParamSpec>(optionName, optionType, VariantJSONHelpers::read<VariantType::Array2DFloat>(is), HelpString{optionHelp}, optionKind);
+          break;
+        case VariantType::Array2DDouble:
+          opt = std::make_unique<ConfigParamSpec>(optionName, optionType, VariantJSONHelpers::read<VariantType::Array2DDouble>(is), HelpString{optionHelp}, optionKind);
+          break;
+        case VariantType::LabeledArrayInt:
+          opt = std::make_unique<ConfigParamSpec>(optionName, optionType, VariantJSONHelpers::read<VariantType::LabeledArrayInt>(is), HelpString{optionHelp}, optionKind);
+          break;
+        case VariantType::LabeledArrayFloat:
+          opt = std::make_unique<ConfigParamSpec>(optionName, optionType, VariantJSONHelpers::read<VariantType::LabeledArrayFloat>(is), HelpString{optionHelp}, optionKind);
+          break;
+        case VariantType::LabeledArrayDouble:
+          opt = std::make_unique<ConfigParamSpec>(optionName, optionType, VariantJSONHelpers::read<VariantType::LabeledArrayDouble>(is), HelpString{optionHelp}, optionKind);
           break;
         default:
-          opt = std::make_unique<ConfigParamSpec>(optionName, optionType, optionDefault, HelpString{optionHelp});
+          opt = std::make_unique<ConfigParamSpec>(optionName, optionType, optionDefault, HelpString{optionHelp}, optionKind);
       }
       // Depending on the previous state, push options to the right place.
       if (previousIs(State::IN_OPTIONS)) {
-        output.back().options.push_back(*opt);
+        dataProcessors.back().options.push_back(*opt);
       } else if (previousIs(State::IN_WORKFLOW_OPTIONS)) {
         metadata.back().workflowOptions.push_back(*opt);
+      } else if (previousIs(State::IN_INPUT_OPTIONS)) {
+        inputOptions.push_back(*opt);
       } else {
         assert(false);
       }
@@ -292,7 +375,10 @@ struct WorkflowImporter : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>,
       push(State::IN_DATAPROCESSORS);
     } else if (in(State::IN_INPUTS)) {
       push(State::IN_INPUT);
+      inputHasDescription = false;
       inputHasSubSpec = false;
+    } else if (in(State::IN_INPUT_OPTIONS)) {
+      push(State::IN_OPTION);
     } else if (in(State::IN_OUTPUTS)) {
       push(State::IN_OUTPUT);
       outputHasSubSpec = false;
@@ -304,6 +390,8 @@ struct WorkflowImporter : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>,
       push(State::IN_METADATUM);
     } else if (in(State::IN_METADATUM_ARGS)) {
       push(State::IN_METADATUM_ARG);
+    } else if (in(State::IN_METADATUM_CHANNELS)) {
+      push(State::IN_METADATUM_CHANNEL);
     }
     return true;
   }
@@ -313,7 +401,7 @@ struct WorkflowImporter : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>,
     enter("END_ARRAY");
     // Handle the case in which inputs / options / outputs are
     // empty.
-    if (in(State::IN_INPUT) || in(State::IN_OUTPUT) || in(State::IN_OPTION) || in(State::IN_METADATUM) || in(State::IN_METADATUM_ARG) || in(State::IN_DATAPROCESSORS)) {
+    if (in(State::IN_INPUT) || in(State::IN_OUTPUT) || in(State::IN_OPTION) || in(State::IN_METADATUM) || in(State::IN_METADATUM_ARG) || in(State::IN_METADATUM_CHANNEL) || in(State::IN_DATAPROCESSORS)) {
       pop();
     }
     pop();
@@ -330,11 +418,14 @@ struct WorkflowImporter : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>,
       push(State::IN_INPUT_ORIGIN);
     } else if (in(State::IN_INPUT) && strncmp(str, "description", length) == 0) {
       push(State::IN_INPUT_DESCRIPTION);
+      inputHasDescription = true;
     } else if (in(State::IN_INPUT) && strncmp(str, "subspec", length) == 0) {
       push(State::IN_INPUT_SUBSPEC);
       inputHasSubSpec = true;
     } else if (in(State::IN_INPUT) && strncmp(str, "lifetime", length) == 0) {
       push(State::IN_INPUT_LIFETIME);
+    } else if (in(State::IN_INPUT) && strncmp(str, "metadata", length) == 0) {
+      push(State::IN_INPUT_OPTIONS);
     } else if (in(State::IN_OUTPUT) && strncmp(str, "binding", length) == 0) {
       push(State::IN_OUTPUT_BINDING);
     } else if (in(State::IN_OUTPUT) && strncmp(str, "origin", length) == 0) {
@@ -374,6 +465,8 @@ struct WorkflowImporter : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>,
       push(State::IN_OPTION_DEFAULT);
     } else if (in(State::IN_OPTION) && strncmp(str, "help", length) == 0) {
       push(State::IN_OPTION_HELP);
+    } else if (in(State::IN_OPTION) && strncmp(str, "kind", length) == 0) {
+      push(State::IN_OPTION_KIND);
     } else if (in(State::IN_METADATUM) && strncmp(str, "name", length) == 0) {
       push(State::IN_METADATUM_NAME);
     } else if (in(State::IN_METADATUM) && strncmp(str, "executable", length) == 0) {
@@ -382,6 +475,10 @@ struct WorkflowImporter : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>,
       push(State::IN_METADATUM_ARGS);
     } else if (in(State::IN_METADATUM) && strncmp(str, "workflowOptions", length) == 0) {
       push(State::IN_WORKFLOW_OPTIONS);
+    } else if (in(State::IN_METADATUM) && strncmp(str, "channels", length) == 0) {
+      push(State::IN_METADATUM_CHANNELS);
+    } else if (in(State::IN_EXECUTION) && strncmp(str, "command", length) == 0) {
+      push(State::IN_COMMAND);
     }
     return true;
   }
@@ -392,8 +489,8 @@ struct WorkflowImporter : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>,
     enter(str);
     auto s = std::string(str, length);
     if (in(State::IN_DATAPROCESSOR_NAME)) {
-      assert(output.size());
-      output.back().name = s;
+      assert(dataProcessors.size());
+      dataProcessors.back().name = s;
     } else if (in(State::IN_METADATUM_NAME)) {
       assert(metadata.size());
       metadata.back().name = s;
@@ -416,6 +513,8 @@ struct WorkflowImporter : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>,
       optionName = s;
     } else if (in(State::IN_OPTION_TYPE)) {
       optionType = (VariantType)std::stoi(s, nullptr);
+    } else if (in(State::IN_OPTION_KIND)) {
+      optionKind = (ConfigParamKind)std::stoi(s, nullptr);
     } else if (in(State::IN_OPTION_DEFAULT)) {
       optionDefault = s;
     } else if (in(State::IN_OPTION_HELP)) {
@@ -425,6 +524,13 @@ struct WorkflowImporter : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>,
       // This is in an array, so we do not actually want to
       // exit from the state.
       push(State::IN_METADATUM_ARG);
+    } else if (in(State::IN_METADATUM_CHANNEL)) {
+      metadata.back().channels.push_back(s);
+      // This is in an array, so we do not actually want to
+      // exit from the state.
+      push(State::IN_METADATUM_CHANNEL);
+    } else if (in(State::IN_COMMAND)) {
+      command.merge({s});
     }
     pop();
     return true;
@@ -442,13 +548,13 @@ struct WorkflowImporter : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>,
     } else if (in(State::IN_OUTPUT_LIFETIME)) {
       lifetime = (Lifetime)i;
     } else if (in(State::IN_DATAPROCESSOR_RANK)) {
-      output.back().rank = i;
+      dataProcessors.back().rank = i;
     } else if (in(State::IN_DATAPROCESSOR_N_SLOTS)) {
-      output.back().nSlots = i;
+      dataProcessors.back().nSlots = i;
     } else if (in(State::IN_DATAPROCESSOR_TIMESLICE_ID)) {
-      output.back().inputTimeSliceId = i;
+      dataProcessors.back().inputTimeSliceId = i;
     } else if (in(State::IN_DATAPROCESSOR_MAX_TIMESLICES)) {
-      output.back().maxInputTimeslices = i;
+      dataProcessors.back().maxInputTimeslices = i;
     }
     pop();
     return true;
@@ -509,8 +615,10 @@ struct WorkflowImporter : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>,
   std::ostringstream debug;
   std::vector<State> states;
   std::string spec;
-  std::vector<DataProcessorSpec>& output;
+  std::vector<DataProcessorSpec>& dataProcessors;
   std::vector<DataProcessorInfo>& metadata;
+  CommandInfo& command;
+  std::vector<ConfigParamSpec> inputOptions;
   std::string binding;
   header::DataOrigin origin;
   header::DataDescription description;
@@ -520,13 +628,16 @@ struct WorkflowImporter : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>,
   VariantType optionType;
   std::string optionDefault;
   std::string optionHelp;
+  ConfigParamKind optionKind;
   bool outputHasSubSpec;
   bool inputHasSubSpec;
+  bool inputHasDescription;
 };
 
 void WorkflowSerializationHelpers::import(std::istream& s,
                                           std::vector<DataProcessorSpec>& workflow,
-                                          std::vector<DataProcessorInfo>& metadata)
+                                          std::vector<DataProcessorInfo>& metadata,
+                                          CommandInfo& command)
 {
   // Skip any line which does not start with '{'
   // If we do not find a starting {, we simply assume that no workflow
@@ -545,7 +656,7 @@ void WorkflowSerializationHelpers::import(std::istream& s,
   }
   rapidjson::Reader reader;
   rapidjson::IStreamWrapper isw(s);
-  WorkflowImporter importer{workflow, metadata};
+  WorkflowImporter importer{workflow, metadata, command};
   bool ok = reader.Parse(isw, importer);
   if (ok == false) {
     throw std::runtime_error("Error while parsing serialised workflow");
@@ -554,7 +665,8 @@ void WorkflowSerializationHelpers::import(std::istream& s,
 
 void WorkflowSerializationHelpers::dump(std::ostream& out,
                                         std::vector<DataProcessorSpec> const& workflow,
-                                        std::vector<DataProcessorInfo> const& metadata)
+                                        std::vector<DataProcessorInfo> const& metadata,
+                                        CommandInfo const& commandInfo)
 {
   rapidjson::OStreamWrapper osw(out);
   rapidjson::PrettyWriter<rapidjson::OStreamWrapper> w(osw);
@@ -577,17 +689,19 @@ void WorkflowSerializationHelpers::dump(std::ostream& out,
       /// FIXME: this only works for a selected set of InputSpecs...
       ///        a proper way to fully serialize an InputSpec with
       ///        a DataDescriptorMatcher is needed.
-      auto dataType = DataSpecUtils::asConcreteDataTypeMatcher(input);
-      if (dataType.origin == header::DataOrigin("DPL")) {
-        continue;
-      }
       w.StartObject();
       w.Key("binding");
       w.String(input.binding.c_str());
-      w.Key("origin");
-      w.String(dataType.origin.str, strnlen(dataType.origin.str, 4));
-      w.Key("description");
-      w.String(dataType.description.str, strnlen(dataType.description.str, 16));
+      auto origin = DataSpecUtils::getOptionalOrigin(input);
+      if (origin.has_value()) {
+        w.Key("origin");
+        w.String(origin->str, strnlen(origin->str, 16));
+      }
+      auto description = DataSpecUtils::getOptionalDescription(input);
+      if (description.has_value()) {
+        w.Key("description");
+        w.String(description->str, strnlen(description->str, 16));
+      }
       auto subSpec = DataSpecUtils::getOptionalSubSpec(input);
       if (subSpec.has_value()) {
         w.Key("subspec");
@@ -595,6 +709,26 @@ void WorkflowSerializationHelpers::dump(std::ostream& out,
       }
       w.Key("lifetime");
       w.Uint((int)input.lifetime);
+      if (input.metadata.empty() == false) {
+        w.Key("metadata");
+        w.StartArray();
+        for (auto& metadata : input.metadata) {
+          w.StartObject();
+          w.Key("name");
+          w.String(metadata.name.c_str());
+          auto s = std::to_string(int(metadata.type));
+          w.Key("type");
+          w.String(s.c_str());
+          std::ostringstream oss;
+          oss << metadata.defaultValue;
+          w.Key("defaultValue");
+          w.String(oss.str().c_str());
+          w.Key("help");
+          w.String(metadata.help.c_str());
+          w.EndObject();
+        }
+        w.EndArray();
+      }
       w.EndObject();
     }
     w.EndArray();
@@ -631,7 +765,7 @@ void WorkflowSerializationHelpers::dump(std::ostream& out,
     w.Key("options");
     w.StartArray();
     for (auto& option : processor.options) {
-      if (option.name == "start-value-enumeration" || option.name == "end-value-enumeration" || option.name == "step-value-enumeration") {
+      if (option.name == "start-value-enumeration" || option.name == "end-value-enumeration" || option.name == "step-value-enumeration" || option.name == "orbit-offset-enumeration" || option.name == "orbit-multiplier-enumeration") {
         continue;
       }
       w.StartObject();
@@ -641,11 +775,30 @@ void WorkflowSerializationHelpers::dump(std::ostream& out,
       w.Key("type");
       w.String(s.c_str());
       std::ostringstream oss;
-      oss << option.defaultValue;
+      switch (option.type) {
+        case VariantType::ArrayInt:
+        case VariantType::ArrayFloat:
+        case VariantType::ArrayDouble:
+        case VariantType::ArrayBool:
+        case VariantType::ArrayString:
+        case VariantType::Array2DInt:
+        case VariantType::Array2DFloat:
+        case VariantType::Array2DDouble:
+        case VariantType::LabeledArrayInt:
+        case VariantType::LabeledArrayFloat:
+        case VariantType::LabeledArrayDouble:
+          VariantJSONHelpers::write(oss, option.defaultValue);
+          break;
+        default:
+          oss << option.defaultValue;
+          break;
+      }
       w.Key("defaultValue");
       w.String(oss.str().c_str());
       w.Key("help");
       w.String(option.help.c_str());
+      w.Key("kind");
+      w.String(std::to_string((int)option.kind).c_str());
       w.EndObject();
     }
     w.EndArray();
@@ -694,11 +847,20 @@ void WorkflowSerializationHelpers::dump(std::ostream& out,
       w.EndObject();
     }
     w.EndArray();
+    w.Key("channels");
+    w.StartArray();
+    for (auto& channel : info.channels) {
+      w.String(channel.c_str());
+    }
+    w.EndArray();
     w.EndObject();
   }
   w.EndArray();
+
+  w.Key("command");
+  w.String(commandInfo.command.c_str());
+
   w.EndObject();
 }
 
-} // namespace framework
-} // namespace o2
+} // namespace o2::framework

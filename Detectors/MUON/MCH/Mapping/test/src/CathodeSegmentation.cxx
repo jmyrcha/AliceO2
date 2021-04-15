@@ -28,6 +28,8 @@
 #include <limits>
 #include <fstream>
 #include <iostream>
+#include "TestParameters.h"
+#include <fmt/format.h>
 
 using namespace o2::mch::mapping;
 namespace bdata = boost::unit_test::data;
@@ -298,6 +300,20 @@ BOOST_AUTO_TEST_CASE(ThrowsIfDualSampaChannelIsNotBetween0And63)
   BOOST_CHECK_THROW(seg.findPadByFEE(102, 64), std::out_of_range);
 }
 
+BOOST_AUTO_TEST_CASE(ReturnsFalseIfCatPadIdIsOutOfRange)
+{
+  forOneDetectionElementOfEachSegmentationType([](int detElemId) {
+    for (auto plane : {true, false}) {
+      CathodeSegmentation seg{detElemId, plane};
+      BOOST_TEST_INFO_SCOPE(fmt::format("DeId {} Bending {}", detElemId, plane));
+      BOOST_CHECK_EQUAL(seg.isValid(0), true);
+      BOOST_CHECK_EQUAL(seg.isValid(seg.nofPads() - 1), true);
+      BOOST_CHECK_EQUAL(seg.isValid(-1), false);
+      BOOST_CHECK_EQUAL(seg.isValid(seg.nofPads()), false);
+    }
+  });
+}
+
 BOOST_AUTO_TEST_CASE(ReturnsTrueIfPadIsConnected)
 {
   BOOST_CHECK_EQUAL(seg.isValid(seg.findPadByFEE(102, 3)), true);
@@ -305,7 +321,12 @@ BOOST_AUTO_TEST_CASE(ReturnsTrueIfPadIsConnected)
 
 BOOST_AUTO_TEST_CASE(ReturnsFalseIfPadIsNotConnected)
 {
-  BOOST_CHECK_EQUAL(seg.isValid(seg.findPadByFEE(214, 14)), false);
+  TestParameters params;
+  int testChannel{14};
+  if (params.isSegmentationRun3) {
+    testChannel = 39;
+  }
+  BOOST_CHECK_EQUAL(seg.isValid(seg.findPadByFEE(214, testChannel)), false);
 }
 
 BOOST_AUTO_TEST_CASE(HasPadByPosition)
@@ -315,7 +336,12 @@ BOOST_AUTO_TEST_CASE(HasPadByPosition)
 
 BOOST_AUTO_TEST_CASE(CheckPositionOfOnePadInDE100Bending)
 {
-  BOOST_CHECK_EQUAL(seg.findPadByFEE(76, 9), seg.findPadByPosition(1.575, 18.69));
+  TestParameters params;
+  int testChannel{9};
+  if (params.isSegmentationRun3) {
+    testChannel = 47;
+  }
+  BOOST_CHECK_EQUAL(seg.findPadByFEE(76, testChannel), seg.findPadByPosition(1.575, 18.69));
 }
 
 BOOST_AUTO_TEST_CASE(CheckCopy)

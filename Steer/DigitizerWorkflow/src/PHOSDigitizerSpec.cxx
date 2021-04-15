@@ -9,20 +9,23 @@
 // or submit itself to any jurisdiction.
 
 #include "PHOSDigitizerSpec.h"
+#include "Framework/ConfigParamRegistry.h"
 #include "Framework/ControlService.h"
 #include "Framework/DataProcessorSpec.h"
 #include "Framework/DataRefUtils.h"
 #include "Framework/Lifetime.h"
 #include "Headers/DataHeader.h"
 #include "TStopwatch.h"
-#include "Steer/HitProcessingManager.h" // for RunContext
+#include "Steer/HitProcessingManager.h" // for DigitizationContext
 #include "TChain.h"
 
+#include "CommonDataFormat/EvIndex.h"
+#include "DataFormatsPHOS/TriggerRecord.h"
 #include "PHOSSimulation/Digitizer.h"
+#include "PHOSBase/PHOSSimParams.h"
 #include "DataFormatsParameters/GRPObject.h"
-#include <SimulationDataFormat/MCCompLabel.h>
+#include "DataFormatsPHOS/MCLabel.h"
 #include <SimulationDataFormat/MCTruthContainer.h>
-#include "DetectorsBase/GeometryManager.h"
 
 using namespace o2::framework;
 using SubSpecificationType = o2::framework::DataAllocator::SubSpecificationType;
@@ -32,136 +35,148 @@ namespace o2
 namespace phos
 {
 
-// helper function which will be offered as a service
-template <typename T>
-void retrieveHits(std::vector<TChain*> const& chains,
-                  const char* brname,
-                  int sourceID,
-                  int entryID,
-                  std::vector<T>* hits)
+void DigitizerSpec::initDigitizerTask(framework::InitContext& ic)
 {
-  auto br = chains[sourceID]->GetBranch(brname);
+
+  auto simulatePileup = ic.options().get<int>("pileup");
+  if (simulatePileup) {                                                // set readout time and dead time parameters
+    mReadoutTime = o2::phos::PHOSSimParams::Instance().mReadoutTimePU; //PHOS readout time in ns
+    mDeadTime = o2::phos::PHOSSimParams::Instance().mDeadTimePU;       //PHOS dead time (should include readout => mReadoutTime< mDeadTime)
+  } else {
+    mReadoutTime = o2::phos::PHOSSimParams::Instance().mReadoutTime; //PHOS readout time in ns
+    mDeadTime = o2::phos::PHOSSimParams::Instance().mDeadTime;       //PHOS dead time (should include readout => mReadoutTime< mDeadTime)
+  }
+
+  // init digitizer
+  mDigitizer.init();
+  auto mctruth = ic.options().get<bool>("mctruth");
+  if (!mctruth) {
+    mDigitizer.processMC(false);
+  }
+
+  if (mHits) {
+    delete mHits;
+  }
+  mHits = new std::vector<Hit>();
+}
+// helper function which will be offered as a service
+void DigitizerSpec::retrieveHits(const char* brname,
+                                 int sourceID,
+                                 int entryID)
+{
+  auto br = mSimChains[sourceID]->GetBranch(brname);
   if (!br) {
     LOG(ERROR) << "No branch found";
     return;
   }
-  br->SetAddress(&hits);
+  mHits->clear();
+  br->SetAddress(&mHits);
   br->GetEntry(entryID);
 }
 
-DataProcessorSpec getPHOSDigitizerSpec(int channel)
+void DigitizerSpec::run(framework::ProcessingContext& pc)
 {
-  // setup of some data structures shared between init and processing functions
-  // (a shared pointer is used since then automatic cleanup is guaranteed with a lifetime beyond
-  //  one process call)
-  auto simChains = std::make_shared<std::vector<TChain*>>();
+  // read collision context from input
+  auto context = pc.inputs().get<o2::steer::DigitizationContext*>("collisioncontext");
+  context->initSimChains(o2::detectors::DetID::PHS, mSimChains);
+  auto& timesview = context->getEventRecords();
+  LOG(DEBUG) << "GOT " << timesview.size() << " COLLISSION TIMES";
 
-  // the instance of the actual digitizer
-  auto digitizer = std::make_shared<o2::phos::Digitizer>();
+  // if there is nothing to do ... return
+  int n = timesview.size();
+  if (n == 0) {
+    return;
+  }
 
-  // containers for digits and labels
-  auto digits = std::make_shared<std::vector<o2::phos::Digit>>();
-  auto digitsAccum = std::make_shared<std::vector<o2::phos::Digit>>(); // accumulator for all digits
-  auto labels = std::make_shared<o2::dataformats::MCTruthContainer<o2::phos::MCLabel>>();
-  auto labelAccum = std::make_shared<o2::dataformats::MCTruthContainer<o2::phos::MCLabel>>();
+  TStopwatch timer;
+  timer.Start();
 
-  // the actual processing function which get called whenever new data is incoming
-  auto process = [simChains, digitizer, digits, digitsAccum, labels, labelAccum, channel](ProcessingContext& pc) {
-    static bool finished = false;
-    if (finished) {
-      return;
+  LOG(INFO) << " CALLING PHOS DIGITIZATION ";
+  std::vector<TriggerRecord> triggers;
+
+  int indexStart = mDigitsOut.size();
+  auto& eventParts = context->getEventParts();
+  //if this is last stream of hits and we can write directly to final vector of digits? Otherwize use temporary vectors
+  mDigitsFinal.clear();
+  mDigitsTmp.clear();
+  bool isLastStream = true;
+  double eventTime = timesview[0].getTimeNS() - o2::phos::PHOSSimParams::Instance().mDeadTime; //checked above that list not empty
+  int eventId;
+  // loop over all composite collisions given from context
+  // (aka loop over all the interaction records)
+  for (int collID = 0; collID < n; ++collID) {
+    double dt = timesview[collID].getTimeNS() - eventTime; //start new PHOS readout, continue current or dead time?
+    if (dt > mReadoutTime && dt < mDeadTime) {             //dead time, skip event
+      continue;
     }
-    // TODO: hardcoded flag for continuos readout
-    static o2::parameters::GRPObject::ROMode roMode = o2::parameters::GRPObject::CONTINUOUS;
 
-    // read collision context from input
-    auto context = pc.inputs().get<o2::steer::RunContext*>("collisioncontext");
-    auto& timesview = context->getEventRecords();
-    LOG(DEBUG) << "GOT " << timesview.size() << " COLLISSION TIMES";
-
-    // if there is nothing to do ... return
-    if (timesview.size() == 0) {
-      return;
+    if (dt >= o2::phos::PHOSSimParams::Instance().mDeadTime) { // start new event
+      //new event
+      eventTime = timesview[collID].getTimeNS();
+      dt = 0.;
+      eventId = collID;
     }
 
-    TStopwatch timer;
-    timer.Start();
+    //Check if next event has to be added to this read-out
+    if (collID < n - 1) {
+      isLastStream = (timesview[collID + 1].getTimeNS() - eventTime > mReadoutTime);
+    } else {
+      isLastStream = true;
+    }
 
-    LOG(INFO) << " CALLING PHOS DIGITIZATION ";
-
-    static std::vector<o2::phos::Hit> hits;
-
-    auto& eventParts = context->getEventParts();
-    // loop over all composite collisions given from context
-    // (aka loop over all the interaction records)
-    for (int collID = 0; collID < timesview.size(); ++collID) {
-      digitizer->setEventTime(timesview[collID].timeNS);
-
-      // for each collision, loop over the constituents event and source IDs
-      // (background signal merging is basically taking place here)
-      for (auto& part : eventParts[collID]) {
-        digitizer->setCurrEvID(part.entryID);
-        digitizer->setCurrSrcID(part.sourceID);
-
-        // get the hits for this event and this source
-        hits.clear();
-        retrieveHits(*simChains.get(), "PHSHit", part.sourceID, part.entryID, &hits);
-
-        LOG(INFO) << "For collision " << collID << " eventID " << part.entryID << " found " << hits.size() << " hits ";
-
-        // call actual digitization procedure
-        labels->clear();
-        digits->clear();
-        digitizer->process(hits, *digits.get(), *labels.get());
-        // copy digits into accumulator
-        std::copy(digits->begin(), digits->end(), std::back_inserter(*digitsAccum.get()));
-        labelAccum->mergeAtBack(*labels.get());
-        LOG(INFO) << "Have " << digits->size() << " digits ";
+    // for each collision, loop over the constituents event and source IDs
+    // (background signal merging is basically taking place here)
+    // merge new hist to current digit list
+    auto part = eventParts[collID].begin();
+    while (part != eventParts[collID].end()) {
+      // get the hits for this event and this source
+      int source = part->sourceID;
+      int entry = part->entryID;
+      retrieveHits("PHSHit", source, entry);
+      part++;
+      if (part == eventParts[collID].end() && isLastStream) { //last stream, copy digits directly to output vector
+        mDigitizer.processHits(mHits, mDigitsFinal, mDigitsOut, mLabels, collID, source, dt);
+        mDigitsFinal.clear();
+        //finalyze previous event and clean
+        // Add trigger record
+        triggers.emplace_back(timesview[eventId], indexStart, mDigitsOut.size() - indexStart);
+        indexStart = mDigitsOut.size();
+      } else { //Fill intermediate digitvector
+        mDigitsTmp.swap(mDigitsFinal);
+        mDigitizer.processHits(mHits, mDigitsTmp, mDigitsFinal, mLabels, collID, source, dt);
+        mDigitsTmp.clear();
       }
     }
+  }
+  LOG(DEBUG) << "Have " << mLabels.getNElements() << " PHOS labels ";
+  // here we have all digits and we can send them to consumer (aka snapshot it onto output)
+  pc.outputs().snapshot(Output{"PHS", "DIGITS", 0, Lifetime::Timeframe}, mDigitsOut);
+  pc.outputs().snapshot(Output{"PHS", "DIGITTRIGREC", 0, Lifetime::Timeframe}, triggers);
+  if (pc.outputs().isAllowed({"PHS", "DIGITSMCTR", 0})) {
+    pc.outputs().snapshot(Output{"PHS", "DIGITSMCTR", 0, Lifetime::Timeframe}, mLabels);
+  }
 
-    LOG(INFO) << "Have " << labelAccum->getNElements() << " PHOS labels ";
-    // here we have all digits and we can send them to consumer (aka snapshot it onto output)
-    pc.outputs().snapshot(Output{"PHS", "DIGITS", 0, Lifetime::Timeframe}, *digitsAccum.get());
-    pc.outputs().snapshot(Output{"PHS", "DIGITSMCTR", 0, Lifetime::Timeframe}, *labelAccum.get());
-    LOG(INFO) << "PHOS: Sending ROMode= " << roMode << " to GRPUpdater";
-    pc.outputs().snapshot(Output{"PHS", "ROMode", 0, Lifetime::Timeframe}, roMode);
+  // PHOS is always a triggering detector
+  const o2::parameters::GRPObject::ROMode roMode = o2::parameters::GRPObject::TRIGGERING;
+  LOG(DEBUG) << "PHOS: Sending ROMode= " << roMode << " to GRPUpdater";
+  pc.outputs().snapshot(Output{"PHS", "ROMode", 0, Lifetime::Timeframe}, roMode);
 
-    timer.Stop();
-    LOG(INFO) << "Digitization took " << timer.CpuTime() << "s";
+  timer.Stop();
+  LOG(INFO) << "Digitization took " << timer.CpuTime() << "s";
 
-    // we should be only called once; tell DPL that this process is ready to exit
-    pc.services().get<ControlService>().readyToQuit(false);
-    finished = true;
-  };
+  // we should be only called once; tell DPL that this process is ready to exit
+  pc.services().get<ControlService>().readyToQuit(QuitRequest::Me);
+}
 
-  // init function returning the lambda taking a ProcessingContext
-  auto initIt = [simChains, process, digitizer, labels](InitContext& ctx) {
-    // setup the input chain for the hits
-    simChains->emplace_back(new TChain("o2sim"));
-
-    // add the main (background) file
-    simChains->back()->AddFile(ctx.options().get<std::string>("simFile").c_str());
-
-    // maybe add a particular signal file
-    auto signalfilename = ctx.options().get<std::string>("simFileS");
-    if (signalfilename.size() > 0) {
-      simChains->emplace_back(new TChain("o2sim"));
-      simChains->back()->AddFile(signalfilename.c_str());
-    }
-
-    // make sure that the geometry is loaded (TODO will this be done centrally?)
-    if (!gGeoManager) {
-      o2::base::GeometryManager::loadGeometry();
-    }
-    // run 3 geometry == run 2 geometry for PHOS
-    auto geom = o2::phos::Geometry::GetInstance();
-    // init digitizer
-    digitizer->init();
-
-    // return the actual processing function which is now setup/configured
-    return process;
-  };
+DataProcessorSpec getPHOSDigitizerSpec(int channel, bool mctruth)
+{
+  std::vector<OutputSpec> outputs;
+  outputs.emplace_back("PHS", "DIGITS", 0, Lifetime::Timeframe);
+  outputs.emplace_back("PHS", "DIGITTRIGREC", 0, Lifetime::Timeframe);
+  if (mctruth) {
+    outputs.emplace_back("PHS", "DIGITSMCTR", 0, Lifetime::Timeframe);
+  }
+  outputs.emplace_back("PHS", "ROMode", 0, Lifetime::Timeframe);
 
   // create the full data processor spec using
   //  a name identifier
@@ -170,13 +185,10 @@ DataProcessorSpec getPHOSDigitizerSpec(int channel)
   //  options that can be used for this processor (here: input file names where to take the hits)
   return DataProcessorSpec{
     "PHOSDigitizer", Inputs{InputSpec{"collisioncontext", "SIM", "COLLISIONCONTEXT", static_cast<SubSpecificationType>(channel), Lifetime::Timeframe}},
-    Outputs{OutputSpec{"PHS", "DIGITS", 0, Lifetime::Timeframe},
-            OutputSpec{"PHS", "DIGITSMCTR", 0, Lifetime::Timeframe},
-            OutputSpec{"PHS", "ROMode", 0, Lifetime::Timeframe}},
-    AlgorithmSpec{initIt},
-    Options{{"simFile", VariantType::String, "o2sim.root", {"Sim (background) input filename"}},
-            {"simFileS", VariantType::String, "", {"Sim (signal) input filename"}},
-            {"pileup", VariantType::Int, 1, {"whether to run in continuous time mode"}}}};
+    outputs,
+    AlgorithmSpec{o2::framework::adaptFromTask<DigitizerSpec>()},
+    Options{{"pileup", VariantType::Int, 1, {"whether to run in continuous time mode"}},
+            {"mctruth", VariantType::Bool, true, {"whether to process MC info"}}}};
 }
 } // namespace phos
 } // namespace o2

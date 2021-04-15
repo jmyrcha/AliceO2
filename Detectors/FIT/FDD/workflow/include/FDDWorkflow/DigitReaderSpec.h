@@ -18,8 +18,8 @@
 #include "Framework/DataProcessorSpec.h"
 #include "Framework/Task.h"
 #include "DataFormatsFDD/Digit.h"
+#include "DataFormatsFDD/ChannelData.h"
 #include "DataFormatsFDD/MCLabel.h"
-#include "SimulationDataFormat/MCTruthContainer.h"
 
 using namespace o2::framework;
 
@@ -37,17 +37,16 @@ class DigitReader : public Task
   void run(ProcessingContext& pc) final;
 
  private:
-  bool mFinished = false;
-  bool mUseMC = true; // use MC truth
+  bool mTrigInp = true; // read trigger inputs
+  bool mUseMC = true;   // use MC truth
   o2::header::DataOrigin mOrigin = o2::header::gDataOriginFDD;
-
-  std::vector<o2::fdd::Digit>* mDigits = nullptr;
-  o2::dataformats::MCTruthContainer<o2::fdd::MCLabel>* mMCTruth = nullptr;
 
   std::string mInputFileName = "";
   std::string mDigitTreeName = "o2sim";
-  std::string mDigitBranchName = "FDDDigit";
-  std::string mDigitMCTruthBranchName = "FDDDigitMCTruth";
+  std::string mDigitBCBranchName = "FDDDigit";
+  std::string mDigitChBranchName = "FDDDigitCh";
+  std::string mTriggerBranchName = "TRIGGERINPUT";
+  std::string mDigitMCTruthBranchName = "FDDDigitLabels";
 };
 
 /// create a processor spec

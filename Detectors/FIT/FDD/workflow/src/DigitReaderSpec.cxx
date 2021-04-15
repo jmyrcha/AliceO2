@@ -14,8 +14,13 @@
 
 #include "TTree.h"
 
+#include "Framework/ConfigParamRegistry.h"
 #include "Framework/ControlService.h"
+#include "Framework/Logger.h"
 #include "FDDWorkflow/DigitReaderSpec.h"
+#include "SimulationDataFormat/MCTruthContainer.h"
+#include "SimulationDataFormat/IOMCTruthContainerView.h"
+#include <vector>
 
 using namespace o2::framework;
 using namespace o2::fdd;
@@ -37,9 +42,10 @@ void DigitReader::init(InitContext& ic)
 
 void DigitReader::run(ProcessingContext& pc)
 {
-  if (mFinished) {
-    return;
-  }
+  std::vector<o2::fdd::Digit>* digitsBC = nullptr;
+  std::vector<o2::fdd::ChannelData>* digitsCh = nullptr;
+  std::vector<o2::fdd::DetTrigInput>* digitsTrig = nullptr;
+  o2::dataformats::IOMCTruthContainerView* mcTruthRootBuffer = nullptr;
 
   { // load data from files
     TFile digFile(mInputFileName.c_str(), "read");
@@ -52,10 +58,15 @@ void DigitReader::run(ProcessingContext& pc)
     }
     LOG(INFO) << "Loaded FDD digits tree " << mDigitTreeName << " from " << mInputFileName;
 
-    digTree->SetBranchAddress(mDigitBranchName.c_str(), &mDigits);
+    digTree->SetBranchAddress(mDigitBCBranchName.c_str(), &digitsBC);
+
+    digTree->SetBranchAddress(mTriggerBranchName.c_str(), &digitsTrig);
     if (mUseMC) {
+      if (digTree->GetBranch(mDigitChBranchName.c_str())) {
+        digTree->SetBranchAddress(mDigitChBranchName.c_str(), &digitsCh);
+      }
       if (digTree->GetBranch(mDigitMCTruthBranchName.c_str())) {
-        digTree->SetBranchAddress(mDigitMCTruthBranchName.c_str(), &mMCTruth);
+        digTree->SetBranchAddress(mDigitMCTruthBranchName.c_str(), &mcTruthRootBuffer);
         LOG(INFO) << "Will use MC-truth from " << mDigitMCTruthBranchName;
       } else {
         LOG(INFO) << "MC-truth is missing";
@@ -67,22 +78,33 @@ void DigitReader::run(ProcessingContext& pc)
     digFile.Close();
   }
 
-  LOG(INFO) << "FDD DigitReader pushes " << mDigits->size() << " digits";
-  pc.outputs().snapshot(Output{mOrigin, "DIGITS", 0, Lifetime::Timeframe}, *mDigits);
+  LOG(INFO) << "FDD DigitReader pushes " << digitsBC->size() << " digits";
+  pc.outputs().snapshot(Output{mOrigin, "DIGITSBC", 0, Lifetime::Timeframe}, *digitsBC);
+  pc.outputs().snapshot(Output{mOrigin, "DIGITSCH", 0, Lifetime::Timeframe}, *digitsCh);
+
   if (mUseMC) {
-    pc.outputs().snapshot(Output{mOrigin, "DIGITSMCTR", 0, Lifetime::Timeframe}, *mMCTruth);
+    // TODO: To be replaced with sending ConstMCTruthContainer as soon as reco workflow supports it
+    pc.outputs().snapshot(Output{mOrigin, "TRIGGERINPUT", 0, Lifetime::Timeframe}, *digitsTrig);
+
+    std::vector<char> flatbuffer;
+    mcTruthRootBuffer->copyandflatten(flatbuffer);
+    o2::dataformats::MCTruthContainer<o2::fdd::MCLabel> mcTruth;
+    mcTruth.restore_from(flatbuffer.data(), flatbuffer.size());
+    pc.outputs().snapshot(Output{mOrigin, "DIGITLBL", 0, Lifetime::Timeframe}, mcTruth);
   }
 
-  mFinished = true;
-  pc.services().get<ControlService>().readyToQuit(false);
+  pc.services().get<ControlService>().endOfStream();
+  pc.services().get<ControlService>().readyToQuit(QuitRequest::Me);
 }
 
 DataProcessorSpec getFDDDigitReaderSpec(bool useMC)
 {
   std::vector<OutputSpec> outputSpec;
-  outputSpec.emplace_back(o2::header::gDataOriginFDD, "DIGITS", 0, Lifetime::Timeframe);
+  outputSpec.emplace_back(o2::header::gDataOriginFDD, "DIGITSBC", 0, Lifetime::Timeframe);
+  outputSpec.emplace_back(o2::header::gDataOriginFDD, "DIGITSCH", 0, Lifetime::Timeframe);
   if (useMC) {
-    outputSpec.emplace_back(o2::header::gDataOriginFDD, "DIGITSMCTR", 0, Lifetime::Timeframe);
+    outputSpec.emplace_back(o2::header::gDataOriginFDD, "TRIGGERINPUT", 0, Lifetime::Timeframe);
+    outputSpec.emplace_back(o2::header::gDataOriginFDD, "DIGITLBL", 0, Lifetime::Timeframe);
   }
 
   return DataProcessorSpec{

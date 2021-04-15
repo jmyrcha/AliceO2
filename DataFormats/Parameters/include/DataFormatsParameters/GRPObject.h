@@ -34,6 +34,7 @@ namespace parameters
 class GRPObject
 {
   using beamDirection = o2::constants::lhc::BeamDirection;
+  using DetID = o2::detectors::DetID;
 
  public:
   using timePoint = std::time_t;
@@ -51,6 +52,13 @@ class GRPObject
   timePoint getTimeEnd() const { return mTimeEnd; }
   void setTimeStart(timePoint t) { mTimeStart = t; }
   void setTimeEnd(timePoint t) { mTimeEnd = t; }
+
+  void setNHBFPerTF(uint32_t n) { mNHBFPerTF = n; }
+  uint32_t getNHBFPerTF() const { return mNHBFPerTF; }
+
+  void setFirstOrbit(uint32_t o) { mFirstOrbit = o; }
+  uint32_t getFirstOrbit() const { return mFirstOrbit; }
+
   /// getters/setters for beams crossing angle (deviation from 0)
   o2::units::AngleRad_t getCrossingAngle() const { return mCrossingAngle; }
   void setCrossingAngle(o2::units::AngleRad_t v) { mCrossingAngle = v; }
@@ -69,8 +77,10 @@ class GRPObject
   /// getters/setters for magnets currents
   o2::units::Current_t getL3Current() const { return mL3Current; }
   o2::units::Current_t getDipoleCurrent() const { return mDipoleCurrent; }
+  bool getFieldUniformity() const { return mUniformField; }
   void setL3Current(o2::units::Current_t v) { mL3Current = v; }
   void setDipoleCurrent(o2::units::Current_t v) { mDipoleCurrent = v; }
+  void setFieldUniformity(bool v) { mUniformField = v; }
   /// getter/setter for data taking period name
   const std::string& getDataPeriod() const { return mDataPeriod; }
   void setDataPeriod(const std::string v) { mDataPeriod = v; }
@@ -84,57 +94,67 @@ class GRPObject
   void setFill(int f) { mFill = f; }
   int getFill() const { return mFill; }
   /// getter/setter for masks of detectors in the readout
-  o2::detectors::DetID::mask_t getDetsReadOut() const { return mDetsReadout; }
-  void setDetsReadOut(o2::detectors::DetID::mask_t mask) { mDetsReadout = mask; }
+  DetID::mask_t getDetsReadOut() const { return mDetsReadout; }
+  void setDetsReadOut(DetID::mask_t mask) { mDetsReadout = mask; }
   /// getter/setter for masks of detectors with continuos readout
-  o2::detectors::DetID::mask_t getDetsContinuousReadOut() const { return mDetsContinuousRO; }
-  void setDetsContinuousReadOut(o2::detectors::DetID::mask_t mask) { mDetsContinuousRO = mask; }
+  DetID::mask_t getDetsContinuousReadOut() const { return mDetsContinuousRO; }
+  void setDetsContinuousReadOut(DetID::mask_t mask) { mDetsContinuousRO = mask; }
   /// getter/setter for masks of detectors providing the trigger
-  o2::detectors::DetID::mask_t getDetsTrigger() const { return mDetsTrigger; }
-  void setDetsTrigger(o2::detectors::DetID::mask_t mask) { mDetsTrigger = mask; }
+  DetID::mask_t getDetsTrigger() const { return mDetsTrigger; }
+  void setDetsTrigger(DetID::mask_t mask) { mDetsTrigger = mask; }
   /// add specific detector to the list of readout detectors
-  void addDetReadOut(o2::detectors::DetID id) { mDetsReadout |= id.getMask(); }
+  void addDetReadOut(DetID id) { mDetsReadout |= id.getMask(); }
   /// remove specific detector from the list of readout detectors
-  void remDetReadOut(o2::detectors::DetID id)
+  void remDetReadOut(DetID id)
   {
     mDetsReadout &= ~id.getMask();
     remDetContinuousReadOut(id);
     remDetTrigger(id);
   }
   /// add specific detector to the list of continuously readout detectors
-  void addDetContinuousReadOut(o2::detectors::DetID id) { mDetsContinuousRO |= id.getMask(); }
+  void addDetContinuousReadOut(DetID id) { mDetsContinuousRO |= id.getMask(); }
   /// remove specific detector from the list of continuouslt readout detectors
-  void remDetContinuousReadOut(o2::detectors::DetID id) { mDetsContinuousRO &= ~id.getMask(); }
+  void remDetContinuousReadOut(DetID id) { mDetsContinuousRO &= ~id.getMask(); }
   /// add specific detector to the list of triggering detectors
-  void addDetTrigger(o2::detectors::DetID id) { mDetsTrigger |= id.getMask(); }
+  void addDetTrigger(DetID id) { mDetsTrigger |= id.getMask(); }
   /// remove specific detector from the list of triggering detectors
-  void remDetTrigger(o2::detectors::DetID id) { mDetsTrigger &= ~id.getMask(); }
+  void remDetTrigger(DetID id) { mDetsTrigger &= ~id.getMask(); }
   /// test if detector is read out
-  bool isDetReadOut(o2::detectors::DetID id) const { return (mDetsReadout & id.getMask()) != 0; }
+  bool isDetReadOut(DetID id) const { return (mDetsReadout & id.getMask()) != 0; }
   /// test if detector is read out
-  bool isDetContinuousReadOut(o2::detectors::DetID id) const { return (mDetsContinuousRO & id.getMask()) != 0; }
+  bool isDetContinuousReadOut(DetID id) const { return (mDetsContinuousRO & id.getMask()) != 0; }
   /// test if detector is triggering
-  bool isDetTriggers(o2::detectors::DetID id) const { return (mDetsTrigger & id.getMask()) != 0; }
+  bool isDetTriggers(DetID id) const { return (mDetsTrigger & id.getMask()) != 0; }
   /// set detector readout mode status
-  void setDetROMode(o2::detectors::DetID id, ROMode status);
-  ROMode getDetROMode(o2::detectors::DetID id) const;
+  void setDetROMode(DetID id, ROMode status);
+  ROMode getDetROMode(DetID id) const;
+
+  /// extra selections
+  /// mask of readout detectors with addition selections. "only" overrides "skip"
+  DetID::mask_t getDetsReadOut(DetID::mask_t only, DetID::mask_t skip = 0) const { return only.any() ? (mDetsReadout & only) : (mDetsReadout ^ skip); }
+  /// same with comma-separate list of detector names
+  DetID::mask_t getDetsReadOut(const std::string& only, const std::string& skip = "") const { return getDetsReadOut(DetID::getMask(only), DetID::getMask(skip)); }
 
   /// print itself
   void print() const;
 
-  static GRPObject* loadFrom(const std::string grpFileName, std::string grpName = "GRP");
+  static GRPObject* loadFrom(const std::string& grpFileName, const std::string& grpName = "GRP");
 
  private:
-  timePoint mTimeStart = 0; ///< DAQ_time_start entry from DAQ logbook
-  timePoint mTimeEnd = 0;   ///< DAQ_time_end entry from DAQ logbook
+  timePoint mTimeStart = 0;      ///< DAQ_time_start entry from DAQ logbook
+  timePoint mTimeEnd = LONG_MAX; ///< DAQ_time_end entry from DAQ logbook
 
-  o2::detectors::DetID::mask_t mDetsReadout;      ///< mask of detectors which are read out
-  o2::detectors::DetID::mask_t mDetsContinuousRO; ///< mask of detectors read out in continuos mode
-  o2::detectors::DetID::mask_t mDetsTrigger;      ///< mask of detectors which provide trigger
+  uint32_t mFirstOrbit = 0;  /// 1st orbit of the 1st TF, in the MC set at digitization // RS Not sure it will stay in GRP, may go to some CTP object
+  uint32_t mNHBFPerTF = 256; /// Number of HBFrames per TF
+
+  DetID::mask_t mDetsReadout;      ///< mask of detectors which are read out
+  DetID::mask_t mDetsContinuousRO; ///< mask of detectors read out in continuos mode
+  DetID::mask_t mDetsTrigger;      ///< mask of detectors which provide trigger
 
   o2::units::AngleRad_t mCrossingAngle = 0.f; ///< crossing angle in radians (as deviation from pi)
   o2::units::Current_t mL3Current = 0.f;      ///< signed current in L3
   o2::units::Current_t mDipoleCurrent = 0.f;  ///< signed current in Dipole
+  bool mUniformField = false;                 ///< uniformity of magnetic field
   float mBeamEnergyPerZ = 0.f;                ///< beam energy per charge (i.e. sqrt(s)/2 for pp)
 
   int mBeamAZ[beamDirection::NBeamDirections] = {0, 0}; ///< A<<16+Z for each beam
@@ -144,7 +164,7 @@ class GRPObject
   std::string mDataPeriod = ""; ///< name of the period
   std::string mLHCState = "";   ///< machine state
 
-  ClassDefNV(GRPObject, 1);
+  ClassDefNV(GRPObject, 4);
 };
 
 //______________________________________________

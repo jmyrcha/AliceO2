@@ -87,7 +87,7 @@ void findTOFclusterFromLabel(int trackID, int eventID = 0, int sourceID = 0)
   if (!foundInDigits)
     Printf("The label was NEVER found in the digits");
 
-  TFile* fKine = new TFile("o2sim.root");
+  TFile* fKine = new TFile("o2sim_Kine.root");
   TTree* tKine = (TTree*)fKine->Get("o2sim");
   std::vector<o2::MCTrack>* mcArr = nullptr;
   tKine->SetBranchAddress("MCTrack", &mcArr);
@@ -107,17 +107,17 @@ void findTOFclusterFromLabel(int trackID, int eventID = 0, int sourceID = 0)
 
   // getting the TPC tracks
   TFile* ftracksTPC = new TFile("tpctracks.root");
-  TTree* tpcTree = (TTree*)ftracksTPC->Get("events");
+  TTree* tpcTree = (TTree*)ftracksTPC->Get("tpcrec");
   std::vector<o2::tpc::TrackTPC>* mTPCTracksArrayInp = new std::vector<o2::tpc::TrackTPC>;
-  tpcTree->SetBranchAddress("Tracks", &mTPCTracksArrayInp);
+  tpcTree->SetBranchAddress("TPCTracks", &mTPCTracksArrayInp);
   o2::dataformats::MCTruthContainer<o2::MCCompLabel>* mcTPC = new o2::dataformats::MCTruthContainer<o2::MCCompLabel>();
   tpcTree->SetBranchAddress("TPCTracksMCTruth", &mcTPC);
   tpcTree->GetEntry(eventID);
 
   for (int i = 0; i < mTracksArrayInp->size(); i++) {
     o2::dataformats::TrackTPCITS trackITSTPC = mTracksArrayInp->at(i);
-    const o2::dataformats::EvIndex<int, int>& evIdxTPC = trackITSTPC.getRefTPC();
-    const auto& labelsTPC = mcTPC->getLabels(evIdxTPC.getIndex());
+    int evIdxTPC = trackITSTPC.getRefTPC();
+    const auto& labelsTPC = mcTPC->getLabels(evIdxTPC);
     for (int ilabel = 0; ilabel < labelsTPC.size(); ilabel++) {
       //Printf("TPC label %d: trackID = %d, eventID = %d, sourceID = %d", ilabel, labelsTPC[ilabel].getTrackID(), labelsTPC[ilabel].getEventID(), labelsTPC[ilabel].getSourceID());
       if (labelsTPC[ilabel].getTrackID() == trackID && labelsTPC[ilabel].getEventID() == eventID)

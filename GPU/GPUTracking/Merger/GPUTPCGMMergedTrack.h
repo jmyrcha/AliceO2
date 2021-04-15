@@ -16,7 +16,6 @@
 
 #include "GPUTPCGMTrackParam.h"
 #include "GPUTPCGMMergedTrackHit.h"
-#include "GPUdEdxInfo.h"
 
 namespace GPUCA_NAMESPACE
 {
@@ -50,6 +49,7 @@ class GPUTPCGMMergedTrack
   GPUd() bool Looper() const { return mFlags & 0x02; }
   GPUd() bool CSide() const { return mFlags & 0x04; }
   GPUd() bool CCE() const { return mFlags & 0x08; }
+  GPUd() bool MergedLooper() const { return mFlags & 0x10; }
 
   GPUd() void SetNClusters(int v) { mNClusters = v; }
   GPUd() void SetNClustersFitted(int v) { mNClustersFitted = v; }
@@ -91,23 +91,24 @@ class GPUTPCGMMergedTrack
       mFlags &= 0xF7;
     }
   }
+  GPUd() void SetMergedLooper(bool v)
+  {
+    if (v) {
+      mFlags |= 0x10;
+    } else {
+      mFlags &= 0xEF;
+    }
+  }
   GPUd() void SetFlags(unsigned char v) { mFlags = v; }
+  GPUd() void SetLegs(unsigned char v) { mLegs = v; }
+  GPUd() unsigned char Legs() const { return mLegs; }
 
   GPUd() const GPUTPCGMTrackParam::GPUTPCOuterParam& OuterParam() const { return mOuterParam; }
-  GPUd() GPUTPCGMTrackParam::GPUTPCOuterParam& OuterParam()
-  {
-    return mOuterParam;
-  }
-  GPUd() const GPUdEdxInfo& dEdxInfo() const { return mdEdxInfo; }
-  GPUd() GPUdEdxInfo& dEdxInfo()
-  {
-    return mdEdxInfo;
-  }
+  GPUd() GPUTPCGMTrackParam::GPUTPCOuterParam& OuterParam() { return mOuterParam; }
 
  private:
   GPUTPCGMTrackParam mParam;                        //* fitted track parameters
   GPUTPCGMTrackParam::GPUTPCOuterParam mOuterParam; //* outer param
-  GPUdEdxInfo mdEdxInfo;                            //* dEdx information
 
   float mAlpha;                  //* alpha angle
   float mLastX;                  //* outer X
@@ -117,6 +118,7 @@ class GPUTPCGMMergedTrack
   unsigned int mNClusters;       //* number of track clusters
   unsigned int mNClustersFitted; //* number of clusters used in fit
   unsigned char mFlags;
+  unsigned char mLegs;
 };
 } // namespace gpu
 } // namespace GPUCA_NAMESPACE

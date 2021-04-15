@@ -11,23 +11,26 @@
 #include "Framework/DataProcessingHeader.h"
 #include "Framework/InputSpec.h"
 #include "Framework/LifetimeHelpers.h"
+#include "Framework/DataDescriptorMatcher.h"
+#include "Framework/Logger.h"
 #include "Framework/RawDeviceService.h"
 #include "Framework/ServiceRegistry.h"
 #include "Framework/TimesliceIndex.h"
 
 #include "Headers/DataHeader.h"
+#include "Headers/DataHeaderHelpers.h"
 #include "Headers/Stack.h"
 #include "MemoryResources/MemoryResources.h"
 #include <curl/curl.h>
 
 #include <fairmq/FairMQDevice.h>
 
+#include <cstdlib>
+
 using namespace o2::header;
 using namespace fair;
 
-namespace o2
-{
-namespace framework
+namespace o2::framework
 {
 
 namespace
@@ -42,15 +45,15 @@ size_t getCurrentTime()
 
 ExpirationHandler::Creator LifetimeHelpers::dataDrivenCreation()
 {
-  return [](TimesliceIndex&) -> TimesliceSlot {
-    return {TimesliceSlot::INVALID};
+  return [](TimesliceIndex& index) -> TimesliceSlot {
+    return {TimesliceSlot::ANY};
   };
 }
 
-ExpirationHandler::Creator LifetimeHelpers::enumDrivenCreation(size_t start, size_t end, size_t step)
+ExpirationHandler::Creator LifetimeHelpers::enumDrivenCreation(size_t start, size_t end, size_t step, size_t inputTimeslice, size_t maxInputTimeslices)
 {
-  auto last = std::make_shared<size_t>(start);
-  return [start, end, step, last](TimesliceIndex& index) -> TimesliceSlot {
+  auto last = std::make_shared<size_t>(start + inputTimeslice * step);
+  return [start, end, step, last, inputTimeslice, maxInputTimeslices](TimesliceIndex& index) -> TimesliceSlot {
     for (size_t si = 0; si < index.size(); si++) {
       if (*last > end) {
         return TimesliceSlot{TimesliceSlot::INVALID};
@@ -58,7 +61,7 @@ ExpirationHandler::Creator LifetimeHelpers::enumDrivenCreation(size_t start, siz
       auto slot = TimesliceSlot{si};
       if (index.isValid(slot) == false) {
         TimesliceId timestamp{*last};
-        *last += step;
+        *last += step * maxInputTimeslices;
         index.associate(timestamp, slot);
         return slot;
       }
@@ -141,7 +144,7 @@ ExpirationHandler::Checker LifetimeHelpers::expireTimed(std::chrono::microsecond
 /// expires via this mechanism).
 ExpirationHandler::Handler LifetimeHelpers::doNothing()
 {
-  return [](ServiceRegistry&, PartRef& ref, uint64_t) -> void { return; };
+  return [](ServiceRegistry&, PartRef& ref, uint64_t, data_matcher::VariableContext&) -> void { return; };
 }
 
 // We simply put everything in a stringstream and read it afterwards.
@@ -168,9 +171,25 @@ size_t readToMessage(void* p, size_t size, size_t nmemb, void* userdata)
 /// \todo for the moment we always go to CCDB every time we are expired.
 /// \todo this should really be done in the common fetcher.
 /// \todo provide a way to customize the namespace from the ProcessingContext
-ExpirationHandler::Handler LifetimeHelpers::fetchFromCCDBCache(ConcreteDataMatcher const& matcher, std::string const& prefix, std::string const& sourceChannel)
+ExpirationHandler::Handler
+  LifetimeHelpers::fetchFromCCDBCache(InputSpec const& spec,
+                                      std::string const& prefix,
+                                      std::string const& overrideTimestamp,
+                                      std::string const& sourceChannel)
 {
-  return [matcher, sourceChannel, serverUrl = prefix](ServiceRegistry& services, PartRef& ref, uint64_t timestamp) -> void {
+  char* err;
+  uint64_t overrideTimestampMilliseconds = strtoll(overrideTimestamp.c_str(), &err, 10);
+  if (*err != 0) {
+    throw runtime_error("fetchFromCCDBCache: Unable to parse forced timestamp for conditions");
+  }
+  if (overrideTimestampMilliseconds) {
+    LOGP(info, "fetchFromCCDBCache: forcing timestamp for conditions to {} milliseconds from epoch UTC", overrideTimestampMilliseconds);
+  }
+  auto matcher = std::get_if<ConcreteDataMatcher>(&spec.matcher);
+  if (matcher == nullptr) {
+    throw runtime_error("InputSpec for Conditions must be fully qualified");
+  }
+  return [spec, matcher, sourceChannel, serverUrl = prefix, overrideTimestampMilliseconds](ServiceRegistry& services, PartRef& ref, uint64_t timestamp, data_matcher::VariableContext&) -> void {
     // We should invoke the handler only once.
     assert(!ref.header);
     assert(!ref.payload);
@@ -184,34 +203,47 @@ ExpirationHandler::Handler LifetimeHelpers::fetchFromCCDBCache(ConcreteDataMatch
 
     CURL* curl = curl_easy_init();
     if (curl == nullptr) {
-      throw std::runtime_error("fetchFromCCDBCache: Unable to initialise CURL");
+      throw runtime_error("fetchFromCCDBCache: Unable to initialise CURL");
     }
     CURLcode res;
-    auto path = std::string("/") + matcher.origin.as<std::string>() + "/" + matcher.description.as<std::string>() + "/" + std::to_string(timestamp / 1000);
-    auto url = serverUrl + path;
+    if (overrideTimestampMilliseconds) {
+      timestamp = overrideTimestampMilliseconds;
+    }
+
+    std::string path = "";
+    for (auto& meta : spec.metadata) {
+      if (meta.name == "ccdb-path") {
+        path = meta.defaultValue.get<std::string>();
+      }
+    }
+    if (path.empty()) {
+      path = fmt::format("{}/{}", matcher->origin, matcher->description);
+    }
+    auto url = fmt::format("{}/{}/{}", serverUrl, path, timestamp / 1000);
     LOG(INFO) << "fetchFromCCDBCache: Fetching " << url;
 
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &payloadBuffer);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, readToMessage);
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, true);
 
     res = curl_easy_perform(curl);
     if (res != CURLE_OK) {
-      throw std::runtime_error(std::string("fetchFromCCDBCache: Unable to fetch ") + url + " from CCDB");
+      throw runtime_error_f("fetchFromCCDBCache: Unable to fetch %s from CCDB", url.c_str());
     }
     long responseCode;
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCode);
 
     if (responseCode != 200) {
-      throw std::runtime_error(std::string("fetchFromCCDBCache: HTTP error ") + std::to_string(responseCode) + " while fetching " + url + " from CCDB");
+      throw runtime_error_f("fetchFromCCDBCache: HTTP error %d while fetching %s from CCDB", responseCode, url.c_str());
     }
 
     curl_easy_cleanup(curl);
 
     DataHeader dh;
-    dh.dataOrigin = matcher.origin;
-    dh.dataDescription = matcher.description;
-    dh.subSpecification = matcher.subSpec;
+    dh.dataOrigin = matcher->origin;
+    dh.dataDescription = matcher->description;
+    dh.subSpecification = matcher->subSpec;
     // FIXME: should use curl_off_t and CURLINFO_SIZE_DOWNLOAD_T, but
     //        apparently not there on some platforms.
     double dl;
@@ -234,8 +266,8 @@ ExpirationHandler::Handler LifetimeHelpers::fetchFromCCDBCache(ConcreteDataMatch
 /// FIXME: provide a way to customise the histogram from the configuration.
 ExpirationHandler::Handler LifetimeHelpers::fetchFromQARegistry()
 {
-  return [](ServiceRegistry&, PartRef& ref, uint64_t) -> void {
-    throw std::runtime_error("fetchFromQARegistry: Not yet implemented");
+  return [](ServiceRegistry&, PartRef& ref, uint64_t, data_matcher::VariableContext&) -> void {
+    throw runtime_error("fetchFromQARegistry: Not yet implemented");
     return;
   };
 }
@@ -245,17 +277,19 @@ ExpirationHandler::Handler LifetimeHelpers::fetchFromQARegistry()
 /// FIXME: provide a way to customise the histogram from the configuration.
 ExpirationHandler::Handler LifetimeHelpers::fetchFromObjectRegistry()
 {
-  return [](ServiceRegistry&, PartRef& ref, uint64_t) -> void {
-    throw std::runtime_error("fetchFromObjectRegistry: Not yet implemented");
+  return [](ServiceRegistry&, PartRef& ref, uint64_t, data_matcher::VariableContext&) -> void {
+    throw runtime_error("fetchFromObjectRegistry: Not yet implemented");
     return;
   };
 }
 
 /// Enumerate entries on every invokation.
-ExpirationHandler::Handler LifetimeHelpers::enumerate(ConcreteDataMatcher const& matcher, std::string const& sourceChannel)
+ExpirationHandler::Handler LifetimeHelpers::enumerate(ConcreteDataMatcher const& matcher, std::string const& sourceChannel,
+                                                      int64_t orbitOffset, int64_t orbitMultiplier)
 {
-  auto counter = std::make_shared<int64_t>(0);
-  auto f = [matcher, counter, sourceChannel](ServiceRegistry& services, PartRef& ref, uint64_t timestamp) -> void {
+  using counter_t = int64_t;
+  auto counter = std::make_shared<counter_t>(0);
+  return [matcher, counter, sourceChannel, orbitOffset, orbitMultiplier](ServiceRegistry& services, PartRef& ref, uint64_t timestamp, data_matcher::VariableContext& variables) -> void {
     // We should invoke the handler only once.
     assert(!ref.header);
     assert(!ref.payload);
@@ -265,8 +299,12 @@ ExpirationHandler::Handler LifetimeHelpers::enumerate(ConcreteDataMatcher const&
     dh.dataOrigin = matcher.origin;
     dh.dataDescription = matcher.description;
     dh.subSpecification = matcher.subSpec;
-    dh.payloadSize = 8;
+    dh.payloadSize = sizeof(counter_t);
     dh.payloadSerializationMethod = gSerializationMethodNone;
+    dh.tfCounter = timestamp;
+    dh.firstTForbit = timestamp * orbitMultiplier + orbitOffset;
+    variables.put({data_matcher::FIRSTTFORBIT_POS, dh.firstTForbit});
+    variables.put({data_matcher::TFCOUNTER_POS, dh.tfCounter});
 
     DataProcessingHeader dph{timestamp, 1};
 
@@ -275,12 +313,58 @@ ExpirationHandler::Handler LifetimeHelpers::enumerate(ConcreteDataMatcher const&
     auto header = o2::pmr::getMessage(o2::header::Stack{channelAlloc, dh, dph});
     ref.header = std::move(header);
 
-    auto payload = rawDeviceService.device()->NewMessage(*counter);
+    auto payload = rawDeviceService.device()->NewMessage(sizeof(counter_t));
+    *(counter_t*)payload->GetData() = *counter;
     ref.payload = std::move(payload);
     (*counter)++;
+  };
+}
+
+/// Create a dummy message with the provided ConcreteDataMatcher
+ExpirationHandler::Handler LifetimeHelpers::dummy(ConcreteDataMatcher const& matcher, std::string const& sourceChannel)
+{
+  using counter_t = int64_t;
+  auto counter = std::make_shared<counter_t>(0);
+  auto f = [matcher, counter, sourceChannel](ServiceRegistry& services, PartRef& ref, uint64_t timestamp, data_matcher::VariableContext& variables) -> void {
+    // We should invoke the handler only once.
+    assert(!ref.header);
+    assert(!ref.payload);
+    auto& rawDeviceService = services.get<RawDeviceService>();
+
+    DataHeader dh;
+    dh.dataOrigin = matcher.origin;
+    dh.dataDescription = matcher.description;
+    dh.subSpecification = matcher.subSpec;
+    dh.payloadSize = 0;
+    dh.payloadSerializationMethod = gSerializationMethodNone;
+
+    {
+      auto pval = std::get_if<uint32_t>(&variables.get(data_matcher::FIRSTTFORBIT_POS));
+      if (pval == nullptr) {
+        dh.firstTForbit = -1;
+      } else {
+        dh.firstTForbit = *pval;
+      }
+    }
+    {
+      auto pval = std::get_if<uint32_t>(&variables.get(data_matcher::TFCOUNTER_POS));
+      if (pval == nullptr) {
+        dh.tfCounter = timestamp;
+      } else {
+        dh.tfCounter = *pval;
+      }
+    }
+
+    DataProcessingHeader dph{timestamp, 1};
+
+    auto&& transport = rawDeviceService.device()->GetChannel(sourceChannel, 0).Transport();
+    auto channelAlloc = o2::pmr::getTransportAllocator(transport);
+    auto header = o2::pmr::getMessage(o2::header::Stack{channelAlloc, dh, dph});
+    ref.header = std::move(header);
+    auto payload = rawDeviceService.device()->NewMessage(0);
+    ref.payload = std::move(payload);
   };
   return f;
 }
 
-} // namespace framework
-} // namespace o2
+} // namespace o2::framework

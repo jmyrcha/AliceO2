@@ -11,10 +11,12 @@
 #define BOOST_TEST_MAIN
 #define BOOST_TEST_DYN_LINK
 
+#include "Mocking.h"
 #include <boost/test/unit_test.hpp>
 #include "../src/DDSConfigHelpers.h"
 #include "../src/DeviceSpecHelpers.h"
 #include "../src/SimpleResourceManager.h"
+#include "../src/ComputingResourceHelpers.h"
 #include "Framework/DataAllocator.h"
 #include "Framework/DeviceControl.h"
 #include "Framework/DeviceSpec.h"
@@ -23,13 +25,14 @@
 
 #include <chrono>
 #include <sstream>
+#include <thread>
 
 using namespace o2::framework;
 
 AlgorithmSpec simplePipe(o2::header::DataDescription what)
 {
   return AlgorithmSpec{[what](ProcessingContext& ctx) {
-    auto bData = ctx.outputs().make<int>(Output{"TST", what, 0}, 1);
+    auto& bData = ctx.outputs().make<int>(Output{"TST", what, 0}, 1);
   }};
 }
 
@@ -41,8 +44,8 @@ WorkflowSpec defineDataProcessing()
                    OutputSpec{"TST", "A2"}},
            AlgorithmSpec{[](ProcessingContext& ctx) {
              std::this_thread::sleep_for(std::chrono::seconds(1));
-             auto aData = ctx.outputs().make<int>(Output{"TST", "A1", 0}, 1);
-             auto bData = ctx.outputs().make<int>(Output{"TST", "A2", 0}, 1);
+             auto& aData = ctx.outputs().make<int>(Output{"TST", "A1", 0}, 1);
+             auto& bData = ctx.outputs().make<int>(Output{"TST", "A2", 0}, 1);
            }}},
           {"B",
            {InputSpec{"x", "TST", "A1"}},
@@ -60,19 +63,34 @@ WorkflowSpec defineDataProcessing()
            Outputs{},
            AlgorithmSpec{
              [](ProcessingContext& context) {},
+           },
+           {
+             ConfigParamSpec{"a-param", VariantType::Int, 1, {"A parameter which should not be escaped"}},
+             ConfigParamSpec{"b-param", VariantType::String, "", {"a parameter which will be escaped"}},
+             ConfigParamSpec{"c-param", VariantType::String, "foo;bar", {"another parameter which will be escaped"}},
            }}};
 }
 
-BOOST_AUTO_TEST_CASE(TestGraphviz)
+char* strdiffchr(const char* s1, const char* s2)
+{
+  while (*s1 && *s1 == *s2) {
+    s1++;
+    s2++;
+  }
+  return (*s1 == *s2) ? nullptr : (char*)s1;
+}
+
+BOOST_AUTO_TEST_CASE(TestDDS)
 {
   auto workflow = defineDataProcessing();
   std::ostringstream ss{""};
-  auto channelPolicies = ChannelConfigurationPolicy::createDefaultPolicies();
+  auto configContext = makeEmptyConfigContext();
+  auto channelPolicies = makeTrivialChannelPolicies(*configContext);
   std::vector<DeviceSpec> devices;
-  SimpleResourceManager rm(22000, 1000);
-  auto resources = rm.getAvailableResources();
+  std::vector<ComputingResource> resources{ComputingResourceHelpers::getLocalhostResource()};
+  SimpleResourceManager rm(resources);
   auto completionPolicies = CompletionPolicy::createDefaultPolicies();
-  DeviceSpecHelpers::dataProcessorSpecs2DeviceSpecs(workflow, channelPolicies, completionPolicies, devices, resources);
+  DeviceSpecHelpers::dataProcessorSpecs2DeviceSpecs(workflow, channelPolicies, completionPolicies, devices, rm, "workflow-id", true);
   std::vector<DeviceControl> controls;
   std::vector<DeviceExecution> executions;
   controls.resize(devices.size());
@@ -83,28 +101,39 @@ BOOST_AUTO_TEST_CASE(TestGraphviz)
 
   std::vector<DataProcessorInfo> dataProcessorInfos = {
     {
-      {"A", "foo", {}, workflowOptions},
+      {"A", "bcsadc/foo", {}, workflowOptions},
       {"B", "foo", {}, workflowOptions},
       {"C", "foo", {}, workflowOptions},
       {"D", "foo", {}, workflowOptions},
     }};
-  DeviceSpecHelpers::prepareArguments(false, false,
+  DeviceSpecHelpers::prepareArguments(false, false, 8080,
                                       dataProcessorInfos,
-                                      devices, executions, controls);
+                                      devices, executions, controls,
+                                      "workflow-id");
   dumpDeviceSpec2DDS(ss, devices, executions);
-  BOOST_CHECK_EQUAL(ss.str(), R"EXPECTED(<topology id="o2-dataflow">
-   <decltask id="A">
-       <exe reachable="true">foo --id A --control static --log-color false --color false --jobs 4 --plugin-search-path $FAIRMQ_ROOT/lib --plugin dds</exe>
+  auto expected = R"EXPECTED(<topology name="o2-dataflow">
+   <decltask name="A">
+       <exe reachable="true">foo --id A --shm-monitor false --log-color false --color false --jobs 4 --severity info --shm-mlock-segment false --shm-segment-id 0 --shm-throw-bad-alloc true --shm-zero-segment false --stacktrace-on-signal all --session dpl_workflow-id --plugin dds --channel-config "name=from_A_to_B,type=push,method=bind,address=ipc://@localhostworkflow-id_22000,transport=shmem,rateLogging=0,rcvBufSize=1,sndBufSize=1;name=from_A_to_C,type=push,method=bind,address=ipc://@localhostworkflow-id_22001,transport=shmem,rateLogging=0,rcvBufSize=1,sndBufSize=1"</exe>
    </decltask>
-   <decltask id="B">
-       <exe reachable="true">foo --id B --control static --log-color false --color false --jobs 4 --plugin-search-path $FAIRMQ_ROOT/lib --plugin dds</exe>
+   <decltask name="B">
+       <exe reachable="true">foo --id B --shm-monitor false --log-color false --color false --jobs 4 --severity info --shm-mlock-segment false --shm-segment-id 0 --shm-throw-bad-alloc true --shm-zero-segment false --stacktrace-on-signal all --session dpl_workflow-id --plugin dds --channel-config "name=from_B_to_D,type=push,method=bind,address=ipc://@localhostworkflow-id_22002,transport=shmem,rateLogging=0,rcvBufSize=1,sndBufSize=1;name=from_A_to_B,type=pull,method=connect,address=ipc://@localhostworkflow-id_22000,transport=shmem,rateLogging=0,rcvBufSize=1,sndBufSize=1"</exe>
    </decltask>
-   <decltask id="C">
-       <exe reachable="true">foo --id C --control static --log-color false --color false --jobs 4 --plugin-search-path $FAIRMQ_ROOT/lib --plugin dds</exe>
+   <decltask name="C">
+       <exe reachable="true">foo --id C --shm-monitor false --log-color false --color false --jobs 4 --severity info --shm-mlock-segment false --shm-segment-id 0 --shm-throw-bad-alloc true --shm-zero-segment false --stacktrace-on-signal all --session dpl_workflow-id --plugin dds --channel-config "name=from_C_to_D,type=push,method=bind,address=ipc://@localhostworkflow-id_22003,transport=shmem,rateLogging=0,rcvBufSize=1,sndBufSize=1;name=from_A_to_C,type=pull,method=connect,address=ipc://@localhostworkflow-id_22001,transport=shmem,rateLogging=0,rcvBufSize=1,sndBufSize=1"</exe>
    </decltask>
-   <decltask id="D">
-       <exe reachable="true">foo --id D --control static --log-color false --color false --jobs 4 --plugin-search-path $FAIRMQ_ROOT/lib --plugin dds</exe>
+   <decltask name="D">
+       <exe reachable="true">foo --id D --shm-monitor false --log-color false --color false --jobs 4 --severity info --shm-mlock-segment false --shm-segment-id 0 --shm-throw-bad-alloc true --shm-zero-segment false --stacktrace-on-signal all --a-param 1 --b-param "" --c-param "foo;bar" --session dpl_workflow-id --plugin dds --channel-config "name=from_B_to_D,type=pull,method=connect,address=ipc://@localhostworkflow-id_22002,transport=shmem,rateLogging=0,rcvBufSize=1,sndBufSize=1;name=from_C_to_D,type=pull,method=connect,address=ipc://@localhostworkflow-id_22003,transport=shmem,rateLogging=0,rcvBufSize=1,sndBufSize=1"</exe>
    </decltask>
+   <declcollection name="DPL">
+       <tasks>
+          <name>A</name>
+          <name>B</name>
+          <name>C</name>
+          <name>D</name>
+       </tasks>
+   </declcollection>
 </topology>
-)EXPECTED");
+)EXPECTED";
+  BOOST_REQUIRE_EQUAL(strdiffchr(ss.str().data(), expected), strdiffchr(expected, ss.str().data()));
+  BOOST_CHECK_EQUAL(ss.str(), expected);
 }

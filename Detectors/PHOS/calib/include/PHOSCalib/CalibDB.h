@@ -58,7 +58,7 @@ class CalibDB
   /// - Incorrect path
   /// - Wrong timestamp
   /// - Meta data not set
-  class ObjectNotFoundException : public std::exception
+  class ObjectNotFoundException final : public std::exception
   {
    public:
     /// \brief Constructor with query parameters
@@ -116,7 +116,7 @@ class CalibDB
   /// a certain path and with a certain timestamp was valid, the object
   /// however has a different type than the expected one (something was
   /// screwed up when writing to the CCDB)
-  class TypeMismatchException : public std::exception
+  class TypeMismatchException final : public std::exception
   {
    public:
     /// \brief Constructor
@@ -208,9 +208,9 @@ class CalibDB
   /// \brief Initialize CCDB server (when new object is created or the server URL changes)
   void init();
 
-  ccdb::CcdbApi mCCDBManager;                       ///< Handler for queries of the CCDB content
-  std::string mCCDBServer = "phsccdb-test.cern.ch"; ///< Name of the CCDB server
-  Bool_t mInit = false;                             ///< Init status (needed for lazy evaluation of the CcdbApi init)
+  ccdb::CcdbApi mCCDBManager;                    ///< Handler for queries of the CCDB content
+  std::string mCCDBServer = "ccdb-test.cern.ch"; ///< Name of the CCDB server
+  Bool_t mInit = false;                          ///< Init status (needed for lazy evaluation of the CcdbApi init)
 
   ClassDefNV(CalibDB, 1);
 };

@@ -7,6 +7,9 @@
 // In applying this license CERN does not waive the privileges and immunities
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
+#ifndef O2_PHOS_PHOSBADCHANNELSMAP_H_
+#define O2_PHOS_PHOSBADCHANNELSMAP_H_
+
 #include <iosfwd>
 #include <bitset>
 #include <Rtypes.h>
@@ -55,6 +58,9 @@ class BadChannelMap
   /// \brief Constructor
   BadChannelMap() = default;
 
+  /// \brief Constructur used to build test bad map
+  BadChannelMap(int test);
+
   /// \brief Destructor
   ~BadChannelMap() = default;
 
@@ -79,28 +85,19 @@ class BadChannelMap
   /// \brief Add bad cell to the container
   /// \param channelID Absolute ID of the bad channel
   /// \param mask type of the bad channel
-  ///
-  /// Adding new bad channel to the container. In case a cell
-  /// with the same ID is already present in the container,
-  /// the mask status is updated. Otherwise it is added.
-  ///
-  /// Only bad or warm cells are added to the container. In case
-  /// the mask type is GOOD_CELL, the entry is removed from the
-  /// container if present before, otherwise the cell is ignored.
-  void addBadChannel(unsigned short channelID) { mBadCells.set(channelID); } //set bit to true
+  void addBadChannel(short channelID) { mBadCells.set(channelID - OFFSET); } //set bit to true
 
   /// \brief Mark channel as good
   /// \param channelID Absolute ID of the channel
-  ///
   /// Setting channel as good.
-  void setChannelGood(unsigned short channelID) { mBadCells.set(channelID, false); }
+  void setChannelGood(short channelID) { mBadCells.set(channelID - OFFSET, false); }
 
   /// \brief Get the status of a certain cell
   /// \param channelID channel for which to obtain the channel status
   /// \return true if good channel
   ///
   /// Provide the mask status of a cell.
-  bool isChannelGood(unsigned short channelID) const { return !mBadCells.test(channelID); }
+  bool isChannelGood(short channelID) const { return !mBadCells.test(channelID - OFFSET); }
 
   /// \brief Convert map into 2D histogram representation
   /// \param mod Module number
@@ -111,7 +108,7 @@ class BadChannelMap
   /// - 0: GOOD_CELL
   /// - 1: BAD_CELL
   /// Attention: It is responsibility of user to create/delete histogram
-  void getHistogramRepresentation(int mod, TH2* h) const;
+  void getHistogramRepresentation(char mod, TH2* h) const;
 
   /// \brief Print bad channels on a given stream
   /// \param stream Stream on which the bad channel map is printed on
@@ -125,8 +122,9 @@ class BadChannelMap
   void PrintStream(std::ostream& stream) const;
 
  private:
-  static constexpr int NCHANNELS = 14337; ///< Number of channels starting from 1 (4*64*56+1
-  std::bitset<NCHANNELS> mBadCells;       ///< Container for bad cells, 1 means bad sell
+  static constexpr short NCHANNELS = 14337; ///< Number of channels starting from 1 (4*64*56+1
+  static constexpr short OFFSET = 1793;     ///< Non-existing channels 56*64*0.5+1
+  std::bitset<NCHANNELS> mBadCells;         ///< Container for bad cells, 1 means bad sell
 
   ClassDefNV(BadChannelMap, 1);
 };
@@ -143,3 +141,5 @@ std::ostream& operator<<(std::ostream& in, const BadChannelMap& bcm);
 } // namespace phos
 
 } // namespace o2
+
+#endif /* O2_PHOS_PHOSBADCHANNELSMAP_H_ */

@@ -365,15 +365,15 @@ int GPUTPCTrackerComponent::Configure(const char* cdbEntry, const char* chainId,
   return iResult1 ? iResult1 : (iResult2 ? iResult2 : iResult3);
 }
 
-void GPUTPCTrackerComponent::ConfigureSlices()
+int GPUTPCTrackerComponent::ConfigureSlices()
 {
   // Initialize the tracker slices
   GPUSettingsRec rec;
-  GPUSettingsEvent ev;
-  GPUSettingsDeviceProcessing devProc;
+  GPUSettingsGRP grp;
+  GPUSettingsProcessing devProc;
 
-  ev.solenoidBz = fSolenoidBz;
-  ev.continuousMaxTimeBin = 0; // triggered events
+  grp.solenoidBz = fSolenoidBz;
+  grp.continuousMaxTimeBin = 0; // triggered events
   if (mNeighboursSearchArea > 0) {
     rec.NeighboursSearchArea = mNeighboursSearchArea;
   }
@@ -390,15 +390,18 @@ void GPUTPCTrackerComponent::ConfigureSlices()
   rec.GlobalTracking = fGlobalTracking;
   devProc.stuckProtection = fGPUStuckProtection;
   rec.NonConsecutiveIDs = true;
+  rec.mergerReadFromTrackerDirectly = false;
+  devProc.ompThreads = 1;
+  devProc.ompKernels = false;
 
   GPURecoStepConfiguration steps;
   steps.steps.set(GPUDataTypes::RecoStep::TPCSliceTracking);
   steps.inputs.set(GPUDataTypes::InOutType::TPCClusters);
   steps.outputs.set(GPUDataTypes::InOutType::TPCSectorTracks);
 
-  fRec->SetSettings(&ev, &rec, &devProc, &steps);
+  fRec->SetSettings(&grp, &rec, &devProc, &steps);
   fChain->LoadClusterErrors();
-  fRec->Init();
+  return fRec->Init();
 }
 
 void* GPUTPCTrackerComponent::TrackerInit(void* par)
@@ -410,7 +413,9 @@ void* GPUTPCTrackerComponent::TrackerInit(void* par)
   }
   fChain = fRec->AddChain<GPUChainTracking>();
 
-  ConfigureSlices();
+  if (ConfigureSlices()) {
+    return ((void*)-1);
+  }
   return (nullptr);
 }
 
@@ -649,7 +654,13 @@ void* GPUTPCTrackerComponent::TrackerDoEvent(void* par)
     printf("Memory Allocation Error\n");
     return ((void*)(size_t)-EINVAL);
   }
-  fChain->RunTPCTrackingSlices();
+  if (fChain->RunTPCTrackingSlices()) {
+    HLTError("Error running tracking!");
+    return ((void*)(size_t)-EINVAL);
+  }
+  if (fChain->CheckErrorCodes()) {
+    return ((void*)(size_t)-EINVAL);
+  }
   fBenchmark.Stop(1);
   HLTInfo("Processed %d clusters", nClustersTotal);
   for (int i = 0; i < NSLICES; i++) {
@@ -659,7 +670,7 @@ void* GPUTPCTrackerComponent::TrackerDoEvent(void* par)
   int ret = 0;
   size = 0;
 
-  if (fRec->OutputControl().EndOfSpace) {
+  if (fRec->OutputControl().size == 1) {
     HLTWarning("Output buffer size exceeded buffer size %d, tracks are not stored", maxBufferSize);
     ret = -ENOSPC;
   } else {

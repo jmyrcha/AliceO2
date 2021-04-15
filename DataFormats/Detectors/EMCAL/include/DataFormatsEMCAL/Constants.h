@@ -13,6 +13,7 @@
 #include <Rtypes.h>
 #include <iosfwd>
 #include <exception>
+#include <cstdint>
 
 namespace o2
 {
@@ -28,7 +29,7 @@ enum {
 
 /// \enum ChannelType_t
 /// \brief Type of a raw data channel
-enum class ChannelType_t {
+enum ChannelType_t {
   HIGH_GAIN, ///< High gain channel
   LOW_GAIN,  ///< Low gain channel
   TRU,       ///< TRU channel
@@ -37,7 +38,7 @@ enum class ChannelType_t {
 
 /// \class InvalidChanneltypeException
 /// \brief Error handling invalid channel types
-class InvalidChanneltypeException : public std::exception
+class InvalidChanneltypeException final : public std::exception
 {
  public:
   /// \brief Constructor initializing the exception
@@ -88,9 +89,22 @@ std::ostream& operator<<(std::ostream& stream, ChannelType_t chantype);
 namespace constants
 {
 
+constexpr int OVERFLOWCUT = 950;             ///< sample overflow
+constexpr int ORDER = 2;                     ///< Order of shaping stages of the signal conditioning unit
+constexpr double TAU = 2.35;                 ///< Approximate shaping time
 constexpr Double_t EMCAL_TIMESAMPLE = 100.;  ///< Width of a timebin in nanoseconds
-constexpr Double_t EMCAL_ADCENERGY = 0.0167; ///< Energy of one ADC count in GeV/c^2
+constexpr Double_t EMCAL_ADCENERGY = 0.0162; ///< Energy of one ADC count in GeV/c^2
+constexpr Int_t EMCAL_HGLGFACTOR = 16;       ///< Conversion from High to Low Gain
+constexpr Int_t EMCAL_HGLGTRANSITION = 800;  ///< Transition from High to Low Gain
+constexpr Int_t EMCAL_MAXTIMEBINS = 15;      ///< Maximum number of time bins for time response
 } // namespace constants
+
+enum FitAlgorithm {
+  Standard = 0,  ///< Standard raw fitter
+  Gamma2 = 1,    ///< Gamma2 raw fitter
+  NeuralNet = 2, ///< Neural net raw fitter
+  NONE = 3
+};
 
 } // namespace emcal
 } // namespace o2

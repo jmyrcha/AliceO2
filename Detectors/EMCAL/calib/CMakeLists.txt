@@ -15,6 +15,10 @@ o2_add_library(EMCALCalib
                        src/TempCalibrationParams.cxx
                        src/TempCalibParamSM.cxx
                        src/GainCalibrationFactors.cxx
+                       src/TriggerTRUDCS.cxx
+                       src/TriggerSTUDCS.cxx
+                       src/TriggerSTUErrorCounter.cxx
+                       src/TriggerDCS.cxx
                        src/CalibDB.cxx
 	       PUBLIC_LINK_LIBRARIES O2::CCDB O2::EMCALBase)
 
@@ -25,6 +29,10 @@ o2_target_root_dictionary(EMCALCalib
                                   include/EMCALCalib/TempCalibrationParams.h
                                   include/EMCALCalib/TempCalibParamSM.h
                                   include/EMCALCalib/GainCalibrationFactors.h
+                                  include/EMCALCalib/TriggerTRUDCS.h
+                                  include/EMCALCalib/TriggerSTUDCS.h
+                                  include/EMCALCalib/TriggerSTUErrorCounter.h
+                                  include/EMCALCalib/TriggerDCS.h
                                   include/EMCALCalib/CalibDB.h
                           LINKDEF src/EMCALCalibLinkDef.h)
 
@@ -38,28 +46,57 @@ o2_add_test(TimeCalibrationParams
             SOURCES test/testTimeCalibration.cxx
             PUBLIC_LINK_LIBRARIES O2::EMCALCalib
             COMPONENT_NAME emcal
-            LABELS emcal)
+            LABELS emcal
+            ENVIRONMENT O2_ROOT=${CMAKE_BINARY_DIR}/stage)
 
 o2_add_test(TimeCalibParamL1Phase
             SOURCES test/testTimeL1PhaseCalib.cxx
             PUBLIC_LINK_LIBRARIES O2::EMCALCalib
             COMPONENT_NAME emcal
-            LABELS emcal)
+            LABELS emcal
+            ENVIRONMENT O2_ROOT=${CMAKE_BINARY_DIR}/stage)
 
 o2_add_test(TempCalibrationParams
             SOURCES test/testTempCalibration.cxx
             PUBLIC_LINK_LIBRARIES O2::EMCALCalib
             COMPONENT_NAME emcal
-            LABELS emcal)
+            LABELS emcal
+            ENVIRONMENT O2_ROOT=${CMAKE_BINARY_DIR}/stage)
 
 o2_add_test(TempCalibParamSM
             SOURCES test/testTempCalibrationSM.cxx
             PUBLIC_LINK_LIBRARIES O2::EMCALCalib
             COMPONENT_NAME emcal
-            LABELS emcal)
+            LABELS emcal
+            ENVIRONMENT O2_ROOT=${CMAKE_BINARY_DIR}/stage)
 
 o2_add_test(GainCalibrationFactors
             SOURCES test/testGainCalibration.cxx
+            PUBLIC_LINK_LIBRARIES O2::EMCALCalib
+            COMPONENT_NAME emcal
+            LABELS emcal
+            ENVIRONMENT O2_ROOT=${CMAKE_BINARY_DIR}/stage)
+
+o2_add_test(TriggerTRUDCS
+            SOURCES test/testTriggerTRUDCS.cxx
+            PUBLIC_LINK_LIBRARIES O2::EMCALCalib
+            COMPONENT_NAME emcal
+            LABELS emcal)
+
+o2_add_test(TriggerSTUDCS
+            SOURCES test/testTriggerSTUDCS.cxx
+            PUBLIC_LINK_LIBRARIES O2::EMCALCalib
+            COMPONENT_NAME emcal
+            LABELS emcal)
+
+o2_add_test(TriggerSTUErrorCounter
+            SOURCES test/testTriggerSTUErrorCounter.cxx
+            PUBLIC_LINK_LIBRARIES O2::EMCALCalib
+            COMPONENT_NAME emcal
+            LABELS emcal)
+
+o2_add_test(TriggerDCS
+            SOURCES test/testTriggerDCS.cxx
             PUBLIC_LINK_LIBRARIES O2::EMCALCalib
             COMPONENT_NAME emcal
             LABELS emcal)
@@ -112,4 +149,12 @@ o2_add_test_root_macro(macros/GainCalibrationFactors_CalibDBTest.C
             PUBLIC_LINK_LIBRARIES O2::EMCALCalib
             LABELS emcal COMPILE_ONLY)
 
-o2_data_file(COPY files DESTINATION Detectors/EMCAL)
+o2_add_test_root_macro(macros/TriggerDCS_CCDBApiTest.C
+            PUBLIC_LINK_LIBRARIES O2::EMCALCalib
+            LABELS emcal COMPILE_ONLY)
+
+o2_add_test_root_macro(macros/TriggerDCS_CalibDBTest.C
+            PUBLIC_LINK_LIBRARIES O2::EMCALCalib
+            LABELS emcal COMPILE_ONLY)
+
+o2_data_file(COPY files DESTINATION Detectors/EMC)

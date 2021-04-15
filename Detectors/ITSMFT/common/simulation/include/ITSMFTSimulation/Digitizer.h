@@ -17,7 +17,7 @@
 #include <deque>
 #include <memory>
 
-#include "Rtypes.h"  // for Digitizer::Class, Double_t, ClassDef, etc
+#include "Rtypes.h" // for Digitizer::Class
 #include "TObject.h" // for TObject
 
 #include "ITSMFTSimulation/ChipDigitsContainer.h"
@@ -25,8 +25,9 @@
 #include "ITSMFTSimulation/DigiParams.h"
 #include "ITSMFTSimulation/Hit.h"
 #include "ITSMFTBase/GeometryTGeo.h"
-#include "ITSMFTBase/Digit.h"
+#include "DataFormatsITSMFT/Digit.h"
 #include "DataFormatsITSMFT/ROFRecord.h"
+#include "CommonDataFormat/InteractionRecord.h"
 #include "SimulationDataFormat/MCCompLabel.h"
 
 namespace o2
@@ -61,8 +62,7 @@ class Digitizer : public TObject
 
   /// Steer conversion of hits to digits
   void process(const std::vector<Hit>* hits, int evID, int srcID);
-  void setEventTime(double t);
-  double getEventTime() const { return mEventTime; }
+  void setEventTime(const o2::InteractionTimeRecord& irt);
   double getEndTimeOfROFMax() const
   {
     ///< return the time corresponding to end of the last reserved ROFrame : mROFrameMax
@@ -71,7 +71,7 @@ class Digitizer : public TObject
 
   void setContinuous(bool v) { mParams.setContinuous(v); }
   bool isContinuous() const { return mParams.isContinuous(); }
-  void fillOutputContainer(UInt_t maxFrame = 0xffffffff);
+  void fillOutputContainer(uint32_t maxFrame = 0xffffffff);
 
   void setDigiParams(const o2::itsmft::DigiParams& par) { mParams = par; }
   const o2::itsmft::DigiParams& getDigitParams() const { return mParams; }
@@ -79,8 +79,8 @@ class Digitizer : public TObject
   // provide the common itsmft::GeometryTGeo to access matrices and segmentation
   void setGeometry(const o2::itsmft::GeometryTGeo* gm) { mGeometry = gm; }
 
-  UInt_t getEventROFrameMin() const { return mEventROFrameMin; }
-  UInt_t getEventROFrameMax() const { return mEventROFrameMax; }
+  uint32_t getEventROFrameMin() const { return mEventROFrameMin; }
+  uint32_t getEventROFrameMax() const { return mEventROFrameMax; }
   void resetEventROFrames()
   {
     mEventROFrameMin = 0xffffffff;
@@ -88,11 +88,11 @@ class Digitizer : public TObject
   }
 
  private:
-  void processHit(const o2::itsmft::Hit& hit, UInt_t& maxFr, int evID, int srcID);
-  void registerDigits(ChipDigitsContainer& chip, UInt_t roFrame, float tInROF, int nROF,
-                      UShort_t row, UShort_t col, int nEle, o2::MCCompLabel& lbl);
+  void processHit(const o2::itsmft::Hit& hit, uint32_t& maxFr, int evID, int srcID);
+  void registerDigits(ChipDigitsContainer& chip, uint32_t roFrame, float tInROF, int nROF,
+                      uint16_t row, uint16_t col, int nEle, o2::MCCompLabel& lbl);
 
-  ExtraDig* getExtraDigBuffer(UInt_t roFrame)
+  ExtraDig* getExtraDigBuffer(uint32_t roFrame)
   {
     if (mROFrameMin > roFrame) {
       return nullptr; // nothing to do
@@ -107,14 +107,15 @@ class Digitizer : public TObject
   static constexpr float sec2ns = 1e9;
 
   o2::itsmft::DigiParams mParams; ///< digitization parameters
-  double mEventTime = 0;          ///< global event time
-  bool mContinuous = false;       ///< flag for continuous simulation
-  UInt_t mROFrameMin = 0;         ///< lowest RO frame of current digits
-  UInt_t mROFrameMax = 0;         ///< highest RO frame of current digits
-  UInt_t mNewROFrame = 0;         ///< ROFrame corresponding to provided time
+  o2::InteractionTimeRecord mEventTime; ///< global event time and interaction record
+  o2::InteractionRecord mIRFirstSampledTF; ///< IR of the 1st sampled IR, noise-only ROFs will be inserted till this IR only
+  double mCollisionTimeWrtROF;
+  uint32_t mROFrameMin = 0; ///< lowest RO frame of current digits
+  uint32_t mROFrameMax = 0; ///< highest RO frame of current digits
+  uint32_t mNewROFrame = 0; ///< ROFrame corresponding to provided time
 
-  UInt_t mEventROFrameMin = 0xffffffff; ///< lowest RO frame for processed events (w/o automatic noise ROFs)
-  UInt_t mEventROFrameMax = 0;          ///< highest RO frame forfor processed events (w/o automatic noise ROFs)
+  uint32_t mEventROFrameMin = 0xffffffff; ///< lowest RO frame for processed events (w/o automatic noise ROFs)
+  uint32_t mEventROFrameMax = 0;          ///< highest RO frame forfor processed events (w/o automatic noise ROFs)
 
   std::unique_ptr<o2::itsmft::AlpideSimResponse> mAlpSimResp; // simulated response
 

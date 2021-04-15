@@ -12,13 +12,15 @@
 #define ALICEO2_ZDC_DETECTOR_H_
 
 #include <vector>                             // for vector
-#include "Rtypes.h"                           // for Int_t, Double_t, Float_t, Bool_t, etc
 #include "TGeoManager.h"                      // for gGeoManager, TGeoManager (ptr only)
 #include "DetectorsBase/GeometryManager.h"    // for getSensID
 #include "DetectorsBase/Detector.h"           // for Detector
 #include "DetectorsCommonDataFormats/DetID.h" // for Detector
 #include "ZDCBase/Geometry.h"
-#include "ZDCSimulation/Hit.h"
+#include "DataFormatsZDC/Hit.h"
+#include "ZDCSimulation/SpatialPhotonResponse.h"
+#include "TParticle.h"
+#include <utility>
 
 class FairVolume;
 
@@ -47,9 +49,7 @@ class Detector : public o2::base::DetImpl<Detector>
     kGraphite = 14
   };
 
-  Detector() = default;
-
-  Detector(Bool_t active);
+  Detector(Bool_t active = true);
 
   ~Detector() override = default;
 
@@ -57,10 +57,12 @@ class Detector : public o2::base::DetImpl<Detector>
 
   Bool_t ProcessHits(FairVolume* v = nullptr) final;
 
+  bool createHitsFromImage(SpatialPhotonResponse const& image, int detector);
+
   void Register() override;
 
   /// Gets the produced collections
-  std::vector<o2::zdc::Hit>* getHits(Int_t iColl) const
+  std::vector<o2::zdc::Hit>* getHits(int32_t iColl) const
   {
     if (iColl == 0) {
       return mHits;
@@ -72,14 +74,16 @@ class Detector : public o2::base::DetImpl<Detector>
   void EndOfEvent() final;
   void FinishPrimary() final;
 
+  void BeginPrimary() final;
+
   void ConstructGeometry() final;
 
   void createMaterials();
   void addAlignableVolumes() const override {}
 
-  o2::zdc::Hit* addHit(Int_t trackID, Int_t parentID, Int_t sFlag, Float_t primaryEnergy, Int_t detID, Int_t secID,
-                       Vector3D<float> pos, Vector3D<float> mom, Float_t tof, Vector3D<float> xImpact, Double_t energyloss,
-                       Int_t nphePMC, Int_t nphePMQ);
+  o2::zdc::Hit* addHit(int32_t trackID, int32_t parentID, int32_t sFlag, float primaryEnergy, int32_t detID, int32_t secID,
+                       math_utils::Vector3D<float> pos, math_utils::Vector3D<float> mom, float tof, math_utils::Vector3D<float> xImpact, double energyloss,
+                       int32_t nphePMC, int32_t nphePMQ);
 
  private:
   /// copy constructor
@@ -91,8 +95,8 @@ class Detector : public o2::base::DetImpl<Detector>
   void createDetectors();
 
   // determine detector; sector/tower and impact coordinates given volumename and position
-  void getDetIDandSecID(TString const& volname, Vector3D<float> const& x,
-                        Vector3D<float>& xDet, int& detector, int& sector) const;
+  void getDetIDandSecID(TString const& volname, math_utils::Vector3D<float> const& x,
+                        math_utils::Vector3D<float>& xDet, int& detector, int& sector) const;
 
   // Define sensitive volumes
   void defineSensitiveVolumes();
@@ -102,22 +106,77 @@ class Detector : public o2::base::DetImpl<Detector>
 
   void resetHitIndices();
 
-  Float_t mTrackEta;
-  Float_t mPrimaryEnergy;
-  Vector3D<float> mXImpact;
-  Float_t mTotLightPMC;
-  Float_t mTotLightPMQ;
-  Int_t mMediumPMCid;
-  Int_t mMediumPMQid;
+  // common function for hit creation (can be called from multiple interfaces)
+  bool createOrAddHit(int detector,
+                      int sector,
+                      int currentMediumid,
+                      bool issecondary,
+                      int nphe,
+                      int trackn,
+                      int parent,
+                      float tof,
+                      float trackenergy,
+                      math_utils::Vector3D<float> const& xImp,
+                      float eDep, float x, float y, float z, float px, float py, float pz)
+  {
+    // A new hit is created when there is nothing yet for this det + sector
+    if (mCurrentHitsIndices[detector - 1][sector] == -1) {
+      mTotLightPMC = mTotLightPMQ = 0;
+      if (currentMediumid == mMediumPMCid) {
+        mTotLightPMC = nphe;
+      } else if (currentMediumid == mMediumPMQid) {
+        mTotLightPMQ = nphe;
+      }
+
+      math_utils::Vector3D<float> pos(x, y, z);
+      math_utils::Vector3D<float> mom(px, py, pz);
+      addHit(trackn, parent, issecondary, trackenergy, detector, sector,
+             pos, mom, tof, xImp, eDep, mTotLightPMC, mTotLightPMQ);
+      // stack->addHit(GetDetId());
+      mCurrentHitsIndices[detector - 1][sector] = mHits->size() - 1;
+
+      mXImpact = xImp;
+      return true;
+    } else {
+      auto& curHit = (*mHits)[mCurrentHitsIndices[detector - 1][sector]];
+      // summing variables that needs to be updated (Eloss and light yield)
+      curHit.setNoNumContributingSteps(curHit.getNumContributingSteps() + 1);
+      int nPMC{0}, nPMQ{0};
+      if (currentMediumid == mMediumPMCid) {
+        mTotLightPMC += nphe;
+        nPMC = nphe;
+      } else if (currentMediumid == mMediumPMQid) {
+        mTotLightPMQ += nphe;
+        nPMQ = nphe;
+      }
+      if (nphe > 0) {
+        curHit.SetEnergyLoss(curHit.GetEnergyLoss() + eDep);
+        curHit.setPMCLightYield(curHit.getPMCLightYield() + nPMC);
+        curHit.setPMQLightYield(curHit.getPMQLightYield() + nPMQ);
+      }
+      return true;
+    }
+  }
+
+  // helper function taking care of writing the photon response pattern at certain moments
+  void flushSpatialResponse();
+
+  float mTrackEta;
+  float mPrimaryEnergy;
+  math_utils::Vector3D<float> mXImpact;
+  float mTotLightPMC;
+  float mTotLightPMQ;
+  int32_t mMediumPMCid = -1;
+  int32_t mMediumPMQid = -2;
 
   //
   /// Container for hit data
   std::vector<o2::zdc::Hit>* mHits;
 
-  Float_t mLumiLength = 0;         //TODO: make part of configurable params
-  Float_t mTCLIAAPERTURE = 3.5;    //TODO: make part of configurable params
-  Float_t mTCLIAAPERTURENEG = 3.5; //TODO: make part of configurable params
-  Float_t mVCollSideCCentreY = 0.; //TODO: make part of configurable params
+  float mLumiLength = 0;         //TODO: make part of configurable params
+  float mTCLIAAPERTURE = 3.5;    //TODO: make part of configurable params
+  float mTCLIAAPERTURENEG = 3.5; //TODO: make part of configurable params
+  float mVCollSideCCentreY = 0.; //TODO: make part of configurable params
 
   int mZNENVVolID = -1; // the volume id for the neutron det envelope volume
   int mZPENVVolID = -1; // the volume id for the proton det envelope volume
@@ -128,7 +187,7 @@ class Detector : public o2::base::DetImpl<Detector>
   int mLastPrincipalTrackEntered = -1;
 
   static constexpr int NUMDETS = 5; // number of detectors
-  static constexpr int NUMSECS = 4; // number of (max) possible sectors
+  static constexpr int NUMSECS = 5; // number of (max) possible sectors (including COMMON one)
 
   // current hits per detector and per sector FOR THE CURRENT track first entering a detector
   // (as given by mLastPrincipalTrackEntered)
@@ -139,8 +198,21 @@ class Detector : public o2::base::DetImpl<Detector>
   static constexpr int ZPRADIUSBINS = 28;
   static constexpr int ANGLEBINS = 90;
 
-  float mLightTableZN[4][ZNRADIUSBINS][ANGLEBINS] = {1.}; //!
-  float mLightTableZP[4][ZPRADIUSBINS][ANGLEBINS] = {1.}; //!
+  float mLightTableZN[4][ANGLEBINS][ZNRADIUSBINS] = {1.}; //!
+  float mLightTableZP[4][ANGLEBINS][ZPRADIUSBINS] = {1.}; //!
+
+  SpatialPhotonResponse mNeutronResponseImage;
+  // there is only one proton detector per side
+  SpatialPhotonResponse mProtonResponseImage;
+
+  TParticle mCurrentPrincipalParticle{};
+
+  // collecting the responses for the current event
+  using ParticlePhotonResponse = std::vector<std::pair<TParticle,
+                                                       std::pair<SpatialPhotonResponse, SpatialPhotonResponse>>>;
+
+  ParticlePhotonResponse mResponses;
+  ParticlePhotonResponse* mResponsesPtr = &mResponses;
 
   template <typename Det>
   friend class o2::base::DetImpl;

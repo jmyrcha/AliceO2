@@ -30,7 +30,6 @@ include_guard()
 # * TIMEOUT (optional) the test timeout (for each attempt)
 # * COMMAND_LINE_ARGS (optional) extra arguments to the test executable, if
 #   needed
-# * NON_FATAL (optional) mark the test as non criticial for the CI
 # * ENVIRONMENT: extra environment needed by the test to run properly
 #
 function(o2_add_test_wrapper)
@@ -43,7 +42,7 @@ function(o2_add_test_wrapper)
     PARSE_ARGV
     0
     "A"
-    "DONT_FAIL_ON_TIMEOUT;NON_FATAL"
+    "DONT_FAIL_ON_TIMEOUT"
     "TARGET;COMMAND;WORKING_DIRECTORY;MAX_ATTEMPTS;TIMEOUT;NAME"
     "COMMAND_LINE_ARGS;LABELS;CONFIGURATIONS;ENVIRONMENT")
 
@@ -81,14 +80,11 @@ function(o2_add_test_wrapper)
     endif()
   endif()
 
-  if("${A_MAX_ATTEMPTS}" GREATER 1)
-    # Warn only for tests where retry has been requested
-    message(
-      WARNING "Test ${testName} will be retried max ${A_MAX_ATTEMPTS} times")
-  endif()
-  if(A_NON_FATAL)
-    message(WARNING "Failure of test ${testName} will not be fatal")
-  endif()
+#  if("${A_MAX_ATTEMPTS}" GREATER 1)
+#    # Warn only for tests where retry has been requested
+#    message(
+#      WARNING "Test ${testName} will be retried max ${A_MAX_ATTEMPTS} times")
+#  endif()
 
   if(NOT A_TIMEOUT)
     set(A_TIMEOUT 100) # default timeout (seconds)
@@ -101,12 +97,26 @@ function(o2_add_test_wrapper)
   else()
     set(A_DONT_FAIL_ON_TIMEOUT "")
   endif()
-  if(A_NON_FATAL)
-    set(A_NON_FATAL "--non-fatal")
-  else()
-    set(A_NON_FATAL "")
-  endif()
+
+  # For now, we enforce 3 max attempts for all tests.
+  # No need to ignore time out, since we have 3 attempts
+  set(A_MAX_ATTEMPTS 3)
+  set(A_DONT_FAIL_ON_TIMEOUT "")
+
   math(EXPR ctestTimeout "(20 + ${A_TIMEOUT}) * ${A_MAX_ATTEMPTS}")
+
+  if(NOT A_WORKING_DIRECTORY)
+    if(DEFINED DEFAULT_TEST_OUTPUT_DIRECTORY)
+      string(REPLACE "${CMAKE_BINARY_DIR}" "" reldir "${CMAKE_CURRENT_BINARY_DIR}")
+      get_filename_component(wdir ${DEFAULT_TEST_OUTPUT_DIRECTORY}/${reldir} REALPATH)
+      file(MAKE_DIRECTORY ${wdir})
+      message(
+        STATUS
+        "test ${testName} will output in ${wdir}"
+      )
+      set(A_WORKING_DIRECTORY ${wdir})
+    endif()
+  endif()
 
   add_test(NAME "${testName}"
            COMMAND "${CMAKE_BINARY_DIR}/tests-wrapper.sh"
@@ -117,12 +127,11 @@ function(o2_add_test_wrapper)
                    "--timeout"
                    "${A_TIMEOUT}"
                    ${A_DONT_FAIA_ON_TIMEOUT}
-                   ${A_NON_FATAL}
                    "--"
                    ${testExe}
                    ${A_COMMAND_LINE_ARGS}
            WORKING_DIRECTORY "${A_WORKING_DIRECTORY}"
-           CONFIGURATIONS "${A_CONFIGURATIONS}")
+           CONFIGURATIONS ${A_CONFIGURATIONS})
 
   set_tests_properties(${testName} PROPERTIES TIMEOUT ${ctestTimeout})
   if(A_LABELS)

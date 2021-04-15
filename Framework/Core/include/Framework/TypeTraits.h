@@ -7,33 +7,20 @@
 // In applying this license CERN does not waive the privileges and immunities
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
-#ifndef FRAMEWORK_TYPETRAITS_H
-#define FRAMEWORK_TYPETRAITS_H
+#ifndef O2_FRAMEWORK_TYPETRAITS_H_
+#define O2_FRAMEWORK_TYPETRAITS_H_
 
 #include <type_traits>
 #include <vector>
 #include <memory>
+#include "Framework/Traits.h"
 
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <gsl/gsl>
 
-namespace o2
+namespace o2::framework
 {
-namespace framework
-{
-/// Helper trait to determine if a given type T
-/// is a specialization of a given reference type Ref.
-/// See Framework/Core/test_TypeTraits.cxx for an example
-
-template <typename T, template <typename...> class Ref>
-struct is_specialization : std::false_type {
-};
-
-template <template <typename...> class Ref, typename... Args>
-struct is_specialization<Ref<Args...>, Ref> : std::true_type {
-};
-
 // helper struct to mark a type as non-messageable by defining a type alias
 // with name 'non-messageable'
 struct MarkAsNonMessageable {
@@ -112,6 +99,13 @@ template <typename T>
 struct has_messageable_value_type<T, std::conditional_t<false, typename T::value_type, void>> : is_messageable<typename T::value_type> {
 };
 
+template <typename T, typename _ = void>
+struct is_span : std::false_type {
+};
+template <typename T>
+struct is_span<T, std::conditional_t<false, typename T::value_type, void>> : std::is_same<gsl::span<typename T::value_type>, T> {
+};
+
 // Detect whether a class has a ROOT dictionary
 // This member detector idiom is implemented using SFINAE idiom to look for
 // a 'Class()' method.
@@ -143,6 +137,23 @@ template <typename T>
 class has_root_dictionary<T, typename std::enable_if<is_container<T>::value>::type>
   : public has_root_dictionary<typename T::value_type>
 {
+};
+
+// Detect whether a class is a ROOT class implementing SetOwner
+// This member detector idiom is implemented using SFINAE idiom to look for
+// a 'SetOwner()' method.
+template <typename T, typename _ = void>
+struct has_root_setowner : std::false_type {
+};
+
+template <typename T>
+struct has_root_setowner<
+  T,
+  std::conditional_t<
+    false,
+    class_member_checker<
+      decltype(std::declval<T>().SetOwner(true))>,
+    void>> : public std::true_type {
 };
 
 /// Helper class to deal with the case we are creating the first instance of a
@@ -208,6 +219,6 @@ template <class Type>
 struct is_boost_serializable<Type, boost::archive::binary_oarchive, std::void_t<typename Type::value_type>>
   : is_boost_serializable<typename Type::value_type, boost::archive::binary_oarchive> {
 };
-} // namespace framework
-} // namespace o2
+
+} // namespace o2::framework
 #endif // FRAMEWORK_TYPETRAITS_H

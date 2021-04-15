@@ -20,31 +20,35 @@ using namespace o2::framework;
 BOOST_AUTO_TEST_CASE(TestVerifyWorkflow)
 {
   using namespace o2::framework;
-  WorkflowSpec w0{
-    DataProcessorSpec{"A",
-                      {InputSpec{"foo", "A", "COLLISIONCONTEXT", 1, Lifetime::Condition}},
-                      {OutputSpec{{"bar"}, "C", "D", 2, Lifetime::Timeframe}},
-                      AlgorithmSpec{[](ProcessingContext& ctx) {}},
-                      {ConfigParamSpec{"aInt", VariantType::Int, 0, {"An Int"}},
-                       ConfigParamSpec{"aFloat", VariantType::Float, 1.3, {"A Float"}},
-                       ConfigParamSpec{"aBool", VariantType::Bool, true, {"A Bool"}},
-                       ConfigParamSpec{"aString", VariantType::String, "some string", {"A String"}}}},
-    DataProcessorSpec{"B",
-                      {InputSpec{"foo", "C", "D"}},
-                      {OutputSpec{{"bar1"}, "E", "F", 0},
-                       OutputSpec{{"bar2"}, "E", "F", 1}},
-                      AlgorithmSpec{[](ProcessingContext& ctx) {}},
-                      {}},
-    DataProcessorSpec{"C",
-                      {},
-                      {OutputSpec{{"bar"}, "G", "H"}},
-                      AlgorithmSpec{[](ProcessingContext& ctx) {}},
-                      {}},
-    DataProcessorSpec{"D",
-                      {InputSpec{"foo", {"C", "D"}}},
-                      {OutputSpec{{"bar"}, {"I", "L"}}},
-                      AlgorithmSpec{[](ProcessingContext& ctx) {}},
-                      {}}};
+  WorkflowSpec w0{                       //
+                  DataProcessorSpec{"A", //
+                                    {InputSpec{"foo", "A", "COLLISIONCONTEXT", 1, Lifetime::Condition, {
+                                                                                                         ConfigParamSpec{"aUrl", VariantType::String, "foo/bar", {"A InputSpec option"}},       //
+                                                                                                         ConfigParamSpec{"bUrl", VariantType::String, "foo/foo", {"Another InputSpec option"}}, //
+                                                                                                       }}},                                                                                     //
+                                    {OutputSpec{{"bar"}, "C", "D", 2, Lifetime::Timeframe}},                                                                                                    //
+                                    AlgorithmSpec{[](ProcessingContext& ctx) {}},                                                                                                               //
+                                    {                                                                                                                                                           //
+                                     ConfigParamSpec{"aInt", VariantType::Int, 0, {"An Int"}},                                                                                                  //
+                                     ConfigParamSpec{"aFloat", VariantType::Float, 1.3, {"A Float"}},                                                                                           //
+                                     ConfigParamSpec{"aBool", VariantType::Bool, true, {"A Bool"}},                                                                                             //
+                                     ConfigParamSpec{"aString", VariantType::String, "some string", {"A String"}}}},                                                                            //                                                                                                    //
+                  DataProcessorSpec{"B",                                                                                                                                                        //
+                                    {InputSpec{"foo", "C", "D"}},                                                                                                                               //
+                                    {                                                                                                                                                           //
+                                     OutputSpec{{"bar1"}, "E", "F", 0},                                                                                                                         //
+                                     OutputSpec{{"bar2"}, "E", "F", 1}},                                                                                                                        //
+                                    AlgorithmSpec{[](ProcessingContext& ctx) {}},                                                                                                               //
+                                    {}},                                                                                                                                                        //
+                  DataProcessorSpec{"C", {},                                                                                                                                                    //
+                                    {                                                                                                                                                           //
+                                     OutputSpec{{"bar"}, "G", "H"}},                                                                                                                            //
+                                    AlgorithmSpec{[](ProcessingContext& ctx) {}},                                                                                                               //
+                                    {}},                                                                                                                                                        //
+                  DataProcessorSpec{"D", {InputSpec{"foo", {"C", "D"}}},                                                                                                                        //
+                                    {OutputSpec{{"bar"}, {"I", "L"}}},                                                                                                                          //
+                                    AlgorithmSpec{[](ProcessingContext& ctx) {}},                                                                                                               //
+                                    {}}};                                                                                                                                                       //
 
   std::vector<DataProcessorInfo> metadataOut{
     {"A", "test_Framework_test_SerializationWorkflow", {"foo"}, {ConfigParamSpec{"aBool", VariantType::Bool, true, {"A Bool"}}}},
@@ -53,19 +57,23 @@ BOOST_AUTO_TEST_CASE(TestVerifyWorkflow)
     {"D", "test_Framework_test_SerializationWorkflow", {}},
   };
 
+  CommandInfo commandInfoOut{"o2-dpl-workflow -b --option 1 --option 2"};
+
   std::vector<DataProcessorInfo> metadataIn{};
+  CommandInfo commandInfoIn;
 
   std::ostringstream firstDump;
-  WorkflowSerializationHelpers::dump(firstDump, w0, metadataOut);
+  WorkflowSerializationHelpers::dump(firstDump, w0, metadataOut, commandInfoOut);
   std::istringstream is;
   is.str(firstDump.str());
   WorkflowSpec w1;
-  WorkflowSerializationHelpers::import(is, w1, metadataIn);
+  WorkflowSerializationHelpers::import(is, w1, metadataIn, commandInfoIn);
 
   std::ostringstream secondDump;
-  WorkflowSerializationHelpers::dump(secondDump, w1, metadataIn);
+  WorkflowSerializationHelpers::dump(secondDump, w1, metadataIn, commandInfoIn);
 
   BOOST_REQUIRE_EQUAL(w0.size(), 4);
   BOOST_REQUIRE_EQUAL(w0.size(), w1.size());
   BOOST_CHECK_EQUAL(firstDump.str(), secondDump.str());
+  BOOST_CHECK_EQUAL(commandInfoIn.command, commandInfoOut.command);
 }

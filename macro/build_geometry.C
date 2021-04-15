@@ -45,6 +45,13 @@
 #include <algorithm>
 #endif
 
+#ifdef ENABLE_UPGRADES
+#include <ITS3Simulation/Detector.h>
+#include <TRKSimulation/Detector.h>
+#include <FT3Simulation/Detector.h>
+#include <Alice3DetectorsPassive/Pipe.h>
+#endif
+
 void finalize_geometry(FairRunSim* run);
 
 bool isActivated(std::string s)
@@ -64,6 +71,7 @@ void build_geometry(FairRunSim* run = nullptr)
   bool geomonly = (run == nullptr);
 
   // minimal macro to test setup of the geometry
+  auto& confref = o2::conf::SimConfig::Instance();
 
   TString dir = getenv("VMCWORKDIR");
   TString geom_dir = dir + "/Detectors/Geometry/";
@@ -82,11 +90,11 @@ void build_geometry(FairRunSim* run = nullptr)
   run->SetMaterials("media.geo"); // Materials
 
   // we need a field to properly init the media
-  auto field = new o2::field::MagneticField("Maps", "Maps", -1., -1., o2::field::MagFieldParam::k5kG);
+  auto field = o2::field::MagneticField::createNominalField(confref.getConfigData().mField, confref.getConfigData().mUniformField);
   run->SetField(field);
 
   // Create geometry
-  // we always need the gave
+  // we always need the cave
   o2::passive::Cave* cave = new o2::passive::Cave("CAVE");
   // adjust size depending on content
   cave->includeZDC(isActivated("ZDC"));
@@ -96,49 +104,64 @@ void build_geometry(FairRunSim* run = nullptr)
 
   // the experimental hall
   if (isActivated("HALL")) {
-    auto hall = new o2::passive::Hall("Hall", "Experimental Hall");
+    auto hall = new o2::passive::Hall("HALL", "Experimental Hall");
     run->AddModule(hall);
   }
 
   // the magnet
   if (isActivated("MAG")) {
     // the frame structure to support other detectors
-    auto magnet = new o2::passive::Magnet("Magnet", "L3 Magnet");
+    auto magnet = new o2::passive::Magnet("MAG", "L3 Magnet");
     run->AddModule(magnet);
   }
 
   // the dipole
   if (isActivated("DIPO")) {
-    auto dipole = new o2::passive::Dipole("Dipole", "Alice Dipole");
+    auto dipole = new o2::passive::Dipole("DIPO", "Alice Dipole");
     run->AddModule(dipole);
   }
 
   // the compensator dipole
   if (isActivated("COMP")) {
-    run->AddModule(new o2::passive::Compensator("Comp", "Alice Compensator Dipole"));
+    run->AddModule(new o2::passive::Compensator("COMP", "Alice Compensator Dipole"));
   }
 
   // beam pipe
   if (isActivated("PIPE")) {
-    run->AddModule(new o2::passive::Pipe("Pipe", "Beam pipe"));
+#ifdef ENABLE_UPGRADES
+    if (isActivated("IT3")) {
+      run->AddModule(new o2::passive::Pipe("PIPE", "Beam pipe", 1.6f, 0.05f));
+    } else {
+      run->AddModule(new o2::passive::Pipe("PIPE", "Beam pipe"));
+    }
+#else
+    run->AddModule(new o2::passive::Pipe("PIPE", "Beam pipe"));
+#endif
   }
+
+#ifdef ENABLE_UPGRADES
+  // upgraded beampipe at the interaction point (IP)
+  if (isActivated("A3IP")) {
+    run->AddModule(new o2::passive::Alice3Pipe("A3IP", "Alice 3 beam pipe", !isActivated("TRK"), 0.48f, 0.015f, 44.4f, 3.7f, 0.05f, 44.4f));
+  }
+#endif
 
   // the absorber
   if (isActivated("ABSO")) {
     // the frame structure to support other detectors
-    auto abso = new o2::passive::Absorber("Absorber", "Absorber");
+    auto abso = new o2::passive::Absorber("ABSO", "Absorber");
     run->AddModule(abso);
   }
 
   // the shil
   if (isActivated("SHIL")) {
-    auto shil = new o2::passive::Shil("Shield", "Small angle beam shield");
+    auto shil = new o2::passive::Shil("SHIL", "Small angle beam shield");
     run->AddModule(shil);
   }
 
   if (isActivated("TOF") || isActivated("TRD") || isActivated("FRAME")) {
     // the frame structure to support other detectors
-    auto frame = new o2::passive::FrameStructure("Frame", "Frame");
+    auto frame = new o2::passive::FrameStructure("FRAME", "Frame");
     run->AddModule(frame);
   }
 
@@ -159,6 +182,25 @@ void build_geometry(FairRunSim* run = nullptr)
     auto tpc = new o2::tpc::Detector(true);
     run->AddModule(tpc);
   }
+#ifdef ENABLE_UPGRADES
+  if (isActivated("IT3")) {
+    // ITS3
+    auto its3 = new o2::its3::Detector(true);
+    run->AddModule(its3);
+  }
+
+  if (isActivated("TRK")) {
+    // ALICE 3 TRK
+    auto trk = new o2::trk::Detector(true);
+    run->AddModule(trk);
+  }
+
+  if (isActivated("FT3")) {
+    // ALICE 3 FT3
+    auto ft3 = new o2::ft3::Detector(true);
+    run->AddModule(ft3);
+  }
+#endif
 
   if (isActivated("ITS")) {
     // its
@@ -224,33 +266,5 @@ void build_geometry(FairRunSim* run = nullptr)
 
   if (geomonly) {
     run->Init();
-    finalize_geometry(run);
-    gGeoManager->Export("O2geometry.root");
-  }
-}
-
-void finalize_geometry(FairRunSim* run)
-{
-  // finalize geometry and declare alignable volumes
-  // this should be called geometry is fully built
-
-  if (!gGeoManager) {
-    LOG(ERROR) << "gGeomManager is not available";
-    return;
-  }
-
-  gGeoManager->CloseGeometry();
-  if (!run) {
-    LOG(ERROR) << "FairRunSim is not available";
-    return;
-  }
-
-  const TObjArray* modArr = run->GetListOfModules();
-  TIter next(modArr);
-  FairModule* module = nullptr;
-  while ((module = (FairModule*)next())) {
-    o2::base::Detector* det = dynamic_cast<o2::base::Detector*>(module);
-    if (det)
-      det->addAlignableVolumes();
   }
 }

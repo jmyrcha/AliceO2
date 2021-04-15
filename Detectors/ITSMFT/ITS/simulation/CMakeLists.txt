@@ -20,3 +20,24 @@ o2_target_root_dictionary(ITSSimulation
                                   include/ITSSimulation/V3Layer.h
                                   include/ITSSimulation/V11Geometry.h
                                   include/ITSSimulation/V3Services.h)
+
+o2_data_file(COPY data  DESTINATION Detectors/ITS/simulation)
+
+o2_add_executable(digi2raw
+                  COMPONENT_NAME its
+		  TARGETVARNAME itsdigi2raw_exe
+                  SOURCES src/digi2raw.cxx
+                  PUBLIC_LINK_LIBRARIES O2::ITSMFTReconstruction
+                                        O2::DataFormatsITSMFT
+                                        O2::ITSMFTBase
+                                        O2::ITSMFTSimulation
+                                        O2::DetectorsRaw
+                                        O2::DetectorsCommonDataFormats
+                                        O2::CommonUtils
+                                        Boost::program_options)
+
+if(NOT APPLE)
+
+ set_property(TARGET ${itsdigi2raw_exe} PROPERTY LINK_WHAT_YOU_USE ON)
+
+endif()

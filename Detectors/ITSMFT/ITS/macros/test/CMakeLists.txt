@@ -28,17 +28,12 @@ o2_add_test_root_macro(CheckDigits.C
                                              O2::DetectorsBase
                        LABELS its)
 
-o2_add_test_root_macro(CheckLookUp.C
-                       PUBLIC_LINK_LIBRARIES O2::ITSMFTReconstruction
-                                             O2::DataFormatsITSMFT
-                       LABELS its)
+#o2_add_test_root_macro(CheckLUtime.C
+#                       PUBLIC_LINK_LIBRARIES O2::ITSMFTReconstruction
+#                                             O2::DataFormatsITSMFT
+#                       LABELS its)
 
-o2_add_test_root_macro(CheckLUtime.C
-                       PUBLIC_LINK_LIBRARIES O2::ITSMFTReconstruction
-                                             O2::DataFormatsITSMFT
-                       LABELS its)
-
-o2_add_test_root_macro(CheckTopologies.C
+o2_add_test_root_macro(CreateDictionaries.C
                        PUBLIC_LINK_LIBRARIES O2::MathUtils
                                              O2::ITSBase
                                              O2::ITSMFTReconstruction
@@ -47,17 +42,18 @@ o2_add_test_root_macro(CheckTopologies.C
                                              O2::SimulationDataFormat
                        LABELS its)
 
-o2_add_test_root_macro(CheckCOG.C
-                       PUBLIC_LINK_LIBRARIES O2::MathUtils
-                                             O2::ITSBase
-                                             O2::ITSMFTReconstruction
-                                             O2::ITSMFTSimulation
-                                             O2::DataFormatsITSMFT
-                                             O2::SimulationDataFormat
-                       LABELS its)
+#o2_add_test_root_macro(CheckCOG.C
+#                       PUBLIC_LINK_LIBRARIES O2::MathUtils
+#                                             O2::ITSBase
+#                                             O2::ITSMFTReconstruction
+#                                             O2::ITSMFTSimulation
+#                                             O2::DataFormatsITSMFT
+#                                             O2::SimulationDataFormat
+#                       LABELS its)
 
 o2_add_test_root_macro(CheckTracks.C
                        PUBLIC_LINK_LIBRARIES O2::SimulationDataFormat
+                                             O2::ITSBase
                                              O2::DataFormatsITS
                                              O2::DataFormatsITSMFT
                        LABELS its)
@@ -71,16 +67,14 @@ o2_add_test_root_macro(DisplayTrack.C
                                              O2::SimulationDataFormat
                        LABELS its)
 
-o2_add_test_root_macro(dictionary_integrity_test.C
-                       PUBLIC_LINK_LIBRARIES O2::DataFormatsITSMFT
-                                             O2::ITSMFTReconstruction
-                       LABELS its)
+#o2_add_test_root_macro(dictionary_integrity_test.C
+#                       PUBLIC_LINK_LIBRARIES O2::DataFormatsITSMFT
+#                                             O2::ITSMFTReconstruction
+#                       LABELS its)
 
-o2_add_test_root_macro(run_buildTopoDict_its.C
-                       PUBLIC_LINK_LIBRARIES O2::MathUtils
-                                             O2::ITSBase
-                                             O2::ITSMFTReconstruction
+o2_add_test_root_macro(run_digi2rawVarPage_its.C
+                       PUBLIC_LINK_LIBRARIES O2::ITSMFTReconstruction
                                              O2::DataFormatsITSMFT
+                                             O2::ITSMFTBase
                                              O2::ITSMFTSimulation
-                                             O2::SimulationDataFormat
                        LABELS its)

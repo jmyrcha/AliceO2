@@ -15,6 +15,7 @@
 #include <iostream>
 #include <iomanip>
 #include "Headers/DataHeader.h"
+#include "Headers/DataHeaderHelpers.h"
 #include "Headers/NameHeader.h"
 #include "Headers/Stack.h"
 
@@ -236,9 +237,9 @@ BOOST_AUTO_TEST_CASE(DataHeader_test)
               << "size " << std::setw(2) << sizeof(dh.payloadSize) << " at " << (char*)(&dh.payloadSize) - (char*)(&dh) << std::endl;
   }
 
-  // DataHeader must have size 80
-  static_assert(sizeof(DataHeader) == 80,
-                "DataHeader struct must be of size 80");
+  // DataHeader must have size 96
+  static_assert(sizeof(DataHeader) == 96,
+                "DataHeader struct must be of size 96");
   DataHeader dh2;
   BOOST_CHECK(dh == dh2);
   DataHeader dh3{gDataDescriptionInvalid, gDataOriginInvalid, DataHeader::SubSpecificationType{0}, 0};
@@ -247,6 +248,10 @@ BOOST_AUTO_TEST_CASE(DataHeader_test)
   BOOST_CHECK(!(dh4 == dh));
   dh4 = dh;
   BOOST_CHECK(dh4 == dh);
+  DataHeader dh5{gDataDescriptionAny, gDataOriginAny, DataHeader::SubSpecificationType{1}, 1};
+  BOOST_REQUIRE_EQUAL(fmt::format("{}", gDataOriginAny), "***");
+  BOOST_REQUIRE_EQUAL(fmt::format("{}", gDataDescriptionAny), "***************");
+  BOOST_REQUIRE_EQUAL(fmt::format("{}", DataHeader::SubSpecificationType{1}), "1");
 }
 
 BOOST_AUTO_TEST_CASE(headerStack_test)
@@ -260,6 +265,7 @@ BOOST_AUTO_TEST_CASE(headerStack_test)
   const DataHeader* h1 = get<DataHeader*>(s1.data());
   BOOST_CHECK(h1 != nullptr);
   BOOST_CHECK(*h1 == dh1);
+  BOOST_CHECK(h1->flagsNextHeader == 1);
   const NameHeader<0>* h2 = get<NameHeader<0>*>(s1.data());
   BOOST_CHECK(h2 != nullptr);
   BOOST_CHECK(0 == std::strcmp(h2->getName(), "somename"));
@@ -272,6 +278,14 @@ BOOST_AUTO_TEST_CASE(headerStack_test)
   auto meta = test::MetaHeader{42};
   Stack s2{s1, meta};
   BOOST_CHECK(s2.size() == s1.size() + sizeof(decltype(meta)));
+
+  //check dynamic construction - where we don't have the type information and need to
+  //work with BaseHeader pointers
+  const test::MetaHeader thead{2};
+  o2::header::BaseHeader const* bname = reinterpret_cast<BaseHeader const*>(&thead);
+  Stack ds2(s1, *bname);
+  BOOST_CHECK(ds2.size() == s1.size() + sizeof(thead));
+  BOOST_CHECK(std::memcmp(get<test::MetaHeader*>(ds2.data()), &thead, sizeof(thead)) == 0);
 
   auto* h3 = get<test::MetaHeader*>(s1.data());
   BOOST_CHECK(h3 == nullptr);
@@ -297,9 +311,47 @@ BOOST_AUTO_TEST_CASE(headerStack_test)
   h3 = get<test::MetaHeader*>(s4.data());
   BOOST_REQUIRE(h3 != nullptr);
   BOOST_CHECK(h3->secret == 42);
+
+  //test constructing from a buffer and an additional header
+  using namespace boost::container::pmr;
+  Stack s5(new_delete_resource(), s1.data(), Stack{}, meta);
+  BOOST_CHECK(s5.size() == s1.size() + sizeof(meta));
+  // check if we can find the header even though there was an empty stack in the middle
+  h3 = get<test::MetaHeader*>(s5.data());
+  BOOST_REQUIRE(h3 != nullptr);
+  BOOST_CHECK(h3->secret == 42);
+  auto* h4 = Stack::lastHeader(s5.data());
+  auto* h5 = Stack::firstHeader(s5.data());
+  auto* h6 = get<DataHeader*>(s5.data());
+  BOOST_REQUIRE(h5 == h6);
+  BOOST_REQUIRE(h5 != nullptr);
+  BOOST_CHECK(h4 == h3);
+
+  // let's assume we have some stack that is missing the required DataHeader at the beginning:
+  Stack s6{new_delete_resource(), DataHeader{}, s1.data()};
+  BOOST_CHECK(s6.size() == sizeof(DataHeader) + s1.size());
 }
 
 BOOST_AUTO_TEST_CASE(Descriptor_benchmark)
+{
+  using TestDescriptor = Descriptor<8>;
+  TestDescriptor a("TESTDESC");
+  TestDescriptor b(a);
+
+  auto refTime = system_clock::now();
+  const int nrolls = 1000000;
+  for (auto count = 0; count < nrolls; ++count) {
+    if (a == b) {
+      ++a.itg[0];
+      ++b.itg[0];
+    }
+  }
+  auto duration = std::chrono::duration_cast<TimeScale>(std::chrono::system_clock::now() - refTime);
+  std::cout << nrolls << " operation(s): " << duration.count() << " ns" << std::endl;
+  // there is not really a check at the moment
+}
+
+BOOST_AUTO_TEST_CASE(Descriptor_formatting)
 {
   using TestDescriptor = Descriptor<8>;
   TestDescriptor a("TESTDESC");

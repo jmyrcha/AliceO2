@@ -12,6 +12,7 @@
 
 #include "Framework/ConcreteDataMatcher.h"
 #include "Framework/DataProcessingHeader.h"
+#include "Framework/RuntimeError.h"
 #include "Headers/DataHeader.h"
 #include "Headers/Stack.h"
 
@@ -19,14 +20,12 @@
 #include <cstdint>
 #include <iosfwd>
 #include <string>
+#if !defined(__CLING__) && !defined(__ROOTCLING__)
 #include <variant>
+#endif
 #include <vector>
 
-namespace o2
-{
-namespace framework
-{
-namespace data_matcher
+namespace o2::framework::data_matcher
 {
 
 /// Marks an empty item in the context
@@ -42,12 +41,24 @@ struct ContextRef {
   inline bool operator==(ContextRef const& other) const;
 };
 
+/// Special positions for variables in context.
+enum ContextPos {
+  STARTTIME_POS = 0,    /// The DataProcessingHeader::startTime associated to the timeslice
+  TFCOUNTER_POS = 14,   /// The DataHeader::tfCounter associated to the timeslice
+  FIRSTTFORBIT_POS = 15 /// The DataHeader::firstTFOrbit associated to the timeslice
+};
+
 /// An element of the matching context. Context itself is really a vector of
 /// those. It's up to the matcher builder to build the vector in a suitable way.
 /// We do not have any float in the value, because AFAICT there is no need for
 /// it in the O2 DataHeader, however we could add it later on.
 struct ContextElement {
+
+#if !defined(__CLING__) && !defined(__ROOTCLING__)
   using Value = std::variant<uint32_t, uint64_t, std::string, None>;
+#else
+  using Value = None;
+#endif
   std::string label;    /// The name of the variable contained in this element.
   Value value = None{}; /// The actual contents of the element.
 };
@@ -84,7 +95,7 @@ class VariableContext
   void reset();
 
  private:
-  /* We make this class fixed size to avoid memory churning while 
+  /* We make this class fixed size to avoid memory churning while
      matching as much as posible when doing the matching, as that might become
      performance critical. Given we will have only a few of these (one per
      cacheline of the input messages) it should not be critical memory wise.
@@ -114,11 +125,17 @@ class ValueHolder
   template <typename VISITOR>
   decltype(auto) visit(VISITOR visitor) const
   {
+#if !defined(__CLING__) && !defined(__ROOTCLING__)
     return std::visit(visitor, mValue);
+#else
+    return ContextRef{};
+#endif
   }
 
  protected:
+#if !defined(__CLING__) && !defined(__ROOTCLING__)
   std::variant<T, ContextRef> mValue;
+#endif
 };
 
 /// Something which can be matched against a header::DataOrigin
@@ -127,6 +144,8 @@ class OriginValueMatcher : public ValueHolder<std::string>
  public:
   inline OriginValueMatcher(std::string const& s);
   inline OriginValueMatcher(ContextRef variableId);
+  template <std::size_t L>
+  inline constexpr OriginValueMatcher(const char (&s)[L]);
 
   bool match(header::DataHeader const& header, VariableContext& context) const;
 };
@@ -136,8 +155,9 @@ class DescriptionValueMatcher : public ValueHolder<std::string>
 {
  public:
   inline DescriptionValueMatcher(std::string const& s);
-
   inline DescriptionValueMatcher(ContextRef variableId);
+  template <std::size_t L>
+  inline constexpr DescriptionValueMatcher(const char (&s)[L]);
 
   bool match(header::DataHeader const& header, VariableContext& context) const;
 };
@@ -176,7 +196,7 @@ class StartTimeValueMatcher : public ValueHolder<uint64_t>
   /// This will match the timing information which is currently in
   /// the DataProcessingHeader. Notice how we apply the scale to the
   /// actual values found.
-  bool match(DataProcessingHeader const& dph, VariableContext& context) const;
+  bool match(header::DataHeader const& dh, DataProcessingHeader const& dph, VariableContext& context) const;
 
  private:
   uint64_t mScale;
@@ -216,8 +236,12 @@ struct DescriptorMatcherTrait<header::DataHeader::SubSpecificationType> {
   using Matcher = SubSpecificationTypeValueMatcher;
 };
 
+#if !defined(__CLING__) && !defined(__ROOTCLING__)
 class DataDescriptorMatcher;
 using Node = std::variant<OriginValueMatcher, DescriptionValueMatcher, SubSpecificationTypeValueMatcher, std::unique_ptr<DataDescriptorMatcher>, ConstantValueMatcher, StartTimeValueMatcher>;
+#else
+using Node = ConstantValueMatcher;
+#endif
 
 // A matcher for a given O2 Data Model descriptor.  We use a variant to hold
 // the different kind of matchers so that we can have a hierarchy or
@@ -235,9 +259,9 @@ class DataDescriptorMatcher
   /// contents mLeft and mRight into a new unique_ptr, if
   /// needed.
   DataDescriptorMatcher(DataDescriptorMatcher const& other);
-  //DataDescriptorMatcher(DataDescriptorMatcher&& other) noexcept;
+  DataDescriptorMatcher(DataDescriptorMatcher&& other) = default;
   DataDescriptorMatcher& operator=(DataDescriptorMatcher const& other);
-  //DataDescriptorMatcher &operator=(DataDescriptorMatcher&& other) noexcept = default;
+  DataDescriptorMatcher& operator=(DataDescriptorMatcher&& other) = default;
 
   /// Unary operator on a node
   DataDescriptorMatcher(Op op, Node&& lhs, Node&& rhs = std::move(ConstantValueMatcher{false}));
@@ -272,9 +296,7 @@ class DataDescriptorMatcher
   Node mRight;
 };
 
-} // namespace data_matcher
-} // namespace framework
-} // namespace o2
+} // namespace o2::framework::data_matcher
 
 // This is to work around CLING issues when parsing
 // GCC 7.3.0 std::variant implementation as described by:

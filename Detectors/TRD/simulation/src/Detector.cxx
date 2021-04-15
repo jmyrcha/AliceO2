@@ -8,64 +8,46 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-#include <TGeoManager.h>
-#include <TVirtualMC.h>
-#include <vector>
-#include <stdexcept>
+#include "TRDSimulation/Detector.h"
+
+#include "TRDBase/CommonParam.h"
+#include "TRDBase/Geometry.h"
+#include "TRDSimulation/TRsim.h"
+#include "TRDSimulation/TRDSimParams.h"
+#include "DataFormatsTRD/Constants.h"
+#include "DataFormatsTRD/Hit.h"
+
+#include "CommonUtils/ShmAllocator.h"
+#include "SimulationDataFormat/Stack.h"
 #include "FairVolume.h"
 #include "FairRootManager.h"
-#include "SimulationDataFormat/Stack.h"
-#include "CommonUtils/ShmAllocator.h"
-#include "TRDBase/TRDCommonParam.h"
-#include "TRDBase/TRDGeometry.h"
-#include "TRDSimulation/Detector.h"
-#include "TRDSimulation/TRsim.h"
+
+#include <TGeoManager.h>
+#include <TVirtualMC.h>
+
+#include <vector>
+#include <stdexcept>
+#include <string>
 
 using namespace o2::trd;
+using namespace o2::trd::constants;
 
 Detector::Detector(Bool_t active)
   : o2::base::DetImpl<Detector>("TRD", active)
 {
-  mHits = o2::utils::createSimVector<HitType>();
-  if (TRDCommonParam::Instance()->IsXenon()) {
-    mWion = 23.53; // Ionization energy XeCO2 (85/15)
-  } else if (TRDCommonParam::Instance()->IsArgon()) {
-    mWion = 27.21; // Ionization energy ArCO2 (82/18)
-  } else {
-    LOG(FATAL) << "Wrong gas mixture";
-  }
-  // Switch on TR simulation as default
-  mTRon = true;
-  if (!mTRon) {
-    LOG(INFO) << "TR simulation off";
-  } else {
-    mTR = new TRsim();
-  }
+  mHits = o2::utils::createSimVector<Hit>();
+  InitializeParams();
 }
 
 Detector::Detector(const Detector& rhs)
   : o2::base::DetImpl<Detector>(rhs),
-    mHits(o2::utils::createSimVector<HitType>()),
+    mHits(o2::utils::createSimVector<Hit>()),
     mFoilDensity(rhs.mFoilDensity),
     mGasNobleFraction(rhs.mGasNobleFraction),
     mGasDensity(rhs.mGasDensity),
     mGeom(rhs.mGeom)
 {
-  if (TRDCommonParam::Instance()->IsXenon()) {
-    mWion = 23.53; // Ionization energy XeCO2 (85/15)
-  } else if (TRDCommonParam::Instance()->IsArgon()) {
-    mWion = 27.21; // Ionization energy ArCO2 (82/18)
-  } else {
-    LOG(FATAL) << "Wrong gas mixture";
-    // add hard exit here!
-  }
-  // Switch on TR simulation as default
-  mTRon = true;
-  if (!mTRon) {
-    LOG(INFO) << "TR simulation off";
-  } else {
-    mTR = new TRsim();
-  }
+  InitializeParams();
 }
 
 Detector::~Detector()
@@ -79,47 +61,68 @@ void Detector::InitializeO2Detector()
   defineSensitiveVolumes();
 }
 
+void Detector::InitializeParams()
+{
+  if (CommonParam::Instance()->IsXenon()) {
+    mWion = 23.53; // Ionization energy XeCO2 (85/15)
+  } else if (CommonParam::Instance()->IsArgon()) {
+    mWion = 27.21; // Ionization energy ArCO2 (82/18)
+  } else {
+    LOG(FATAL) << "Wrong gas mixture";
+    // add hard exit here!
+  }
+  // Switch on TR simulation as default
+  mTRon = TRDSimParams::Instance().doTR;
+  if (!mTRon) {
+    LOG(INFO) << "TR simulation off";
+  }
+  mTR = new TRsim();
+  mMaxMCStepDef = TRDSimParams::Instance().maxMCStepSize;
+}
+
 bool Detector::ProcessHits(FairVolume* v)
 {
   // If not charged track or already stopped or disappeared, just return.
   if ((!fMC->TrackCharge()) || fMC->IsTrackDisappeared()) {
     return false;
   }
+  fMC->SetMaxStep(mMaxMCStepDef); // Should we optimize this value?
 
   // Inside sensitive volume ?
   bool drRegion = false;
   bool amRegion = false;
-  const TString cIdSensDr = "J";
-  const TString cIdSensAm = "K";
-  const TString cIdCurrent = fMC->CurrentVolName();
-  if (cIdCurrent[1] == cIdSensDr) {
+  char idRegion;
+  int cIdChamber;
+  int r1 = std::sscanf(fMC->CurrentVolName(), "U%c%d", &idRegion, &cIdChamber);
+  if (r1 != 2) {
+    LOG(FATAL) << "Something went wrong with the geometry volume name " << fMC->CurrentVolName();
+  }
+  if (idRegion == 'J') {
     drRegion = true;
-  }
-  if (cIdCurrent[1] == cIdSensAm) {
+  } else if (idRegion == 'K') {
     amRegion = true;
-  }
-  if (!drRegion && !amRegion) {
+  } else {
     return false;
   }
 
-  // Determine the dectector number
-  int sector, det;
-  // The plane number and chamber number
-  char cIdChamber[3];
-  cIdChamber[0] = cIdCurrent[2];
-  cIdChamber[1] = cIdCurrent[3];
-  cIdChamber[2] = 0;
-  // The det-sec number (0 – 29)
-  const int idChamber = mGeom->getDetectorSec(atoi(cIdChamber));
-  // The sector number (0 - 17), according to the standard coordinate system
-  TString cIdPath = fMC->CurrentVolPath();
-  char cIdSector[3];
-  cIdSector[0] = cIdPath[21];
-  cIdSector[1] = cIdPath[22];
-  cIdSector[2] = 0;
-  sector = atoi(cIdSector);
-  // The detector number (0 – 539)
-  det = mGeom->getDetector(mGeom->getLayer(idChamber), mGeom->getStack(idChamber), sector);
+  const int idChamber = mGeom->getDetectorSec(cIdChamber);
+  if (idChamber < 0 || idChamber > 29) {
+    LOG(FATAL) << "Chamber ID out of bounds";
+  }
+
+  int sector;
+  int r2 = std::sscanf(fMC->CurrentVolOffName(7), "BTRD%d", &sector);
+  if (r2 != 1) {
+    LOG(FATAL) << "Something went wrong with the geometry volume name " << fMC->CurrentVolOffName(7);
+  }
+  if (sector < 0 || sector >= NSECTOR) {
+    LOG(FATAL) << "Sector out of bounds";
+  }
+  // The detector number (0 - 539)
+  int det = mGeom->getDetector(mGeom->getLayer(idChamber), mGeom->getStack(idChamber), sector);
+  if (det < 0 || det >= MAXCHAMBER) {
+    LOG(FATAL) << "Detector number out of bounds";
+  }
 
   // 0: InFlight 1: Entering 2: Exiting
   int trkStat = 0;
@@ -144,7 +147,7 @@ bool Detector::ProcessHits(FairVolume* v)
     // Update track status
     trkStat = 1;
     // Create the hits from TR photons if electron/positron is entering the drift volume
-    const bool ele = (TMath::Abs(fMC->TrackPid()) == 11); // electron PDG code.
+    const bool ele = (std::fabs(fMC->TrackPid()) == 11); // electron PDG code.
     if (mTRon && ele) {
       createTRhit(det);
     }
@@ -164,8 +167,8 @@ bool Detector::ProcessHits(FairVolume* v)
 
   // Calculate the charge according to GEANT Edep
   // Create a new dEdx hit
-  const float enDep = TMath::Max(fMC->Edep(), 0.0) * 1e9; // Energy in eV
-  const int totalChargeDep = (int)(enDep / mWion);        // Total charge
+  const float enDep = std::max(fMC->Edep(), 0.0) * 1e9; // Energy in eV
+  const int totalChargeDep = (int)(enDep / mWion);      // Total charge
 
   // Store those hits with enDep bigger than the ionization potential of the gas mixture for in-flight tracks
   // or store hits of tracks that are entering or exiting
@@ -176,7 +179,10 @@ bool Detector::ProcessHits(FairVolume* v)
     double pos[3] = {xp, yp, zp};
     double loc[3] = {-99, -99, -99};
     gGeoManager->MasterToLocal(pos, loc); // Go to the local coordinate system (locR, locC, locT)
-    const float locC = loc[0], locR = loc[1], locT = loc[2];
+    float locC = loc[0], locR = loc[1], locT = loc[2];
+    if (drRegion) {
+      locT = locT - 0.5 * (Geometry::drThick() + Geometry::amThick()); // Relative to middle of amplification region
+    }
     addHit(xp, yp, zp, locC, locR, locT, tof, totalChargeDep, trackID, det, drRegion);
     stack->addHit(GetDetId());
     return true;
@@ -199,7 +205,7 @@ void Detector::createTRhit(int det)
 
   float px, py, pz, etot;
   fMC->TrackMomentum(px, py, pz, etot);
-  float pTot = TMath::Sqrt(px * px + py * py + pz * pz);
+  float pTot = std::sqrt(px * px + py * py + pz * pz);
   std::vector<float> photonEnergyContainer;            // energy in keV
   mTR->createPhotons(11, pTot, photonEnergyContainer); // Create TR photons
   if (photonEnergyContainer.size() > mMaxNumberOfTRPhotons) {
@@ -217,7 +223,7 @@ void Detector::createTRhit(int det)
     sigma = muMy * mFoilDensity;
     if (sigma > 0.0) {
       absLength = gRandom->Exp(1.0 / sigma);
-      if (absLength < TRDGeometry::myThick()) {
+      if (absLength < Geometry::myThick()) {
         continue;
       }
     } else {
@@ -226,9 +232,9 @@ void Detector::createTRhit(int det)
     // The absorbtion cross sections in the drift gas
     // Gas-mixture (Xe/CO2)
     double muNo = 0.0;
-    if (TRDCommonParam::Instance()->IsXenon()) {
+    if (CommonParam::Instance()->IsXenon()) {
       muNo = mTR->getMuXe(energyMeV);
-    } else if (TRDCommonParam::Instance()->IsArgon()) {
+    } else if (CommonParam::Instance()->IsArgon()) {
       muNo = mTR->getMuAr(energyMeV);
     }
     double muCO = mTR->getMuCO(energyMeV);
@@ -240,7 +246,7 @@ void Detector::createTRhit(int det)
     // is deposited.
     if (sigma > 0.0) {
       absLength = gRandom->Exp(1.0 / sigma);
-      if (absLength > (TRDGeometry::drThick() + TRDGeometry::amThick())) {
+      if (absLength > (Geometry::drThick() + Geometry::amThick())) {
         continue;
       }
     } else {
@@ -264,7 +270,8 @@ void Detector::createTRhit(int det)
     double pos[3] = {x, y, z};
     double loc[3] = {-99, -99, -99};
     gGeoManager->MasterToLocal(pos, loc); // Go to the local coordinate system (locR, locC, locT)
-    const float locC = loc[0], locR = loc[1], locT = loc[2];
+    float locC = loc[0], locR = loc[1], locT = loc[2];
+    locT = locT - 0.5 * (Geometry::drThick() + Geometry::amThick());            // Relative to middle of amplification region
     addHit(x, y, z, locC, locR, locT, tof, totalChargeDep, trackID, det, true); // All TR hits are in drift region
     stack->addHit(GetDetId());
   }
@@ -279,7 +286,7 @@ void Detector::FinishEvent()
 {
   // Sort hit vector by detector number before the End of the Event
   std::sort(mHits->begin(), mHits->end(),
-            [](const HitType& a, const HitType& b) {
+            [](const Hit& a, const Hit& b) {
               return a.GetDetectorID() < b.GetDetectorID();
             });
 }
@@ -352,9 +359,9 @@ void Detector::createMaterials()
   float fac = 0.82;
   float dar = 0.00166; // at 20C
   float dgmAr = fac * dar + (1.0 - fac) * dco;
-  if (TRDCommonParam::Instance()->IsXenon()) {
+  if (CommonParam::Instance()->IsXenon()) {
     Mixture(53, "XeCO2", aXeCO2, zXeCO2, dgmXe, -3, wXeCO2);
-  } else if (TRDCommonParam::Instance()->IsArgon()) {
+  } else if (CommonParam::Instance()->IsArgon()) {
     LOG(INFO) << "Gas mixture: Ar C02 (80/20)";
     Mixture(53, "ArCO2", aArCO2, zArCO2, dgmAr, -3, wArCO2);
   } else {
@@ -485,10 +492,10 @@ void Detector::createMaterials()
   // Save the density values for the TRD absorbtion
   float dmy = 1.39;
   mFoilDensity = dmy;
-  if (TRDCommonParam::Instance()->IsXenon()) {
+  if (CommonParam::Instance()->IsXenon()) {
     mGasDensity = dgmXe;
     mGasNobleFraction = fxc;
-  } else if (TRDCommonParam::Instance()->IsArgon()) {
+  } else if (CommonParam::Instance()->IsArgon()) {
     mGasDensity = dgmAr;
     mGasNobleFraction = fac;
   }
@@ -504,7 +511,7 @@ void Detector::ConstructGeometry()
   // to the geometry creation
   getMediumIDMappingAsVector(medmapping);
 
-  mGeom = new TRDGeometry();
+  mGeom = Geometry::instance();
   mGeom->createGeometry(medmapping);
 }
 

@@ -15,88 +15,81 @@
 #include <vector>
 #include <array>
 #include <unordered_map>
+#include <numeric>
 #include "Rtypes.h" // for ClassDef
+
+#include "TRDBase/FeeParam.h"
+#include "DataFormatsTRD/Constants.h"
+#include <gsl/span>
 
 namespace o2
 {
 namespace trd
 {
 
-class Digit;
+using ADC_t = std::uint16_t;
+using ArrayADC = std::array<ADC_t, constants::TIMEBINS>;
 
-constexpr int kTB = 30;
-constexpr int KEY_MIN = 0;
-constexpr int KEY_MAX = 2211727;
-
-typedef std::uint16_t ADC_t;                                   // the ADC value type
-typedef std::array<ADC_t, kTB> ArrayADC_t;                     // the array ADC
-typedef std::vector<Digit> DigitContainer_t;                   // the digit container type
-typedef std::unordered_map<int, ArrayADC_t> SignalContainer_t; // a map container type for signal handling during digitization
+// Digit class for TRD
+// Notes:
+//    Shared pads:
+//        the lower mcm and rob is chosen for a given shared pad.
+//        this negates the need for need alternate indexing strategies.
+//        if you are trying to go from mcm/rob/adc to pad/row and back to mcm/rob/adc ,
+//        you may not end up in the same place, you need to remember to manually check for shared pads.
 
 class Digit
 {
  public:
   Digit() = default;
   ~Digit() = default;
-  Digit(const int det, const int row, const int pad, const ArrayADC_t adc)
-    : mDetector(det), mRow(row), mPad(pad), mADC(adc) {}
+  Digit(const int det, const int row, const int pad, const ArrayADC adc);
+  Digit(const int det, const int row, const int pad); // add adc data in a seperate step
+  Digit(const int det, const int rob, const int mcm, const int channel, const ArrayADC adc);
+  Digit(const int det, const int rob, const int mcm, const int channel); // add adc data in a seperate step
+
   // Copy
   Digit(const Digit&) = default;
   // Assignment
   Digit& operator=(const Digit&) = default;
   // Modifiers
+  void setROB(int rob) { mROB = rob; }
+  void setROB(int row, int pad) { mROB = FeeParam::getROBfromPad(row, pad); }
+  void setMCM(int mcm) { mMCM = mcm; }
+  void setMCM(int row, int pad) { mMCM = FeeParam::getMCMfromPad(row, pad); }
+  void setChannel(int channel) { mChannel = channel; }
   void setDetector(int det) { mDetector = det; }
-  void setRow(int row) { mRow = row; }
-  void setPad(int pad) { mPad = pad; }
-  void setADC(ArrayADC_t adc) { mADC = adc; }
+  void setADC(ArrayADC const& adc) { mADC = adc; }
+  void setADC(const gsl::span<ADC_t>& adc) { std::copy(adc.begin(), adc.end(), mADC.begin()); }
   // Get methods
   int getDetector() const { return mDetector; }
-  int getRow() const { return mRow; }
-  int getPad() const { return mPad; }
-  ArrayADC_t getADC() const { return mADC; }
+  int getHCId() const { return mDetector * 2 + (mROB % 2); }
+  int getRow() const { return FeeParam::getPadRowFromMCM(mROB, mMCM); }
+  int getPad() const { return FeeParam::getPadColFromADC(mROB, mMCM, mChannel); }
+  int getROB() const { return mROB; }
+  int getMCM() const { return mMCM; }
+  int getChannel() const { return mChannel; }
+  bool isSharedDigit() const;
 
-  // Set of static helper methods
-  static int calculateKey(const int det, const int row, const int col) { return ((det << 12) | (row << 8) | col); }
-  static int getDetectorFromKey(const int key) { return (key >> 12) & 0xFFF; }
-  static int getRowFromKey(const int key) { return (key >> 8) & 0xF; }
-  static int getColFromKey(const int key) { return key & 0xFF; }
-  static void convertMapToVectors(const SignalContainer_t& adcMapCont,
-                                  DigitContainer_t& digitCont)
+  ArrayADC const& getADC() const { return mADC; }
+  ADC_t getADCsum() const { return std::accumulate(mADC.begin(), mADC.end(), (ADC_t)0); }
+
+  bool operator==(const Digit& o) const
   {
-    //
-    // Create a digit and a digit-index container from a map container
-    //
-    digitCont.reserve(adcMapCont.size());
-    for (const auto& element : adcMapCont) {
-      const int key = element.first;
-      digitCont.emplace_back(Digit::getDetectorFromKey(key),
-                             Digit::getRowFromKey(key),
-                             Digit::getColFromKey(key),
-                             element.second);
-    }
-  }
-  static void convertVectorsToMap(const DigitContainer_t& digitCont,
-                                  SignalContainer_t& adcMapCont)
-  {
-    //
-    // Create a map container from a digit and a digit-index container
-    //
-    for (const auto& element : digitCont) {
-      const int key = calculateKey(element.getDetector(),
-                                   element.getRow(),
-                                   element.getPad());
-      adcMapCont[key] = element.getADC();
-    }
+    return mDetector == o.mDetector && mROB == o.mROB && mMCM == o.mMCM && mChannel == o.mChannel && mADC == o.mADC;
   }
 
  private:
-  std::uint16_t mDetector{0}; // TRD detector number, 0-539
-  std::uint8_t mRow{0};       // pad row, 0-15
-  std::uint8_t mPad{0};       // pad within pad row, 0-143
-  ArrayADC_t mADC{};          // ADC vector (30 time-bins)
+  std::uint16_t mDetector{0}; // detector, the chamber [0-539]
+  std::uint8_t mROB{0};       // read out board within chamber [0-7] [0-5] depending on C0 or C1
+  std::uint8_t mMCM{0};       // MCM chip this digit is attached [0-15]
+  std::uint8_t mChannel{0};   // channel of this chip the digit is attached to, see TDP chapter ?? TODO fill in later the figure number of ROB to MCM mapping picture
 
-  ClassDefNV(Digit, 1);
+  ArrayADC mADC{}; // ADC vector (30 time-bins)
+  ClassDefNV(Digit, 3);
 };
+
+std::ostream& operator<<(std::ostream& stream, const Digit& d);
 
 } // namespace trd
 } // namespace o2

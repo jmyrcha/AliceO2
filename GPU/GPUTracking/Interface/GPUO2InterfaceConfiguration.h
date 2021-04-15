@@ -14,45 +14,54 @@
 #ifndef GPUO2INTERFACECONFIGURATION_H
 #define GPUO2INTERFACECONFIGURATION_H
 
-#ifndef GPUCA_O2_LIB
-#define GPUCA_O2_LIB
-#endif
 #ifndef HAVE_O2HEADERS
 #define HAVE_O2HEADERS
 #endif
 #ifndef GPUCA_TPC_GEOMETRY_O2
 #define GPUCA_TPC_GEOMETRY_O2
 #endif
+#ifndef GPUCA_O2_INTERFACE
+#define GPUCA_O2_INTERFACE
+#endif
 
 #include <memory>
+#include <array>
+#include <vector>
+#include <functional>
+#include <gsl/gsl>
 #include "GPUSettings.h"
-#include "GPUDisplayConfig.h"
-#include "GPUQAConfig.h"
 #include "GPUDataTypes.h"
+#include "GPUHostDataTypes.h"
+#include "GPUOutputControl.h"
+#include "DataFormatsTPC/Constants.h"
+
+class TH1F;
+class TH1D;
+class TH2F;
 
 namespace o2
 {
-class MCCompLabel;
-namespace base
-{
-class MatLayerCylSet;
-}
-namespace trd
-{
-class TRDGeometryFlat;
-}
-namespace dataformats
-{
-template <class T>
-class MCTruthContainer;
-}
 namespace tpc
 {
 class TrackTPC;
-}
+class Digit;
+} // namespace tpc
 namespace gpu
 {
 class TPCFastTransform;
+class GPUReconstruction;
+struct GPUSettingsO2;
+
+struct GPUInterfaceQAOutputs {
+  const std::vector<TH1F>* hist1;
+  const std::vector<TH2F>* hist2;
+  const std::vector<TH1D>* hist3;
+};
+
+struct GPUInterfaceOutputs : public GPUTrackingOutputs {
+  GPUInterfaceQAOutputs qa;
+};
+
 // Full configuration structure with all available settings of GPU...
 struct GPUO2InterfaceConfiguration {
   GPUO2InterfaceConfiguration() = default;
@@ -61,24 +70,31 @@ struct GPUO2InterfaceConfiguration {
 
   // Settings for the Interface class
   struct GPUInterfaceSettings {
-    bool dumpEvents = false;
-    // These constants affect GPU memory allocation and do not limit the CPU processing
+    int dumpEvents = 0;
+    bool outputToExternalBuffers = false;
+    float memoryBufferScaleFactor = 1.f;
+    // These constants affect GPU memory allocation only and do not limit the CPU processing
+    unsigned long maxTPCZS = 8192ul * 1024 * 1024;
     unsigned int maxTPCHits = 1024 * 1024 * 1024;
     unsigned int maxTRDTracklets = 128 * 1024;
     unsigned int maxITSTracks = 96 * 1024;
   };
 
+  GPUSettingsDeviceBackend configDeviceBackend;
   GPUSettingsProcessing configProcessing;
-  GPUSettingsDeviceProcessing configDeviceProcessing;
-  GPUSettingsEvent configEvent;
+  GPUSettingsGRP configGRP;
   GPUSettingsRec configReconstruction;
-  GPUDisplayConfig configDisplay;
-  GPUQAConfig configQA;
+  GPUSettingsDisplay configDisplay;
+  GPUSettingsQA configQA;
   GPUInterfaceSettings configInterface;
   GPURecoStepConfiguration configWorkflow;
-  const TPCFastTransform* fastTransform = nullptr;
-  const o2::base::MatLayerCylSet* matLUT = nullptr;
-  const o2::trd::TRDGeometryFlat* trdGeometry = nullptr;
+  GPUCalibObjects configCalib;
+
+  GPUSettingsO2 ReadConfigurableParam();
+
+ private:
+  friend class GPUReconstruction;
+  GPUSettingsO2 ReadConfigurableParam_internal();
 };
 
 // Structure with pointers to actual data for input and output
@@ -91,24 +107,27 @@ struct GPUO2InterfaceConfiguration {
 // value of the pointer is overridden. GPUCATracking will try to place the output in the "void* outputBuffer"
 // location if it is not a nullptr.
 struct GPUO2InterfaceIOPtrs {
-  // TPC clusters in cluster native format, const as it can only be input
+  // Input: TPC clusters in cluster native format, or digits, or list of ZS pages -  const as it can only be input
   const o2::tpc::ClusterNativeAccess* clusters = nullptr;
+  const std::array<gsl::span<const o2::tpc::Digit>, o2::tpc::constants::MAXSECTOR>* o2Digits = nullptr;
+  const std::array<const o2::dataformats::ConstMCTruthContainerView<o2::MCCompLabel>*, o2::tpc::constants::MAXSECTOR>* o2DigitsMC = nullptr;
+  const o2::gpu::GPUTrackingInOutZS* tpcZS = nullptr;
 
   // Input / Output for Merged TPC tracks, two ptrs, for the tracks themselves, and for the MC labels.
-  std::vector<o2::tpc::TrackTPC>* outputTracks = nullptr;
-  o2::dataformats::MCTruthContainer<o2::MCCompLabel>* outputTracksMCTruth = nullptr;
-
+#ifdef MS_GSL_V3
+  gsl::span<o2::tpc::TrackTPC> outputTracks = {nullptr, (gsl::span<o2::tpc::TrackTPC>::size_type)0};
+  gsl::span<uint32_t> outputClusRefs = {nullptr, (gsl::span<uint32_t>::size_type)0};
+  gsl::span<o2::MCCompLabel> outputTracksMCTruth = {nullptr, (gsl::span<o2::MCCompLabel>::size_type)0};
+#else
+  gsl::span<o2::tpc::TrackTPC> outputTracks = {nullptr, (gsl::span<o2::tpc::TrackTPC>::index_type)0};
+  gsl::span<uint32_t> outputClusRefs = {nullptr, (gsl::span<uint32_t>::index_type)0};
+  gsl::span<o2::MCCompLabel> outputTracksMCTruth = {nullptr, (gsl::span<o2::MCCompLabel>::index_type)0};
+#endif
   // Output for entropy-reduced clusters of TPC compression
-  const o2::tpc::CompressedClusters* compressedClusters;
+  const o2::tpc::CompressedClustersFlat* compressedClusters = nullptr;
 
-  // Hint for GPUCATracking to place its output in this buffer if possible.
-  // This enables to create the output directly in a shared memory segment of the framework.
-  // This allows further processing with zero-copy.
-  // So far this is only a hint, GPUCATracking will not always follow.
-  // If outputBuffer = nullptr, GPUCATracking will allocate the output internally and own the memory.
-  // TODO: Make this mandatory if outputBuffer != nullptr, and throw an error if outputBufferSize is too small.
-  void* outputBuffer = nullptr;
-  size_t outputBufferSize = 0;
+  // Ptr to parameters for current TF
+  const GPUSettingsTF* settingsTF = nullptr;
 };
 } // namespace gpu
 } // namespace o2

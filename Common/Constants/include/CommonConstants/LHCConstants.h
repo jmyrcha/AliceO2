@@ -30,6 +30,8 @@ static constexpr double LHCRFFreq = 400.789e6;                          // LHC R
 static constexpr double LHCBunchSpacingNS = 10 * 1.e9 / LHCRFFreq;      // bunch spacing in ns (10 RFbuckets)
 static constexpr double LHCOrbitNS = LHCMaxBunches * LHCBunchSpacingNS; // orbit duration in ns
 static constexpr double LHCRevFreq = 1.e9 / LHCOrbitNS;                 // revolution frequency
+static constexpr double LHCBunchSpacingMUS = LHCBunchSpacingNS * 1e-3;  // bunch spacing in \mus (10 RFbuckets)
+static constexpr double LHCOrbitMUS = LHCOrbitNS * 1e-3;                // orbit duration in \mus
 
 static constexpr unsigned int MaxNOrbits = 0xffffffff;
 } // namespace lhc

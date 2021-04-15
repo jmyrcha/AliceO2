@@ -14,10 +14,14 @@ function(o2_define_options)
 
   option(BUILD_SHARED_LIBS "Build shared libs" ON)
 
+  option(BUILD_ANALYSIS "Build analysis parts" ON)
+
   option(BUILD_EXAMPLES "Build examples" ON)
 
   option(BUILD_TEST_ROOT_MACROS
          "Build the tests toload and compile the Root macros" ON)
+
+  option(ENABLE_CASSERT "Enable asserts" OFF)
 
   option(
     BUILD_SIMULATION_DEFAULT
@@ -26,4 +30,5 @@ function(o2_define_options)
   # for the complete picture of how BUILD_SIMULATION is handled see
   # ../dependencies/O2SimulationDependencies.cmake
 
+  option(ENABLE_UPGRADES "Enable detectors for upgrades" OFF)
 endfunction()

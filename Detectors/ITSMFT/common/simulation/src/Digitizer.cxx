@@ -11,11 +11,12 @@
 /// \file Digitizer.cxx
 /// \brief Implementation of the ITS/MFT digitizer
 
-#include "ITSMFTBase/Digit.h"
+#include "DataFormatsITSMFT/Digit.h"
 #include "ITSMFTBase/SegmentationAlpide.h"
 #include "ITSMFTSimulation/Digitizer.h"
-#include "MathUtils/Cartesian3D.h"
+#include "MathUtils/Cartesian.h"
 #include "SimulationDataFormat/MCTruthContainer.h"
+#include "DetectorsRaw/HBFUtils.h"
 
 #include <TRandom.h>
 #include <climits>
@@ -44,6 +45,7 @@ void Digitizer::init()
     mParams.setAlpSimResponse(mAlpSimResp.get());
   }
   mParams.print();
+  mIRFirstSampledTF = o2::raw::HBFUtils::Instance().getFirstSampledTFIR();
 }
 
 //_______________________________________________________________________
@@ -52,8 +54,7 @@ void Digitizer::process(const std::vector<Hit>* hits, int evID, int srcID)
   // digitize single event, the time must have been set beforehand
 
   LOG(INFO) << "Digitizing " << mGeometry->getName() << " hits of entry " << evID << " from source "
-            << srcID << " at time " << mEventTime + mParams.getTimeOffset() << " (TOff.= "
-            << mParams.getTimeOffset() << " ROFrame= " << mNewROFrame << ")"
+            << srcID << " at time " << mEventTime << " ROFrame= " << mNewROFrame << ")"
             << " cont.mode: " << isContinuous()
             << " Min/Max ROFrames " << mROFrameMin << "/" << mROFrameMax;
 
@@ -82,33 +83,31 @@ void Digitizer::process(const std::vector<Hit>* hits, int evID, int srcID)
 }
 
 //_______________________________________________________________________
-void Digitizer::setEventTime(double t)
+void Digitizer::setEventTime(const o2::InteractionTimeRecord& irt)
 {
   // assign event time in ns
-  mEventTime = t;
-  // to randomize the RO phase wrt the event time we use a random offset
-  if (mParams.isContinuous()) {       // in continuous mode we set the offset only in the very beginning
-    if (!mParams.isTimeOffsetSet()) { // offset is initially at -inf
-      mParams.setTimeOffset(0);       ///*mEventTime + */ mParams.getROFrameLength() * (gRandom->Rndm() - 0.5));
-    }
-  } else {                             // in the triggered mode we start from 0 ROFrame in every event, is this correct?
-    mParams.setTimeOffset(mEventTime); // + mParams.getROFrameLength() * (gRandom->Rndm() - 0.5));
-    mROFrameMin = 0;                   // so we reset the frame counters
+  mEventTime = irt;
+  if (!mParams.isContinuous()) {
+    mROFrameMin = 0; // in triggered mode reset the frame counters
     mROFrameMax = 0;
   }
-
-  mEventTime -= mParams.getTimeOffset(); // subtract common offset
-  if (mEventTime < 0.) {
-    mEventTime = 0.;
-  } else if (mEventTime > UINT_MAX * mParams.getROFrameLength()) {
-    LOG(FATAL) << "ROFrame for event time " << t << " exceeds allowe maximum " << UINT_MAX;
+  // RO frame corresponding to provided time
+  mCollisionTimeWrtROF = mEventTime.timeInBCNS; // in triggered mode the ROF starts at BC (is there a delay?)
+  if (mParams.isContinuous()) {
+    auto nbc = mEventTime.differenceInBC(mIRFirstSampledTF);
+    if (mCollisionTimeWrtROF < 0 && nbc > 0) {
+      nbc--;
+    }
+    mNewROFrame = nbc / mParams.getROFrameLengthInBC();
+    // in continuous mode depends on starts of periodic readout frame
+    mCollisionTimeWrtROF += (nbc % mParams.getROFrameLengthInBC()) * o2::constants::lhc::LHCBunchSpacingNS;
+  } else {
+    mNewROFrame = 0;
   }
 
-  // RO frame corresponding to provided time
-  mNewROFrame = static_cast<UInt_t>(mEventTime * mParams.getROFrameLengthInv());
-
   if (mNewROFrame < mROFrameMin) {
-    LOG(FATAL) << "New ROFrame (time=" << t << ") precedes currently cashed " << mROFrameMin;
+    LOG(ERROR) << "New ROFrame " << mNewROFrame << " (" << irt << ") precedes currently cashed " << mROFrameMin;
+    throw std::runtime_error("deduced ROFrame precedes already processed one");
   }
 
   if (mParams.isContinuous() && mROFrameMax < mNewROFrame) {
@@ -117,7 +116,7 @@ void Digitizer::setEventTime(double t)
 }
 
 //_______________________________________________________________________
-void Digitizer::fillOutputContainer(UInt_t frameLast)
+void Digitizer::fillOutputContainer(uint32_t frameLast)
 {
   // fill output with digits from min.cached up to requested frame, generating the noise beforehand
   if (frameLast > mROFrameMax) {
@@ -134,7 +133,7 @@ void Digitizer::fillOutputContainer(UInt_t frameLast)
   // we have to write chips in RO increasing order, therefore have to loop over the frames here
   for (; mROFrameMin <= frameLast; mROFrameMin++) {
     rcROF.setROFrame(mROFrameMin);
-    rcROF.getROFEntry().setIndex(mDigits->size()); // start of current ROF in digits
+    rcROF.setFirstEntry(mDigits->size()); // start of current ROF in digits
 
     auto& extra = *(mExtraBuff.front().get());
     for (auto& chip : mChips) {
@@ -153,7 +152,7 @@ void Digitizer::fillOutputContainer(UInt_t frameLast)
         auto& preDig = iter->second; // preDigit
         if (preDig.charge >= mParams.getChargeThreshold()) {
           int digID = mDigits->size();
-          mDigits->emplace_back(chip.getChipIndex(), mROFrameMin, preDig.row, preDig.col, preDig.charge);
+          mDigits->emplace_back(chip.getChipIndex(), preDig.row, preDig.col, preDig.charge);
           mMCLabels->addElement(digID, preDig.labelRef.label);
           auto& nextRef = preDig.labelRef; // extra contributors are in extra array
           while (nextRef.next >= 0) {
@@ -165,8 +164,12 @@ void Digitizer::fillOutputContainer(UInt_t frameLast)
       buffer.erase(itBeg, iter);
     }
     // finalize ROF record
-    rcROF.setNROFEntries(mDigits->size() - rcROF.getROFEntry().getIndex()); // number of digits
-    rcROF.getBCData().setFromNS(mROFrameMin * mParams.getROFrameLength() + mParams.getTimeOffset());
+    rcROF.setNEntries(mDigits->size() - rcROF.getFirstEntry()); // number of digits
+    if (isContinuous()) {
+      rcROF.getBCData().setFromLong(mIRFirstSampledTF.toLong() + mROFrameMin * mParams.getROFrameLengthInBC());
+    } else {
+      rcROF.getBCData() = mEventTime; // RSTODO do we need to add trigger delay?
+    }
     if (mROFRecords) {
       mROFRecords->push_back(rcROF);
     }
@@ -178,39 +181,49 @@ void Digitizer::fillOutputContainer(UInt_t frameLast)
 }
 
 //_______________________________________________________________________
-void Digitizer::processHit(const o2::itsmft::Hit& hit, UInt_t& maxFr, int evID, int srcID)
+void Digitizer::processHit(const o2::itsmft::Hit& hit, uint32_t& maxFr, int evID, int srcID)
 {
   // convert single hit to digits
-
-  double hTime0 = hit.GetTime() * sec2ns + mEventTime; // time from the RO start, in ns
-
+  float timeInROF = hit.GetTime() * sec2ns;
+  if (timeInROF > 20e3) {
+    const int maxWarn = 10;
+    static int warnNo = 0;
+    if (warnNo < maxWarn) {
+      LOG(WARNING) << "Ignoring hit with time_in_event = " << timeInROF << " ns"
+                   << ((++warnNo < maxWarn) ? "" : " (suppressing further warnings)");
+    }
+    return;
+  }
+  if (isContinuous()) {
+    timeInROF += mCollisionTimeWrtROF;
+  }
   // calculate RO Frame for this hit
-  if (hTime0 < 0) {
-    hTime0 = 0.;
+  if (timeInROF < 0) {
+    timeInROF = 0.;
   }
   float tTot = mParams.getSignalShape().getMaxDuration();
-  // frame of the hit signal start
-  UInt_t roFrame = UInt_t(hTime0 * mParams.getROFrameLengthInv());
-  // frame of the hit signal end: in the triggered mode we read just 1 frame
-  UInt_t roFrameMax = mParams.isContinuous() ? UInt_t((hTime0 + tTot) * mParams.getROFrameLengthInv()) : roFrame;
-  int nFrames = roFrameMax + 1 - roFrame;
+  // frame of the hit signal start wrt event ROFrame
+  int roFrameRel = int(timeInROF * mParams.getROFrameLengthInv());
+  // frame of the hit signal end  wrt event ROFrame: in the triggered mode we read just 1 frame
+  uint32_t roFrameRelMax = mParams.isContinuous() ? (timeInROF + tTot) * mParams.getROFrameLengthInv() : roFrameRel;
+  int nFrames = roFrameRelMax + 1 - roFrameRel;
+  uint32_t roFrameMax = mNewROFrame + roFrameRelMax;
   if (roFrameMax > maxFr) {
     maxFr = roFrameMax; // if signal extends beyond current maxFrame, increase the latter
   }
-  // delay of the signal start wrt 1st ROF start
-  float timeInROF = float(hTime0 - (roFrame * mParams.getROFrameLength()));
 
   // here we start stepping in the depth of the sensor to generate charge diffision
   float nStepsInv = mParams.getNSimStepsInv();
   int nSteps = mParams.getNSimSteps();
   const auto& matrix = mGeometry->getMatrixL2G(hit.GetDetectorID());
-  Vector3D<float> xyzLocS(matrix ^ (hit.GetPosStart())); // start position in sensor frame
-  Vector3D<float> xyzLocE(matrix ^ (hit.GetPos()));      // end position in sensor frame
-  Vector3D<float> step(xyzLocE);
+  math_utils::Vector3D<float> xyzLocS(matrix ^ (hit.GetPosStart())); // start position in sensor frame
+  math_utils::Vector3D<float> xyzLocE(matrix ^ (hit.GetPos()));      // end position in sensor frame
+
+  math_utils::Vector3D<float> step(xyzLocE);
   step -= xyzLocS;
   step *= nStepsInv; // position increment at each step
   // the electrons will injected in the middle of each step
-  Vector3D<float> stepH(step * 0.5);
+  math_utils::Vector3D<float> stepH(step * 0.5);
   xyzLocS += stepH;
   xyzLocE -= stepH;
 
@@ -268,8 +281,11 @@ void Digitizer::processHit(const o2::itsmft::Hit& hit, UInt_t& maxFr, int evID, 
 
   const o2::itsmft::AlpideSimResponse* resp = mParams.getAlpSimResponse();
 
-  // take into account that the AlpideSimResponse has min/max thickness non-symmetric around 0
-  xyzLocS.SetY(xyzLocS.Y() + resp->getDepthShift());
+  // take into account that the AlpideSimResponse depth defintion has different min/max boundaries
+  // although the max should coincide with the surface of the epitaxial layer, which in the chip
+  // local coordinates has Y = +SensorLayerThickness/2
+
+  xyzLocS.SetY(xyzLocS.Y() + resp->getDepthMax() - Segmentation::SensorLayerThickness / 2.);
 
   // collect charge in evey pixel which might be affected by the hit
   for (int iStep = nSteps; iStep--;) {
@@ -309,9 +325,9 @@ void Digitizer::processHit(const o2::itsmft::Hit& hit, UInt_t& maxFr, int evID, 
   // fire the pixels assuming Poisson(n_response_electrons)
   o2::MCCompLabel lbl(hit.GetTrackID(), evID, srcID, false);
   auto& chip = mChips[hit.GetDetectorID()];
-
+  auto roFrameAbs = mNewROFrame + roFrameRel;
   for (int irow = rowSpan; irow--;) {
-    UShort_t rowIS = irow + rowS;
+    uint16_t rowIS = irow + rowS;
     for (int icol = colSpan; icol--;) {
       float nEleResp = respMatrix[irow][icol];
       if (!nEleResp) {
@@ -322,16 +338,16 @@ void Digitizer::processHit(const o2::itsmft::Hit& hit, UInt_t& maxFr, int evID, 
       if (nEle < mParams.getMinChargeToAccount()) {
         continue;
       }
-      UShort_t colIS = icol + colS;
+      uint16_t colIS = icol + colS;
       //
-      registerDigits(chip, roFrame, timeInROF, nFrames, rowIS, colIS, nEle, lbl);
+      registerDigits(chip, roFrameAbs, timeInROF, nFrames, rowIS, colIS, nEle, lbl);
     }
   }
 }
 
 //________________________________________________________________________________
-void Digitizer::registerDigits(ChipDigitsContainer& chip, UInt_t roFrame, float tInROF, int nROF,
-                               UShort_t row, UShort_t col, int nEle, o2::MCCompLabel& lbl)
+void Digitizer::registerDigits(ChipDigitsContainer& chip, uint32_t roFrame, float tInROF, int nROF,
+                               uint16_t row, uint16_t col, int nEle, o2::MCCompLabel& lbl)
 {
   // Register digits for given pixel, accounting for the possible signal contribution to
   // multiple ROFrame. The signal starts at time tInROF wrt the start of provided roFrame
@@ -339,7 +355,7 @@ void Digitizer::registerDigits(ChipDigitsContainer& chip, UInt_t roFrame, float 
 
   float tStrobe = mParams.getStrobeDelay() - tInROF; // strobe start wrt signal start
   for (int i = 0; i < nROF; i++) {
-    UInt_t roFr = roFrame + i;
+    uint32_t roFr = roFrame + i;
     int nEleROF = mParams.getSignalShape().getCollectedCharge(nEle, tStrobe, tStrobe + mParams.getStrobeLength());
     tStrobe += mParams.getROFrameLength(); // for the next ROF
 
@@ -347,10 +363,12 @@ void Digitizer::registerDigits(ChipDigitsContainer& chip, UInt_t roFrame, float 
     if (nEleROF < mParams.getMinChargeToAccount()) {
       continue;
     }
-    if (roFr > mEventROFrameMax)
+    if (roFr > mEventROFrameMax) {
       mEventROFrameMax = roFr;
-    if (roFr < mEventROFrameMin)
+    }
+    if (roFr < mEventROFrameMin) {
       mEventROFrameMin = roFr;
+    }
     auto key = chip.getOrderingKey(roFr, row, col);
     PreDigit* pd = chip.findDigit(key);
     if (!pd) {

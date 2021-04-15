@@ -12,7 +12,7 @@
 #define ALICEO2_CPV_DETECTOR_H_
 
 #include "DetectorsBase/Detector.h"
-#include "MathUtils/Cartesian3D.h"
+#include "MathUtils/Cartesian.h"
 #include "CPVBase/Hit.h"
 #include "RStringView.h"
 #include "Rtypes.h"
@@ -27,7 +27,6 @@ namespace o2
 namespace cpv
 {
 class Hit;
-class Geometry;
 class GeometryParams;
 
 ///
@@ -87,7 +86,7 @@ class Detector : public o2::base::DetImpl<Detector>
   /// \param[in] time Time of the hit
   /// \param[in] qdep charge deposited in this pad
   ///
-  void AddHit(int trackID, int detID, const Point3D<float>& pos, Double_t time, Double_t qdep);
+  void addHit(int trackID, short detID, const math_utils::Point3D<float>& pos, double time, float qdep);
 
   ///
   /// Register vector with hits
@@ -126,13 +125,6 @@ class Detector : public o2::base::DetImpl<Detector>
   ///
   void addAlignableVolumes() const override;
 
-  ///
-  /// Get the CPV geometry desciption
-  /// Will be created the first time the function is called
-  /// \return Access to the CPV Geometry description
-  ///
-  Geometry* GetGeometry();
-
  protected:
   ///
   /// Creating detector materials for the CPV detector and space frame
@@ -147,24 +139,23 @@ class Detector : public o2::base::DetImpl<Detector>
   //
   // Calculate the amplitude in one CPV pad using the
   //
-  double PadResponseFunction(float qhit, float zhit, float xhit);
+  float padResponseFunction(float qhit, float zhit, float xhit);
 
-  double CPVCumulPadResponse(double x, double y);
+  float CPVCumulPadResponse(float x, float y);
 
  private:
   /// copy constructor (used in MT)
   Detector(const Detector& rhs);
-  Detector& operator=(const Detector&);
+  Detector& operator=(const Detector& rhs);
 
   /// Define the sensitive volumes of the geometry
   void defineSensitiveVolumes();
 
   // Geometry parameters
-  Bool_t mActiveModule[6]; // list of modules to create
+  Bool_t mActiveModule[5]; // list of modules to create
 
   // Simulation
-  Geometry* mGeom;         //!
-  std::vector<Hit>* mHits; //! Collection of CPV hits
+  std::vector<Hit>* mHits = nullptr; //! Collection of CPV hits
 
   template <typename Det>
   friend class o2::base::DetImpl;

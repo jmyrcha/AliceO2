@@ -14,9 +14,22 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class o2::emcal::RAWDataHeader + ;
-#pragma link C++ class o2::emcal::RawReaderFile + ;
+#pragma link C++ class o2::emcal::RawReaderMemory + ;
 #pragma link C++ class o2::emcal::AltroDecoder + ;
-#pragma link C++ class o2::emcal::Mapper + ;
+#pragma link C++ class o2::emcal::RawPayload + ;
+#pragma link C++ class o2::emcal::Bunch + ;
+#pragma link C++ class o2::emcal::Channel + ;
+#pragma link C++ class o2::emcal::CaloFitResults + ;
+#pragma link C++ class o2::emcal::CaloRawFitter + ;
+#pragma link C++ class o2::emcal::CaloRawFitterStandard + ;
+#pragma link C++ class o2::emcal::CaloRawFitterGamma2 + ;
 
+//#pragma link C++ namespace o2::emcal+;
+#pragma link C++ class o2::emcal::ClusterizerParameters + ;
+#pragma link C++ class o2::emcal::Clusterizer < o2::emcal::Cell> + ;
+#pragma link C++ class o2::emcal::Clusterizer < o2::emcal::Digit> + ;
+#pragma link C++ class o2::emcal::ClusterizerTask < o2::emcal::Cell> + ;
+#pragma link C++ class o2::emcal::ClusterizerTask < o2::emcal::Digit> + ;
+#pragma link C++ class o2::emcal::DigitReader < o2::emcal::Cell> + ;
+#pragma link C++ class o2::emcal::DigitReader < o2::emcal::Digit> + ;
 #endif

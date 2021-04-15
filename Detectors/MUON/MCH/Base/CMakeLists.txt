@@ -9,7 +9,11 @@
 # submit itself to any jurisdiction.
 
 o2_add_library(MCHBase
-               SOURCES src/Mapping.cxx src/DigitBlock.cxx
-                       src/PreClusterBlock.cxx src/ClusterBlock.cxx
-                       src/TrackBlock.cxx
-               PUBLIC_LINK_LIBRARIES ROOT::Core FairRoot::Base FairMQ::FairMQ)
+         SOURCES
+	       src/ClusterBlock.cxx
+           src/PreCluster.cxx
+           src/TrackBlock.cxx
+	       PUBLIC_LINK_LIBRARIES O2::DataFormatsMCH)
+
+o2_target_root_dictionary(MCHBase
+  HEADERS include/MCHBase/DecoderError.h)

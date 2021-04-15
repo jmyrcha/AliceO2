@@ -25,17 +25,27 @@
 #include <utility>
 
 #include "ITStracking/Configuration.h"
+#include "DetectorsBase/MatLayerCylSet.h"
+#include "CommonConstants/MathConstants.h"
 #include "ITStracking/Definitions.h"
 #include "ITStracking/ROframe.h"
 #include "ITStracking/MathUtils.h"
 #include "ITStracking/PrimaryVertexContext.h"
+#include "DetectorsBase/Propagator.h"
 #include "ITStracking/Road.h"
 
 #include "DataFormatsITS/TrackITS.h"
 #include "SimulationDataFormat/MCCompLabel.h"
 
+#include "Framework/Logger.h"
+
+#ifdef CA_DEBUG
+#include "ITStracking/StandaloneDebugger.h"
+#endif
+
 namespace o2
 {
+
 namespace gpu
 {
 class GPUChainITS;
@@ -60,13 +70,16 @@ class Tracker
   float getBz() const;
 
   std::vector<TrackITSExt>& getTracks();
-  dataformats::MCTruthContainer<MCCompLabel>& getTrackLabels();
+  auto& getTrackLabels() { return mTrackLabels; }
 
   void clustersToTracks(const ROframe&, std::ostream& = std::cout);
 
   void setROFrame(std::uint32_t f) { mROFrame = f; }
   std::uint32_t getROFrame() const { return mROFrame; }
+  void setCorrType(const o2::base::PropagatorImpl<float>::MatCorrType& type) { mCorrType = type; }
   void setParameters(const std::vector<MemoryParameters>&, const std::vector<TrackingParameters>&);
+  void getGlobalConfiguration();
+  bool isMatLUT() const { return o2::base::Propagator::Instance()->getMatLUT() && (mCorrType == o2::base::PropagatorImpl<float>::MatCorrType::USEMatCorrLUT); }
 
  private:
   track::TrackParCov buildTrackSeed(const Cluster& cluster1, const Cluster& cluster2, const Cluster& cluster3,
@@ -78,10 +91,11 @@ class Tracker
   void findCellsNeighbours(int& iteration);
   void findRoads(int& iteration);
   void findTracks(const ROframe& ev);
-  bool fitTrack(const ROframe& event, TrackITSExt& track, int start, int end, int step);
+  bool fitTrack(const ROframe& event, TrackITSExt& track, int start, int end, int step, const float chi2cut = o2::constants::math::VeryBig);
   void traverseCellsTree(const int, const int);
   void computeRoadsMClabels(const ROframe&);
   void computeTracksMClabels(const ROframe&);
+  void rectifyClusterIndices(const ROframe& event);
 
   template <typename... T>
   float evaluateTask(void (Tracker::*)(T...), const char*, std::ostream& ostream, T&&... args);
@@ -93,11 +107,16 @@ class Tracker
   std::vector<TrackingParameters> mTrkParams;
 
   bool mCUDA = false;
+  o2::base::PropagatorImpl<float>::MatCorrType mCorrType = o2::base::PropagatorImpl<float>::MatCorrType::USEMatCorrLUT;
   float mBz = 5.f;
   std::uint32_t mROFrame = 0;
   std::vector<TrackITSExt> mTracks;
-  dataformats::MCTruthContainer<MCCompLabel> mTrackLabels;
+  std::vector<MCCompLabel> mTrackLabels;
   o2::gpu::GPUChainITS* mRecoChain = nullptr;
+
+#ifdef CA_DEBUG
+  StandaloneDebugger* mDebugger;
+#endif
 };
 
 inline void Tracker::setParameters(const std::vector<MemoryParameters>& memPars, const std::vector<TrackingParameters>& trkPars)
@@ -127,11 +146,6 @@ inline std::vector<TrackITSExt>& Tracker::getTracks()
   return mTracks;
 }
 
-inline dataformats::MCTruthContainer<MCCompLabel>& Tracker::getTrackLabels()
-{
-  return mTrackLabels;
-}
-
 template <typename... T>
 float Tracker::evaluateTask(void (Tracker::*task)(T...), const char* taskName, std::ostream& ostream,
                             T&&... args)
@@ -146,10 +160,12 @@ float Tracker::evaluateTask(void (Tracker::*task)(T...), const char* taskName, s
     std::chrono::duration<double, std::milli> diff_t{end - start};
     diff = diff_t.count();
 
-    if (taskName == nullptr) {
-      ostream << diff << "\t";
-    } else {
-      ostream << std::setw(2) << " - " << taskName << " completed in: " << diff << " ms" << std::endl;
+    if (fair::Logger::Logging(fair::Severity::info)) {
+      if (taskName == nullptr) {
+        ostream << diff << "\t";
+      } else {
+        ostream << std::setw(2) << " - " << taskName << " completed in: " << diff << " ms" << std::endl;
+      }
     }
   } else {
     (this->*task)(std::forward<T>(args)...);

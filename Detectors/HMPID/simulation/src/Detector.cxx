@@ -32,15 +32,17 @@
 
 #include "DetectorsBase/MaterialManager.h"
 
+#include "Framework/Logger.h"
+
 namespace o2
 {
 namespace hmpid
 {
 
-Detector::Detector(Bool_t active) : o2::base::DetImpl<Detector>("HMP", active), mHits(new std::vector<HitType>) {}
+Detector::Detector(Bool_t active) : o2::base::DetImpl<Detector>("HMP", active), mHits(new std::vector<o2::hmpid::HitType>) {}
 
 Detector::Detector(const Detector& other) : mSensitiveVolumes(other.mSensitiveVolumes),
-                                            mHits(new std::vector<HitType>) {}
+                                            mHits(new std::vector<o2::hmpid::HitType>) {}
 
 void Detector::InitializeO2Detector()
 {
@@ -72,8 +74,8 @@ bool Detector::ProcessHits(FairVolume* v)
       TString tmpname = volname;
       tmpname.Remove(0, 4);
       Int_t idch = tmpname.Atoi(); //retrieve the chamber number
-      Float_t xl, yl;
-      Param::Instance()->Mars2Lors(idch, x, xl, yl);      //take LORS position
+      Double_t xl, yl;
+      o2::hmpid::Param::instance()->mars2Lors(idch, x, xl, yl); //take LORS position
       AddHit(x[0], x[1], x[2], hitTime, etot, tid, idch); //HIT for photon, position at P, etot will be set to Q
       GenFee(etot);                                       //generate feedback photons etot is modified in hit ctor to Q of hit
       stack->addHit(GetDetId());
@@ -110,8 +112,8 @@ bool Detector::ProcessHits(FairVolume* v)
       TString tmpname = volname;
       tmpname.Remove(0, 4);
       Int_t idch = tmpname.Atoi(); //retrieve the chamber number
-      Float_t xl, yl;
-      Param::Instance()->Mars2Lors(idch, out, xl, yl); //take LORS position
+      Double_t xl, yl;
+      o2::hmpid::Param::instance()->mars2Lors(idch, out, xl, yl); //take LORS position
       if (eloss > 0) {
         // HIT for MIP, position near anod plane, eloss will be set to Q
         AddHit(out[0], out[1], out[2], hitTime, eloss, tid, idch);
@@ -130,7 +132,7 @@ bool Detector::ProcessHits(FairVolume* v)
   return false;
 }
 //*********************************************************************************************************
-HitType* Detector::AddHit(float x, float y, float z, float time, float energy, Int_t trackId, Int_t detId)
+o2::hmpid::HitType* Detector::AddHit(float x, float y, float z, float time, float energy, Int_t trackId, Int_t detId)
 {
   mHits->emplace_back(x, y, z, time, energy, trackId, detId);
   return &(mHits->back());
@@ -151,17 +153,19 @@ void Detector::GenFee(Float_t qtot)
     Double_t ranf[2];
     fMC->GetRandom()->RndmArray(2, ranf); //Sample direction
     cthf = ranf[0] * 2 - 1.0;
-    if (cthf < 0)
+    if (cthf < 0) {
       continue;
+    }
     sthf = TMath::Sqrt((1. - cthf) * (1. + cthf));
     phif = ranf[1] * 2 * TMath::Pi();
 
-    if (Double_t randomNumber = fMC->GetRandom()->Rndm() <= 0.57)
+    if (Double_t randomNumber = fMC->GetRandom()->Rndm() <= 0.57) {
       enfp = 7.5e-9;
-    else if (randomNumber <= 0.7)
+    } else if (randomNumber <= 0.7) {
       enfp = 6.4e-9;
-    else
+    } else {
       enfp = 7.9e-9;
+    }
 
     dir[0] = sthf * TMath::Sin(phif);
     dir[1] = cthf;
@@ -184,40 +188,49 @@ void Detector::GenFee(Float_t qtot)
     e3[2] = -dir[0];
 
     vmod = 0;
-    for (j = 0; j < 3; j++)
+    for (j = 0; j < 3; j++) {
       vmod += e1[j] * e1[j];
-    if (!vmod)
+    }
+    if (!vmod) {
       for (j = 0; j < 3; j++) {
         uswop = e1[j];
         e1[j] = e3[j];
         e3[j] = uswop;
       }
+    }
     vmod = 0;
-    for (j = 0; j < 3; j++)
+    for (j = 0; j < 3; j++) {
       vmod += e2[j] * e2[j];
-    if (!vmod)
+    }
+    if (!vmod) {
       for (j = 0; j < 3; j++) {
         uswop = e2[j];
         e2[j] = e3[j];
         e3[j] = uswop;
       }
+    }
 
     vmod = 0;
-    for (j = 0; j < 3; j++)
+    for (j = 0; j < 3; j++) {
       vmod += e1[j] * e1[j];
+    }
     vmod = TMath::Sqrt(1 / vmod);
-    for (j = 0; j < 3; j++)
+    for (j = 0; j < 3; j++) {
       e1[j] *= vmod;
+    }
     vmod = 0;
-    for (j = 0; j < 3; j++)
+    for (j = 0; j < 3; j++) {
       vmod += e2[j] * e2[j];
+    }
     vmod = TMath::Sqrt(1 / vmod);
-    for (j = 0; j < 3; j++)
+    for (j = 0; j < 3; j++) {
       e2[j] *= vmod;
+    }
 
     phi = fMC->GetRandom()->Rndm() * 2 * TMath::Pi();
-    for (j = 0; j < 3; j++)
+    for (j = 0; j < 3; j++) {
       pol[j] = e1[j] * TMath::Sin(phi) + e2[j] * TMath::Cos(phi);
+    }
     fMC->Gdtom(pol, pol, 2);
     Int_t outputNtracksStored;
   } //feedbacks loop
@@ -242,8 +255,9 @@ Bool_t Detector::IsLostByFresnel()
   if (fMC->GetRandom()->Rndm() < Fresnel(p4.E() * 1e9, cotheta, 1)) {
     // AliDebug(1,"Photon lost");
     return kTRUE;
-  } else
+  } else {
     return kFALSE;
+  }
 } //IsLostByFresnel()
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 Float_t Detector::Fresnel(Float_t ene, Float_t pdoti, Bool_t pola)
@@ -296,8 +310,9 @@ Float_t Detector::Fresnel(Float_t ene, Float_t pdoti, Bool_t pola)
   if (pola) {
     Float_t pdotr = 0.8; //DEGREE OF POLARIZATION : 1->P , -1->S
     fresn = 0.5 * (rp * (1 + pdotr) + rs * (1 - pdotr));
-  } else
+  } else {
     fresn = 0.5 * (rp + rs);
+  }
 
   fresn = fresn * rO;
   return fresn;
@@ -348,6 +363,9 @@ void Detector::IdealPosition(Int_t iCh, TGeoHMatrix* pMatrix) // ideal position 
       break; // left and up
   }
   pMatrix->RotateZ(kAngCom); // apply common rotation  in XY plane
+  Double_t* t = pMatrix->GetTranslation();
+  t[1] += 30.;
+  pMatrix->SetTranslation(t);
 }
 
 void Detector::IdealPositionCradle(Int_t iCh, TGeoHMatrix* pMatrix) // ideal position of given one module of the cradle
@@ -386,6 +404,9 @@ void Detector::IdealPositionCradle(Int_t iCh, TGeoHMatrix* pMatrix) // ideal pos
       break; // left and up
   }
   pMatrix->RotateZ(kAngCom); // apply common rotation  in XY plane
+  Double_t* t = pMatrix->GetTranslation();
+  t[1] += 30.;
+  pMatrix->SetTranslation(t);
 }
 
 //*********************************************************************************************************
@@ -607,13 +628,16 @@ TGeoVolume* Detector::createChamber(int number)
   rad->AddNode(si1, 2, new TGeoTranslation(0 * mm, +204 * mm, -0.5 * mm));
   rad->AddNode(si2, 1, new TGeoTranslation(-660 * mm, 0 * mm, -0.5 * mm));
   rad->AddNode(si2, 2, new TGeoTranslation(+660 * mm, 0 * mm, -0.5 * mm));
-  for (Int_t i = 0; i < 3; i++)
-    for (Int_t j = 0; j < 10; j++)
+  for (Int_t i = 0; i < 3; i++) {
+    for (Int_t j = 0; j < 10; j++) {
       rad->AddNode(spa, 10 * i + j,
                    new TGeoTranslation(-1330 * mm / 2 + 116 * mm + j * 122 * mm, (i - 1) * 105 * mm, -0.5 * mm));
+    }
+  }
   hmp->AddNode(fr4, 1, new TGeoTranslation(0 * mm, 0 * mm, 9.00 * mm)); // p.84 TDR
-  for (int i = 1; i <= 322; i++)
+  for (int i = 1; i <= 322; i++) {
     fr4->AddNode(col, i, new TGeoCombiTrans(0 * mm, -1296 / 2 * mm + i * 4 * mm, -5 * mm, rot)); // F4 2043P1
+  }
   fr4->AddNode(f4a, 1, new TGeoTranslation(0 * mm, 0 * mm, 2.5 * mm));
   f4a->AddNode(f4i, 1, new TGeoTranslation(0 * mm, 0 * mm, 0 * mm));
   hmp->AddNode(sec, 4, new TGeoTranslation(-335 * mm, +433 * mm, 78.6 * mm));
@@ -1109,16 +1133,13 @@ TGeoVolume* Detector::CradleBaseVolume(TGeoMedium* med, Double_t l[7], const cha
 {
   /*
   The trapezoid is build in the xy plane
-
       0  ________________ 1
         /       |        \
        /        |         \
       /       (0,0)        \
      /          |           \
   3 /___________|____________\ 2
-
    01 is right shifted => shift is positive
-
     //1: small base (0-1); 2: long base (3-2);
     //3: trapezoid height; 4: shift between the two bases;
     //5: height 6: height reduction; 7: z-reduction;
@@ -1146,15 +1167,17 @@ TGeoVolume* Detector::CradleBaseVolume(TGeoMedium* med, Double_t l[7], const cha
   xtruOut->DefineSection(1, +l[4] / 2., 0., 0., 1.0); // 1= II plane z;
 
   Double_t tgalpha = 0;
-  if (xv[3] - xv[0] == 0)
+  if (xv[3] - xv[0] == 0) {
     tgalpha = 999999;
-  else
+  } else {
     tgalpha = l[2] / TMath::Abs(xv[3] - xv[0]);
+  }
   Double_t tgbeta = 0;
-  if (xv[2] - xv[1] == 0)
+  if (xv[2] - xv[1] == 0) {
     tgbeta = 999999;
-  else
+  } else {
     tgbeta = l[2] / TMath::Abs(xv[2] - xv[1]);
+  }
 
   xv[0] = xv[0] - l[5] / tgalpha;
   yv[0] = l[2] / 2 - l[5];
@@ -1190,11 +1213,11 @@ void Detector::ConstructGeometry()
     TGeoVolume* hmpid = createChamber(iCh);
     TGeoHMatrix* pMatrix = new TGeoHMatrix;
     IdealPosition(iCh, pMatrix);
-    gGeoManager->GetVolume("cave")->AddNode(hmpid, 0, pMatrix);
+    gGeoManager->GetVolume("barrel")->AddNode(hmpid, 0, pMatrix);
     if (iCh == 1 || iCh == 3 || iCh == 5) {
       TGeoHMatrix* pCradleMatrix = new TGeoHMatrix;
       IdealPositionCradle(iCh, pCradleMatrix);
-      gGeoManager->GetVolume("cave")->AddNode(hmpcradle, iCh, pCradleMatrix);
+      gGeoManager->GetVolume("barrel")->AddNode(hmpcradle, iCh, pCradleMatrix);
     }
   }
   // }

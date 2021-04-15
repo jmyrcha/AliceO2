@@ -10,8 +10,8 @@
 #include "Framework/runDataProcessing.h"
 #include "Framework/Task.h"
 #include "Framework/ControlService.h"
-#include <Monitoring/Monitoring.h>
-#include "Framework/ControlService.h"
+#include "Framework/Monitoring.h"
+#include "Framework/Logger.h"
 
 #define ASSERT_ERROR(condition)                                                                      \
   if ((condition) == false) {                                                                        \
@@ -32,10 +32,11 @@ class ATask : public Task
   }
   void run(ProcessingContext& pc) final
   {
-    auto result = pc.outputs().make<int>({"dummy"}, 1);
+    auto& result = pc.outputs().make<int>({"dummy"}, 1);
     result[0] = mSomeState;
     pc.services().get<o2::monitoring::Monitoring>().send({result[0], "output"});
-    pc.services().get<ControlService>().readyToQuit(false);
+    pc.services().get<ControlService>().endOfStream();
+    pc.services().get<ControlService>().readyToQuit(QuitRequest::Me);
   }
 
  private:
@@ -52,7 +53,11 @@ class BTask : public Task
     auto result = pc.inputs().get<int>("in");
     ASSERT_ERROR(result == 2);
     pc.services().get<o2::monitoring::Monitoring>().send({result, "input"});
-    pc.services().get<ControlService>().readyToQuit(true);
+  }
+
+  void endOfStream(EndOfStreamContext& eos) final
+  {
+    eos.services().get<ControlService>().readyToQuit(QuitRequest::All);
   }
 };
 

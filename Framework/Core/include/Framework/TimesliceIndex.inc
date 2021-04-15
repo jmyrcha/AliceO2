@@ -15,6 +15,18 @@ namespace framework
 inline bool TimesliceId::isValid(TimesliceId const& timeslice) { return timeslice.value != INVALID; }
 inline bool TimesliceSlot::isValid(TimesliceSlot const& slot) { return slot.index != INVALID; }
 
+inline bool TimesliceSlot::operator==(const TimesliceSlot that) const
+{
+  return index == that.index ||
+         (index == TimesliceSlot::ANY && TimesliceSlot::INVALID != that.index) ||
+         (index != TimesliceSlot::INVALID && TimesliceSlot::ANY == that.index);
+}
+
+inline bool TimesliceSlot::operator!=(const TimesliceSlot that) const
+{
+  return !(*this == that);
+}
+
 inline void TimesliceIndex::resize(size_t s)
 {
   mVariables.resize(s);
@@ -98,6 +110,7 @@ inline TimesliceSlot TimesliceIndex::findOldestSlot() const
 inline TimesliceId TimesliceIndex::getTimesliceForSlot(TimesliceSlot slot) const
 {
   assert(mVariables.size() > slot.index);
+  // timeslice is always at register 0
   auto pval = std::get_if<uint64_t>(&mVariables[slot.index].get(0));
   if (pval == nullptr) {
     return TimesliceId{TimesliceId::INVALID};
@@ -105,13 +118,35 @@ inline TimesliceId TimesliceIndex::getTimesliceForSlot(TimesliceSlot slot) const
   return TimesliceId{*pval};
 }
 
-inline data_matcher::VariableContext &TimesliceIndex::getVariablesForSlot(TimesliceSlot slot)
+inline uint32_t TimesliceIndex::getFirstTFOrbitForSlot(TimesliceSlot slot) const
+{
+  assert(mVariables.size() > slot.index);
+  // firstTForbit is always at register 15
+  auto pval = std::get_if<uint32_t>(&mVariables[slot.index].get(data_matcher::FIRSTTFORBIT_POS));
+  if (pval == nullptr) {
+    return -1;
+  }
+  return *pval;
+}
+
+inline uint32_t TimesliceIndex::getFirstTFCounterForSlot(TimesliceSlot slot) const
+{
+  assert(mVariables.size() > slot.index);
+  // tfCounter is always at register 14
+  auto pval = std::get_if<uint32_t>(&mVariables[slot.index].get(14));
+  if (pval == nullptr) {
+    return -1;
+  }
+  return *pval;
+}
+
+inline data_matcher::VariableContext& TimesliceIndex::getVariablesForSlot(TimesliceSlot slot)
 {
   assert(mVariables.size() > slot.index);
   return mVariables[slot.index];
 }
 
-inline data_matcher::VariableContext &TimesliceIndex::getPublishedVariablesForSlot(TimesliceSlot slot)
+inline data_matcher::VariableContext& TimesliceIndex::getPublishedVariablesForSlot(TimesliceSlot slot)
 {
   assert(mPublishedVariables.size() > slot.index);
   return mPublishedVariables[slot.index];

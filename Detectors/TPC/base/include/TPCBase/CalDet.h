@@ -14,11 +14,7 @@
 #include <memory>
 #include <vector>
 #include <string>
-#include <boost/format.hpp>
-#include <boost/range/combine.hpp>
 #include <cassert>
-
-#include <FairLogger.h>
 
 #include "DataFormatsTPC/Defs.h"
 #include "TPCBase/Mapper.h"
@@ -26,7 +22,11 @@
 #include "TPCBase/Sector.h"
 #include "TPCBase/CalArray.h"
 
-using boost::format;
+#ifndef GPUCA_ALIGPUCODE
+#include <Framework/Logger.h>
+#include <boost/format.hpp>
+#include <boost/range/combine.hpp>
+#endif
 
 namespace o2
 {
@@ -41,6 +41,8 @@ class CalDet
 
  public:
   CalDet() = default;
+  CalDet(CalDet const&) = default;
+  CalDet& operator=(CalDet const&) = default;
   ~CalDet() = default;
 
   CalDet(PadSubset padSusbset) : mName{"PadCalibrationObject"}, mData{}, mPadSubset{padSusbset} { initData(); }
@@ -62,11 +64,14 @@ class CalDet
   ///
   ///
   const T getValue(const int sec, const int globalPadInSector) const;
+  void setValue(const int sec, const int globalPadInSector, const T& value);
+  void setValue(const int sec, const int rowInSector, const int padInRow, const T& value);
 
   /// \todo return value of T& not possible if a default value should be returned, e.g. T{}:
   ///       warning: returning reference to temporary
   const T getValue(const ROC roc, const size_t row, const size_t pad) const;
   const T getValue(const CRU cru, const size_t row, const size_t pad) const;
+  const T getValue(const Sector sec, const int rowInSector, const int padInRow) const;
 
   void setName(const std::string_view name) { mName = name.data(); }
   const std::string& getName() const { return mName; }
@@ -81,6 +86,12 @@ class CalDet
   const CalDet& operator-=(const T& val);
   const CalDet& operator*=(const T& val);
   const CalDet& operator/=(const T& val);
+
+  template <class U>
+  friend CalDet<U> operator+(const CalDet<U>&, const CalDet<U>&);
+
+  template <class U>
+  friend CalDet<U> operator-(const CalDet<U>&, const CalDet<U>&);
 
  private:
   std::string mName;          ///< name of the object
@@ -173,6 +184,50 @@ inline const T CalDet<T>::getValue(const CRU cru, const size_t row, const size_t
   }
   return T{};
 }
+
+template <class T>
+inline void CalDet<T>::setValue(const int sec, const int globalPadInSector, const T& value)
+{
+  assert(mPadSubset == PadSubset::ROC);
+  int roc = sec;
+  int padInROC = globalPadInSector;
+  const int padsInIROC = Mapper::getPadsInIROC();
+  if (globalPadInSector >= padsInIROC) {
+    roc += Mapper::getNumberOfIROCs();
+    padInROC -= padsInIROC;
+  }
+  mData[roc].setValue(padInROC, value);
+}
+
+template <class T>
+inline void CalDet<T>::setValue(const int sec, const int rowInSector, const int padInRow, const T& value)
+{
+  assert(mPadSubset == PadSubset::ROC);
+  int roc = sec;
+  int rowInROC = rowInSector;
+  const int rowsInIROC = 63;
+  if (rowInSector >= rowsInIROC) {
+    roc += Mapper::getNumberOfIROCs();
+    rowInROC -= rowsInIROC;
+  }
+  mData[roc].setValue(rowInROC, padInRow, value);
+}
+
+template <class T>
+inline const T CalDet<T>::getValue(const Sector sec, const int rowInSector, const int padInRow) const
+{
+  assert(mPadSubset == PadSubset::ROC);
+  int roc = sec;
+  int rowInROC = rowInSector;
+  const int rowsInIROC = 63;
+  if (rowInSector >= rowsInIROC) {
+    roc += Mapper::getNumberOfIROCs();
+    rowInROC -= rowsInIROC;
+  }
+  return mData[roc].getValue(rowInROC, padInRow);
+}
+
+#ifndef GPUCA_ALIGPUCODE // hide from GPU standalone compilation
 
 //______________________________________________________________________________
 template <class T>
@@ -282,6 +337,23 @@ inline const CalDet<T>& CalDet<T>::operator/=(const T& val)
   return *this;
 }
 
+//______________________________________________________________________________
+template <class T>
+CalDet<T> operator+(const CalDet<T>& c1, const CalDet<T>& c2)
+{
+  CalDet<T> ret(c1);
+  ret += c2;
+  return ret;
+}
+
+//______________________________________________________________________________
+template <class T>
+CalDet<T> operator-(const CalDet<T>& c1, const CalDet<T>& c2)
+{
+  CalDet<T> ret(c1);
+  ret -= c2;
+  return ret;
+}
 // ===| Full detector initialisation |==========================================
 template <class T>
 void CalDet<T>::initData()
@@ -311,9 +383,11 @@ void CalDet<T>::initData()
 
   for (size_t i = 0; i < size; ++i) {
     mData.push_back(CalType(mPadSubset, i));
-    mData.back().setName(boost::str(format(frmt) % mName % i));
+    mData.back().setName(boost::str(boost::format(frmt) % mName % i));
   }
 }
+
+#endif // GPUCA_ALIGPUCODE
 
 using CalPad = CalDet<float>;
 } // namespace tpc

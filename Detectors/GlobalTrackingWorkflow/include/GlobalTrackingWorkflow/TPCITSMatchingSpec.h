@@ -13,14 +13,6 @@
 #ifndef O2_MATCHING_TPCITS_SPEC
 #define O2_MATCHING_TPCITS_SPEC
 
-#include "TFile.h"
-
-#include "GlobalTracking/MatchTPCITS.h"
-#include "DataFormatsTPC/Constants.h"
-#include "Framework/DataProcessorSpec.h"
-#include "Framework/Task.h"
-#include <string>
-#include <vector>
 
 using namespace o2::framework;
 
@@ -28,31 +20,8 @@ namespace o2
 {
 namespace globaltracking
 {
-
-class TPCITSMatchingDPL : public Task
-{
- public:
-  TPCITSMatchingDPL(bool useMC, bool useFIT, const std::vector<int>& tpcClusLanes)
-    : mUseMC(useMC), mUseFIT(useFIT), mTPCClusLanes(tpcClusLanes) {}
-  ~TPCITSMatchingDPL() override = default;
-  void init(InitContext& ic) final;
-  void run(ProcessingContext& pc) final;
-
- private:
-  o2::globaltracking::MatchTPCITS mMatching; // matching engine
-
-  std::vector<int> mTPCClusLanes;
-  std::array<std::vector<char>, o2::tpc::Constants::MAXSECTOR> mBufferedTPCClusters; // at the moment not used
-
-  bool mUseFIT = false;
-
-  bool mFinished = false;
-  bool mUseMC = true;
-};
-
 /// create a processor spec
-/// write ITS tracks a root file
-framework::DataProcessorSpec getTPCITSMatchingSpec(bool useMC, bool useFIT, const std::vector<int>& tpcClusLanes);
+framework::DataProcessorSpec getTPCITSMatchingSpec(bool useFT0, bool calib, bool useMC);
 
 } // namespace globaltracking
 } // namespace o2

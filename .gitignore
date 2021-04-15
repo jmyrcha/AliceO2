@@ -39,6 +39,7 @@ xbuild/
 # common editor backups
 *.swp
 *~
+\#*\#
 
 # doxygen stuff
 html-doc/
@@ -76,3 +77,6 @@ bazel-*
 
 # direnv
 .envrc
+
+# LSP support on macOS with vim
+.clangd

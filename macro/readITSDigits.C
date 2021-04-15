@@ -7,17 +7,17 @@
 #include <iostream>
 #include "FairLogger.h"
 #include "DataFormatsITSMFT/ROFRecord.h"
-#include "ITSMFTBase/Digit.h"
-#include "SimulationDataFormat/RunContext.h"
-#include "SimulationDataFormat/MCTruthContainer.h"
+#include "DataFormatsITSMFT/Digit.h"
+#include "SimulationDataFormat/DigitizationContext.h"
+#include "SimulationDataFormat/ConstMCTruthContainer.h"
+#include "SimulationDataFormat/IOMCTruthContainerView.h"
 #include "SimulationDataFormat/MCCompLabel.h"
 
 /// Example of accessing the digits of MCEvent digitized with continous readout
 
 void readITSDigits(std::string path = "./",
                    std::string digiFName = "itsdigits.root",
-                   std::string runContextFName = "collisioncontext.root",
-                   std::string mctruthFName = "o2sim.root")
+                   std::string runContextFName = "collisioncontext.root")
 {
   if (path.back() != '/') {
     path += '/';
@@ -39,36 +39,42 @@ void readITSDigits(std::string path = "./",
     LOG(ERROR) << "Failed to get digits tree";
     return;
   }
-  TTree* rofTree = (TTree*)digiFile->Get("ROF");
-  if (!rofTree) {
-    LOG(ERROR) << "Failed to get ROF tree";
-    return;
-  }
-  TTree* mc2rofTree = (TTree*)digiFile->Get("MC2ROF");
-  if (!mc2rofTree) {
-    LOG(ERROR) << "Failed to get MC->ROF tree";
-    return;
-  }
 
   std::vector<o2::itsmft::Digit>* dv = nullptr;
   digiTree->SetBranchAddress("ITSDigit", &dv);
   o2::dataformats::MCTruthContainer<o2::MCCompLabel>* labels = nullptr;
-  digiTree->SetBranchAddress("ITSDigitMCTruth", &labels);
+  o2::dataformats::IOMCTruthContainerView* labelROOTbuffer = nullptr;
+  o2::dataformats::ConstMCTruthContainer<o2::MCCompLabel> constlabels;
+
+  // for backward compatibility we check what is stored in the file
+  auto labelClass = digiTree->GetBranch("ITSDigitMCTruth")->GetClassName();
+  bool oldlabelformat = false;
+  if (TString(labelClass).Contains("IOMCTruth")) {
+    // new format
+    digiTree->SetBranchAddress("ITSDigitMCTruth", &labelROOTbuffer);
+  } else {
+    // old format
+    digiTree->SetBranchAddress("ITSDigitMCTruth", &labels);
+    oldlabelformat = true;
+  }
 
   // ROF record entries in the digit tree
   std::vector<o2::itsmft::ROFRecord>* rofRecVec = nullptr;
-  rofTree->SetBranchAddress("ITSDigitROF", &rofRecVec);
-  rofTree->GetEntry(0);
+  digiTree->SetBranchAddress("ITSDigitROF", &rofRecVec);
 
   // MCEvID -> ROFrecord references
   std::vector<o2::itsmft::MC2ROFRecord>* mc2rofVec = nullptr;
-  mc2rofTree->SetBranchAddress("ITSDigitMC2ROF", &mc2rofVec);
-  mc2rofTree->GetEntry(0);
+  digiTree->SetBranchAddress("ITSDigitMC2ROF", &mc2rofVec);
+
+  digiTree->GetEntry(0);
+  if (!oldlabelformat) {
+    labelROOTbuffer->copyandflatten(constlabels);
+  }
 
   // MC collisions record
-  auto runContext = reinterpret_cast<o2::steer::RunContext*>(rcFile->GetObjectChecked("RunContext", "o2::steer::RunContext"));
+  auto runContext = reinterpret_cast<o2::steer::DigitizationContext*>(rcFile->GetObjectChecked("DigitizationContext", "o2::steer::DigitizationContext"));
   if (!runContext) {
-    LOG(WARNING) << "Did not find RunContext";
+    LOG(WARNING) << "Did not find DigitizationContext";
     return;
   }
 
@@ -98,19 +104,17 @@ void readITSDigits(std::string path = "./",
       const auto& rofrec = (*rofRecVec)[rofEntry];
       rofrec.print();
 
-      // read 1st and last digit of concerned rof
-      digiTree->GetEntry(rofrec.getROFEntry().getEvent());
-      int dgid = rofrec.getROFEntry().getIndex();
+      int dgid = rofrec.getFirstEntry();
       const auto& digit0 = (*dv)[dgid];
-      const auto& labs0 = labels->getLabels(dgid);
+      const auto& labs0 = oldlabelformat ? labels->getLabels(dgid) : constlabels.getLabels(dgid);
       printf("1st digit of this ROF (Entry: %6d) :", dgid);
       digit0.print(std::cout);
       printf(" MCinfo: ");
       labs0[0].print();
 
-      dgid = rofrec.getROFEntry().getIndex() + rofrec.getNROFEntries() - 1;
+      dgid = rofrec.getFirstEntry() + rofrec.getNEntries() - 1;
       const auto& digit1 = (*dv)[dgid];
-      const auto& labs1 = labels->getLabels(dgid);
+      const auto& labs1 = oldlabelformat ? labels->getLabels(dgid) : constlabels.getLabels(dgid);
       printf("1st digit of this ROF (Entry: %6d) :", dgid);
       digit1.print(std::cout);
       printf(" MCinfo: ");

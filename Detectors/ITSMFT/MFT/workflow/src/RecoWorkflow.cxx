@@ -10,39 +10,45 @@
 
 /// @file   RecoWorkflow.cxx
 
+#include <TTree.h>
 #include "MFTWorkflow/RecoWorkflow.h"
-
-#include "MFTWorkflow/DigitReaderSpec.h"
 #include "MFTWorkflow/ClustererSpec.h"
 #include "MFTWorkflow/ClusterWriterSpec.h"
 #include "MFTWorkflow/ClusterReaderSpec.h"
 #include "MFTWorkflow/TrackerSpec.h"
 #include "MFTWorkflow/TrackWriterSpec.h"
+#include "ITSMFTWorkflow/DigitReaderSpec.h"
 
 namespace o2
 {
 namespace mft
 {
 
-namespace RecoWorkflow
+namespace reco_workflow
 {
 
-framework::WorkflowSpec getWorkflow(bool useMC)
+framework::WorkflowSpec getWorkflow(bool useMC, bool upstreamDigits, bool upstreamClusters, bool disableRootOutput)
 {
   framework::WorkflowSpec specs;
 
-  specs.emplace_back(o2::mft::getDigitReaderSpec());
-  specs.emplace_back(o2::mft::getClustererSpec(useMC));
-  specs.emplace_back(o2::mft::getClusterWriterSpec());
-
-  specs.emplace_back(o2::mft::getClusterReaderSpec());
-  specs.emplace_back(o2::mft::getTrackerSpec());
-  specs.emplace_back(o2::mft::getTrackWriterSpec());
+  if (!(upstreamDigits || upstreamClusters)) {
+    specs.emplace_back(o2::itsmft::getMFTDigitReaderSpec(useMC, false, "mftdigits.root"));
+  }
+  if (!upstreamClusters) {
+    specs.emplace_back(o2::mft::getClustererSpec(useMC));
+  }
+  if (!disableRootOutput) {
+    specs.emplace_back(o2::mft::getClusterWriterSpec(useMC));
+  }
+  specs.emplace_back(o2::mft::getTrackerSpec(useMC));
+  if (!disableRootOutput) {
+    specs.emplace_back(o2::mft::getTrackWriterSpec(useMC));
+  }
 
   return specs;
 }
 
-} // namespace RecoWorkflow
+} // namespace reco_workflow
 
 } // namespace mft
 } // namespace o2

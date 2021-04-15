@@ -119,12 +119,6 @@ class Detector : public o2::base::DetImpl<Detector>
   /// Base class to create the detector geometry
   void ConstructGeometry() override;
 
-  /// Creates the Service Barrel (as a simple cylinder) for IB and OB
-  /// \param innerBarrel if true, build IB service barrel, otherwise for OB
-  /// \param dest the mother volume holding the service barrel
-  /// \param mgr  the gGeoManager pointer (used to get the material)
-  void createServiceBarrel(const Bool_t innerBarrel, TGeoVolume* dest, const TGeoManager* mgr = gGeoManager);
-
   /// Sets the layer parameters
   /// \param nlay layer number
   /// \param phi0 layer phi0
@@ -304,6 +298,18 @@ class Detector : public o2::base::DetImpl<Detector>
   /// Creates the Inner Barrel Services
   /// \param motherVolume the TGeoVolume owing the volume structure
   void createInnerBarrelServices(TGeoVolume* motherVolume);
+
+  /// Creates the Middle Barrel Services
+  /// \param motherVolume the TGeoVolume owing the volume structure
+  void createMiddlBarrelServices(TGeoVolume* motherVolume);
+
+  /// Creates the Outer Barrel Services
+  /// \param motherVolume the TGeoVolume owing the volume structure
+  void createOuterBarrelServices(TGeoVolume* motherVolume);
+
+  /// Creates the Outer Barrel Supports
+  /// \param motherVolume the TGeoVolume owing the volume supports
+  void createOuterBarrelSupports(TGeoVolume* motherVolume);
 
   Detector(const Detector&);
 

@@ -12,7 +12,7 @@
 /// \brief Implementation of the TOF cluster finder task
 
 #include "TOFReconstruction/ClustererTask.h"
-#include "MathUtils/Cartesian3D.h"
+#include "MathUtils/Cartesian.h"
 #include "MathUtils/Utils.h"
 #include "SimulationDataFormat/MCCompLabel.h"
 #include "SimulationDataFormat/MCTruthContainer.h"
@@ -27,8 +27,9 @@ using namespace o2::tof;
 //_____________________________________________________________________
 ClustererTask::ClustererTask(Bool_t useMCTruth) : FairTask("TOFClustererTask")
 {
-  if (useMCTruth)
+  if (useMCTruth) {
     mClsLabels = new o2::dataformats::MCTruthContainer<o2::MCCompLabel>;
+  }
 }
 
 //_____________________________________________________________________
@@ -54,7 +55,7 @@ InitStatus ClustererTask::Init()
     return kERROR;
   }
 
-  const std::vector<o2::tof::Digit>* arr = mgr->InitObjectAs<const std::vector<o2::tof::Digit>*>("TOFDigit");
+  const gsl::span<const o2::tof::Digit>* arr = mgr->InitObjectAs<const gsl::span<const o2::tof::Digit>*>("TOFDigit");
   if (!arr) {
     LOG(ERROR) << "TOF digits not registered in the FairRootManager. Exiting ...";
     return kERROR;
@@ -74,8 +75,9 @@ InitStatus ClustererTask::Init()
   mgr->RegisterAny("TOFCluster", mClustersArray, kTRUE);
 
   // Register new MC Truth container --> here we will now associate to the clusters all labels that belonged to all digits that formed that cluster
-  if (mClsLabels)
+  if (mClsLabels) {
     mgr->RegisterAny("TOFClusterMCTruth", mClsLabels, kTRUE);
+  }
 
   mClusterer.setMCTruthContainer(mClsLabels);
 
@@ -85,10 +87,12 @@ InitStatus ClustererTask::Init()
 //_____________________________________________________________________
 void ClustererTask::Exec(Option_t* option)
 {
-  if (mClustersArray)
+  if (mClustersArray) {
     mClustersArray->clear();
-  if (mClsLabels)
+  }
+  if (mClsLabels) {
     mClsLabels->clear();
+  }
   LOG(DEBUG) << "Running clusterization on new event";
 
   mClusterer.process(mReader, *mClustersArray, mDigitMCTruth);
