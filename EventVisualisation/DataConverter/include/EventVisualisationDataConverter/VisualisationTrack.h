@@ -18,6 +18,7 @@
 #define ALICE_O2_EVENTVISUALISATION_BASE_VISUALISATIONTRACK_H
 
 #include "ConversionConstants.h"
+#include "rapidjson/document.h"
 
 #include <iosfwd>
 #include <string>
@@ -25,10 +26,20 @@
 #include <array>
 #include <cmath>
 
+
 namespace o2
 {
 namespace event_visualisation
 {
+
+
+enum ETrackSource
+{
+  CosmicSource,
+  TPCSource
+};
+
+
 
 /// Minimalistic description of particles track
 ///
@@ -39,8 +50,11 @@ namespace event_visualisation
 class VisualisationTrack
 {
  public:
+  ETrackSource source;
   // Default constructor
   VisualisationTrack();
+  VisualisationTrack(rapidjson::Value& tree);
+  rapidjson::Value jsonTree(rapidjson::Document::AllocatorType& allocator) ;
 
   // Constructor with properties initialisation
   VisualisationTrack(
@@ -67,6 +81,7 @@ class VisualisationTrack
   void addPolyPoint(double xyz[3]);
   // Track type setter (standard track, V0, kink, cascade)
   void setTrackType(ETrackType type);
+  std::string getTrackType()  {return this->mType;}
 
   // Vertex getter
   double* getVertex() { return mStartCoordinates; }

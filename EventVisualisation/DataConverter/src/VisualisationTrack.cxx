@@ -103,5 +103,46 @@ void VisualisationTrack::setTrackType(ETrackType type)
   mType = gTrackTypes[type];
 }
 
+VisualisationTrack::VisualisationTrack(rapidjson::Value& tree)
+{
+  rapidjson::Value& jsonPolyX = tree["mPolyX"];
+  rapidjson::Value& jsonPolyY = tree["mPolyY"];
+  rapidjson::Value& jsonPolyZ = tree["mPolyZ"];
+  rapidjson::Value& count = tree["count"];
+
+  mPolyX.reserve(count.GetInt());
+  mPolyY.reserve(count.GetInt());
+  mPolyZ.reserve(count.GetInt());
+  for (auto& v : jsonPolyX.GetArray())
+    mPolyX.push_back(v.GetDouble());
+  for (auto& v : jsonPolyY.GetArray())
+    mPolyY.push_back(v.GetDouble());
+  for (auto& v : jsonPolyZ.GetArray())
+    mPolyZ.push_back(v.GetDouble());
+}
+
+rapidjson::Value VisualisationTrack::jsonTree(rapidjson::Document::AllocatorType& allocator)
+{
+  rapidjson::Value tree(rapidjson::kObjectType);
+  rapidjson::Value count(rapidjson::kNumberType);
+  rapidjson::Value jsonPolyX(rapidjson::kArrayType);
+  rapidjson::Value jsonPolyY(rapidjson::kArrayType);
+  rapidjson::Value jsonPolyZ(rapidjson::kArrayType);
+
+  count.SetInt(this->getPointCount());
+  tree.AddMember("count", count, allocator);
+
+  for(int i=0; i<this->getPointCount(); i++) {
+    jsonPolyX.PushBack(mPolyX[i], allocator);
+    jsonPolyY.PushBack(mPolyY[i], allocator);
+    jsonPolyZ.PushBack(mPolyZ[i], allocator);
+  }
+  tree.AddMember("mPolyX", jsonPolyX, allocator);
+  tree.AddMember("mPolyY", jsonPolyY, allocator);
+  tree.AddMember("mPolyZ", jsonPolyZ, allocator);
+
+  return tree;
+}
+
 } // namespace event_visualisation
 } // namespace o2

@@ -82,9 +82,7 @@ std::unique_ptr<VisualisationEvent> DataInterpreterITS::interpretDataForType(TOb
     for (const auto& c : mClusters) {
       const auto& gloC = c.getXYZGloRot(*gman);
       double xyz[3] = {gloC.X(), gloC.Y(), gloC.Z()};
-      VisualisationCluster cluster(xyz);
-
-      ret_event->addCluster(cluster);
+      ret_event->addCluster(xyz);
     }
   } else if (type == ESD) {
     TFile* trackFile = (TFile*)list->At(0);
@@ -141,12 +139,12 @@ std::unique_ptr<VisualisationEvent> DataInterpreterITS::interpretDataForType(TOb
       double track_end[3] = {end.fX, end.fY, end.fZ};
       double track_p[3] = {p[0], p[1], p[2]};
 
-      VisualisationTrack track(rec.getSign(), 0.0, 0, 0, 0.0, 0.0, track_start, track_end, track_p, 0, 0.0, 0.0, 0.0, 0);
+      VisualisationTrack *track = ret_event->addTrack(rec.getSign(), 0.0, 0, 0, 0.0, 0.0, track_start, track_end, track_p, 0, 0.0, 0.0, 0.0, 0);
 
       for (Int_t i = 0; i < eve_track->GetN(); ++i) {
         Float_t x, y, z;
         eve_track->GetPoint(i, x, y, z);
-        track.addPolyPoint(x, y, z);
+        track->addPolyPoint(x, y, z);
       }
       delete eve_track;
 
@@ -159,7 +157,7 @@ std::unique_ptr<VisualisationEvent> DataInterpreterITS::interpretDataForType(TOb
       //                        tpoints->SetNextPoint(gloC.X(), gloC.Y(), gloC.Z());
       //                    }
 
-      ret_event->addTrack(track);
+
     }
     delete trackList;
   }

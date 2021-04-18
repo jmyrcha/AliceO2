@@ -93,6 +93,7 @@ const std::string gTrackTypes[nTrackTypes] = {
 
   "muon_matched",
   "muon_not_matched",
-  "muon_ghost"};
+  "muon_ghost"
+};
 
 #endif //ALICE_O2_DATACONVERTER_CONVERSIONCONSTANTS_H
