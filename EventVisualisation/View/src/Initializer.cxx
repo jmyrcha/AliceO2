@@ -45,7 +45,7 @@ namespace o2
 namespace event_visualisation
 {
 
-void Initializer::setup(const Options options, EventManager::EDataSource defaultDataSource)
+void Initializer::setup(EventManager::EDataSource defaultDataSource)
 {
   TEnv settings;
   ConfigurationManager::getInstance().getConfig(settings);

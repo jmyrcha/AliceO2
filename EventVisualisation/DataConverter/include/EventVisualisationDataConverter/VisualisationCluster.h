@@ -37,7 +37,7 @@ class VisualisationCluster
 {
  public:
   VisualisationCluster(rapidjson::Value& tree);
-  rapidjson::Value jsonTree(rapidjson::Document::AllocatorType& allocator) ;
+  rapidjson::Value jsonTree(rapidjson::Document::AllocatorType& allocator);
 
   // Default constructor
   VisualisationCluster(double XYZ[]);

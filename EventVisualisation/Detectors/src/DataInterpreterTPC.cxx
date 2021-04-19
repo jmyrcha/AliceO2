@@ -111,12 +111,22 @@ std::unique_ptr<VisualisationEvent> DataInterpreterTPC::interpretDataForType(TOb
 
       auto start = eve_track->GetLineStart();
       auto end = eve_track->GetLineEnd();
-      double track_start[3] = {start.fX, start.fY, start.fZ};
-      double track_end[3] = {end.fX, end.fY, end.fZ};
-      double track_p[3] = {p[0], p[1], p[2]};
-
-
-      VisualisationTrack *track = ret_event->addTrack(rec.getSign(), 0.0, 0, 0, 0.0, 0.0, track_start, track_end, track_p, 0, 0.0, 0.0, 0.0, 0);
+      VisualisationTrack* track = ret_event->addTrack({
+        .charge=rec.getSign(),
+        .energy=0.0,
+        .ID=0,
+        .PID=0,
+        .mass = 0.0,
+        .signedPT = 0.0,
+        .startXYZ = {start.fX, start.fY, start.fZ},
+        .endXYZ = {end.fX, end.fY, end.fZ} ,
+        .pxpypz = {p[0], p[1], p[2]},
+        .parentID =0,
+        .phi=0.0,
+        .theta=0.0,
+        .helixCurvature=0.0,
+        .type=0
+      });
 
       for (Int_t i = 0; i < eve_track->GetN(); ++i) {
         Float_t x, y, z;

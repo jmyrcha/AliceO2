@@ -57,7 +57,7 @@ std::string VisualisationEvent::toJson()
   tree.AddMember("trackCount", trackCount, allocator);
   Value jsonTracks(kArrayType);
   for (int i = 0; i < this->getTrackCount(); i++)
-    jsonTracks.PushBack(this->mTracks[i].jsonTree(allocator),allocator);
+    jsonTracks.PushBack(this->mTracks[i].jsonTree(allocator), allocator);
   tree.AddMember("mTracks", jsonTracks, allocator);
 
   // Clusters
@@ -66,7 +66,7 @@ std::string VisualisationEvent::toJson()
   tree.AddMember("clusterCount", clusterCount, allocator);
   Value jsonClusters(kArrayType);
   for (int i = 0; i < this->getClusterCount(); i++)
-    jsonClusters.PushBack(this->mClusters[i].jsonTree(allocator),allocator);
+    jsonClusters.PushBack(this->mClusters[i].jsonTree(allocator), allocator);
   tree.AddMember("mClusters", jsonClusters, allocator);
 
   // stringify
@@ -78,14 +78,7 @@ std::string VisualisationEvent::toJson()
 
 VisualisationEvent::VisualisationEvent(std::string fileName)
 {
-  std::ifstream inFile;
-  inFile.open(fileName);
-
-  std::stringstream strStream;
-  strStream << inFile.rdbuf(); //read the file
-  inFile.close();
-  std::string str = strStream.str(); //str holds the content of the file
-  fromJson(str);
+  this->fromFile(fileName);
 }
 
 void VisualisationEvent::fromJson(std::string json)
@@ -122,6 +115,23 @@ std::string VisualisationEvent::fileNameIndexed(const std::string fileName, cons
   std::stringstream buffer;
   buffer << fileName << std::setfill('0') << std::setw(3) << index << ".json";
   return buffer.str();
+}
+
+bool VisualisationEvent::fromFile(std::string fileName)
+{
+  if (FILE* file = fopen(fileName.c_str(), "r"))
+    fclose(file); // file exists
+  else
+    return false;
+  std::ifstream inFile;
+  inFile.open(fileName);
+
+  std::stringstream strStream;
+  strStream << inFile.rdbuf(); //read the file
+  inFile.close();
+  std::string str = strStream.str(); //str holds the content of the file
+  fromJson(str);
+  return true;
 }
 
 } // namespace event_visualisation

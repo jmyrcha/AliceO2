@@ -37,82 +37,67 @@ namespace event_visualisation
 class VisualisationEvent
 {
  public:
-  std::string toJson() ;
+  std::string toJson();
   void fromJson(std::string json);
+  bool fromFile(std::string fileName);
+
   VisualisationEvent(std::string fileName);
   void toFile(std::string fileName);
-  static std::string fileNameIndexed(const std::string fileName, const int index) ;
+  static std::string fileNameIndexed(const std::string fileName, const int index);
 
-
-  VisualisationEvent(){}
+  VisualisationEvent() {}
   // Default constructor
   VisualisationEvent(int eventNumber, int runNumber, double energy, int multiplicity, std::string collidingSystem,
                      time_t timeStamp);
-
 
   // Adds visualisation track inside visualisation event
   //void addTrack(const VisualisationTrack& track)
   //{ mTracks.push_back(track); }
 
-  VisualisationTrack *addTrack(int charge,
-                               double energy,
-                               int ID,
-                               int PID,
-                               double mass,
-                               double signedPT,
-                               double startXYZ[],
-                               double endXYZ[],
-                               double pxpypz[],
-                               int parentID,
-                               double phi,
-                               double theta,
-                               double helixCurvature,
-                               int type)
-  { mTracks.emplace_back(charge,
-      energy,
-      ID,
-      PID,
-      mass,
-      signedPT,
-      startXYZ,
-      endXYZ,
-      pxpypz,
-      parentID,
-      phi,
-      theta,
-      helixCurvature,
-       type);
+  VisualisationTrack* addTrack(VisualisationTrack::VisualisationTrackVO vo) {
+    mTracks.emplace_back(vo);
     return &mTracks.back();
   }
-  void remove_last_track() {mTracks.pop_back();}    // used to remove track assigned optimistically
+  void remove_last_track() { mTracks.pop_back(); } // used to remove track assigned optimistically
 
   // Adds visualisation cluser inside visualisation event
   //void addCluster(const VisualisationCluster& cluster)
   //{ mClusters.push_back(cluster); }
-  VisualisationCluster& addCluster(double XYZ[]) {
+  VisualisationCluster& addCluster(double XYZ[])
+  {
     mClusters.emplace_back(XYZ);
     return mClusters.back();
   }
 
   // Multiplicity getter
   int GetMultiplicity() const
-  { return mMultiplicity; }
+  {
+    return mMultiplicity;
+  }
 
   // Returns track with index i
   const VisualisationTrack& getTrack(int i) const
-  { return mTracks[i]; };
+  {
+    return mTracks[i];
+  };
 
   // Returns number of tracks
   size_t getTrackCount() const
-  { return mTracks.size(); }
+  {
+    return mTracks.size();
+  }
 
   // Returns cluster with index i
   const VisualisationCluster& getCluster(int i) const
-  { return mClusters[i]; };
+  {
+    return mClusters[i];
+  };
 
   // Returns number of clusters
   size_t getClusterCount() const
-  { return mClusters.size(); }
+  {
+    return mClusters.size();
+  }
 
  private:
   int mEventNumber;                            /// event number in file
