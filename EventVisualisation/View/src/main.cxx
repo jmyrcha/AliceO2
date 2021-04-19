@@ -32,8 +32,6 @@
 using namespace std;
 using namespace o2::event_visualisation;
 
-
-
 int main(int argc, char** argv)
 {
   LOG(INFO) << "Welcome in O2 event visualisation tool";
