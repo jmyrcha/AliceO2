@@ -36,12 +36,14 @@ class Options
 
   // helper methods
   static Options instance;
-  bool saveToJSON(std::string filename);      // stores options to current folder
-  bool readFromJSON(std::string filename);    // read options from option file
-  Options() {
+  bool saveToJSON(std::string filename);   // stores options to current folder
+  bool readFromJSON(std::string filename); // read options from option file
+  Options()
+  {
     mFileName = "data.root";
     mDataFolder = "./";
   }
+
  public:
   static Options* Instance() { return &instance; }
   std::string printOptions();

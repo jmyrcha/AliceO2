@@ -20,7 +20,6 @@
 #include <unistd.h>
 #include <iostream>
 
-
 using namespace std;
 
 namespace o2
@@ -132,14 +131,13 @@ bool Options::processCommandLine(int argc, char* argv[])
     return false;
   }
 
-  if(save) {
+  if (save) {
     this->saveToJSON("o2eve.json");
     return false;
   }
 
   return true;
 }
-
 
 bool Options::saveToJSON(std::string filename)
 {
