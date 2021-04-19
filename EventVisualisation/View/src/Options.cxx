@@ -32,11 +32,11 @@ std::string Options::printOptions()
   stringstream ss;
   ss << "fileName    : " << this->fileName() << std::endl;
   ss << "randomTracks: " << str[this->randomTracks()] << std::endl;
-  ss << "itc         : " << str[this->itc()] << std::endl;
+  ss << "itc         : " << str[this->its()] << std::endl;
   ss << "json        : " << str[this->json()] << std::endl;
   ss << "vsd         : " << str[this->vsd()] << std::endl;
+  ss << "tpc         : " << str[this->tpc()] << std::endl;
   return ss.str();
-  ;
 }
 
 std::string Options::usage()
@@ -60,6 +60,8 @@ std::string Options::usage()
   ss << "\t\t"
      << "-s             save options to o2eve.json in current folder" << std::endl;
   ss << "\t\t"
+     << "-t             use tpc reading from files as a source" << std::endl;
+  ss << "\t\t"
      << "-v             use vsd files as a source" << std::endl;
   ss << "\tdefault values are always taken from o2eve.json in current folder if present" << std::endl;
   return ss.str();
@@ -73,16 +75,16 @@ bool Options::processCommandLine(int argc, char* argv[])
   // put ':' in the starting of the
   // string so that program can
   //distinguish between '?' and ':'
-  while ((opt = getopt(argc, argv, ":f:ijo:rsv")) != -1) {
+  while ((opt = getopt(argc, argv, ":f:ijo:rsvt")) != -1) {
     switch (opt) {
       case 'f':
         this->mFileName = optarg;
         break;
       case 'i':
-        this->mItc = true;
+        this->mIts = true;
         break;
       case 'j':
-        this->mItc = true;
+        this->mJSON = true;
         break;
       case 'o':
         optionsFileName = optarg;
@@ -92,6 +94,9 @@ bool Options::processCommandLine(int argc, char* argv[])
         break;
       case 's':
         save = true;
+        break;
+      case 't':
+        this->mTpc = true;
         break;
       case 'v':
         this->mVsd = true;

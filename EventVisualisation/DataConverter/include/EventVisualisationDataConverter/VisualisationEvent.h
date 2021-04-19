@@ -40,21 +40,34 @@ class VisualisationEvent
   std::string toJson();
   void fromJson(std::string json);
   bool fromFile(std::string fileName);
-
+  VisualisationEvent() = default;
   VisualisationEvent(std::string fileName);
   void toFile(std::string fileName);
   static std::string fileNameIndexed(const std::string fileName, const int index);
 
-  VisualisationEvent() {}
+  //VisualisationEvent() {}
+
+  /// constructor parametrisation (Value Object) for VisualisationEvent class
+  ///
+  /// Simplifies passing parameters to constructor of VisualisationEvent
+  /// by providing their names
+  struct VisualisationEventVO {
+    int eventNumber;
+    int runNumber;
+    double energy;
+    int multiplicity;
+    std::string collidingSystem;
+    time_t timeStamp;
+  };
   // Default constructor
-  VisualisationEvent(int eventNumber, int runNumber, double energy, int multiplicity, std::string collidingSystem,
-                     time_t timeStamp);
+  VisualisationEvent(const VisualisationEventVO vo);
 
   // Adds visualisation track inside visualisation event
   //void addTrack(const VisualisationTrack& track)
   //{ mTracks.push_back(track); }
 
-  VisualisationTrack* addTrack(VisualisationTrack::VisualisationTrackVO vo) {
+  VisualisationTrack* addTrack(VisualisationTrack::VisualisationTrackVO vo)
+  {
     mTracks.emplace_back(vo);
     return &mTracks.back();
   }

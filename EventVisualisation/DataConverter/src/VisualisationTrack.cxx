@@ -30,12 +30,12 @@ VisualisationTrack::VisualisationTrack(const VisualisationTrackVO vo)
   this->mCharge = vo.charge;
   this->mEnergy = vo.energy;
   this->mParentID = vo.parentID;
-  this->mPID=vo.PID;
-  this->mSignedPT=vo.signedPT;
-  this->mMass=vo.mass;
-  this->mHelixCurvature=vo.helixCurvature;
-  this->mTheta=vo.theta;
-  this->mPhi=vo.phi;
+  this->mPID = vo.PID;
+  this->mSignedPT = vo.signedPT;
+  this->mMass = vo.mass;
+  this->mHelixCurvature = vo.helixCurvature;
+  this->mTheta = vo.theta;
+  this->mPhi = vo.phi;
   this->addMomentum(vo.pxpypz);
   this->addStartCoordinates(vo.startXYZ);
   this->addEndCoordinates(vo.endXYZ);

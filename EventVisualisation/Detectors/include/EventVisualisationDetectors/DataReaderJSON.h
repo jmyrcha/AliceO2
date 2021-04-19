@@ -8,12 +8,12 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-/// \file DataReaderTPC.h
-/// \brief TPC Detector-specific reading from file(s)
+/// \file DataReaderITS.h
+/// \brief JSON specific reading from file(s)
 /// \author julian.myrcha@cern.ch
 
-#ifndef O2EVE_EVENTVISUALISATION_DETECTORS_DATAREADERTPC_H
-#define O2EVE_EVENTVISUALISATION_DETECTORS_DATAREADERTPC_H
+#ifndef O2EVE_EVENTVISUALISATION_DETECTORS_DATAREADERJSON_H
+#define O2EVE_EVENTVISUALISATION_DETECTORS_DATAREADERJSON_H
 
 #include <TFile.h>
 #include "EventVisualisationBase/DataReader.h"
@@ -23,21 +23,22 @@ namespace o2
 namespace event_visualisation
 {
 
-class DataReaderTPC : public DataReader
+class DataReaderJSON : public DataReader
 {
  private:
   Int_t mMaxEv;
-  TFile* mClusFile;
-  TFile* mTracFile;
+  std::string mFileName ;
 
  public:
-  DataReaderTPC(DataInterpreter *interpreter);
+  DataReaderJSON(DataInterpreter *interpreter): DataReader(interpreter){}
+
   void open() override;
-  Int_t GetEventCount() const override { return mMaxEv; };
-  TObject* getEventData(int no) override;
+  int GetEventCount() const override { return mMaxEv; }
+  virtual VisualisationEvent getEvent(int no, EVisualisationDataType dataType) override;
+  //TObject* getEventData(int no) override;
 };
 
 } // namespace event_visualisation
 } // namespace o2
 
-#endif // O2EVE_EVENTVISUALISATION_DETECTORS_DATAREADERTPC_H
+#endif //O2EVE_DATAREADERJSON_H

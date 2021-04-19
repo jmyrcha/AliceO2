@@ -32,18 +32,13 @@ namespace event_visualisation
 {
 
 /// Ctor -- set the minimalistic event up
-VisualisationEvent::VisualisationEvent(int eventNumber,
-                                       int runNumber,
-                                       double energy,
-                                       int multiplicity,
-                                       string collidingSystem,
-                                       time_t timeStamp) : mEventNumber(eventNumber),
-                                                           mRunNumber(runNumber),
-                                                           mEnergy(energy),
-                                                           mMultiplicity(multiplicity),
-                                                           mCollidingSystem(collidingSystem),
-                                                           mTimeStamp(timeStamp)
-{
+VisualisationEvent::VisualisationEvent(VisualisationEventVO vo) {
+  this->mEventNumber = vo.eventNumber;
+  this->mRunNumber = vo.runNumber;
+  this->mEnergy = vo.energy;
+  this->mMultiplicity = vo.multiplicity;
+  this->mCollidingSystem = vo.collidingSystem;
+  this->mTimeStamp=vo.timeStamp;
 }
 
 std::string VisualisationEvent::toJson()

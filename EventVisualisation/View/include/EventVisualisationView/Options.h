@@ -28,7 +28,8 @@ class Options
   static Options instance;
   bool mRandomTracks;    // -r
   bool mVsd;             // -v
-  bool mItc;             // -i
+  bool mIts;             // -i
+  bool mTpc;             // -t
   bool mJSON;            // -j
   std::string mFileName; // -f 'data.root'
   bool saveTojson(std::string filename);
@@ -43,7 +44,8 @@ class Options
   bool randomTracks() { return this->mRandomTracks; }
   std::string fileName() { return this->mFileName; }
   bool vsd() { return this->mVsd; }
-  bool itc() { return this->mItc; }
+  bool tpc() { return this->mTpc; }
+  bool its() { return this->mIts; }
   bool json() { return this->mJSON; }
 };
 

@@ -23,11 +23,16 @@
 #include "EventVisualisationView/MultiView.h"
 #include "EventVisualisationBase/VisualisationConstants.h"
 #include "EventVisualisationBase/DataSourceOffline.h"
-#include "EventVisualisationDetectors/DataReaderTPC.h"
-#include "EventVisualisationDetectors/DataInterpreterTPC.h"
-#include "EventVisualisationDetectors/DataReaderITS.h"
-#include "EventVisualisationDetectors/DataInterpreterITS.h"
 #include "EventVisualisationView/EventManagerFrame.h"
+#include "EventVisualisationView/Options.h"
+
+#include "EventVisualisationDetectors/DataInterpreterITS.h"
+#include "EventVisualisationDetectors/DataReaderITS.h"
+#include "EventVisualisationDetectors/DataInterpreterTPC.h"
+#include "EventVisualisationDetectors/DataReaderTPC.h"
+
+#include "EventVisualisationDetectors/DataReaderJSON.h"
+
 #include "FairLogger.h"
 
 #include <TGTab.h>
@@ -37,7 +42,6 @@
 #include <TRegexp.h>
 #include <TSystem.h>
 #include <TEveWindowManager.h>
-#include <TFile.h>
 using namespace std;
 
 namespace o2
@@ -58,8 +62,12 @@ void Initializer::setup(EventManager::EDataSource defaultDataSource)
   eventManager.setDataSourceType(defaultDataSource);
   eventManager.setCdbPath(ocdbStorage);
 
-  eventManager.registerDetector(new DataReaderTPC(), new DataInterpreterTPC(), EVisualisationGroup::TPC);
-  eventManager.registerDetector(new DataReaderITS(), new DataInterpreterITS(), EVisualisationGroup::ITS);
+  if(Options::Instance()->tpc())
+    eventManager.registerDetector(new DataReaderTPC(new DataInterpreterTPC()), EVisualisationGroup::TPC);
+  if(Options::Instance()->its())
+    eventManager.registerDetector(new DataReaderITS(new DataInterpreterITS()), EVisualisationGroup::ITS);
+  if(Options::Instance()->json())
+    eventManager.registerDetector(new DataReaderJSON(nullptr), EVisualisationGroup::JSON);
 
   eventManager.setDataSourceType(EventManager::EDataSource::SourceOffline);
   eventManager.Open();

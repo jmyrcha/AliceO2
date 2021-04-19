@@ -36,9 +36,6 @@ enum ETrackSource {
   TPCSource
 };
 
-
-
-
 /// Minimalistic description of particles track
 ///
 /// This class is used mainly for visualisation purpose.
@@ -103,9 +100,7 @@ class VisualisationTrack
   size_t getPointCount() const { return mPolyX.size(); }
   std::array<double, 3> getPoint(size_t i) const { return std::array<double, 3>{mPolyX[i], mPolyY[i], mPolyZ[i]}; }
 
-
  private:
-
   // Set coordinates of the beginning of the track
   void addStartCoordinates(const double xyz[3]);
   // Set coordinates of the end of the track
@@ -129,8 +124,7 @@ class VisualisationTrack
   double mPhi;                 /// An angle from X-axis to the radius vector pointing to the particle
 
   std::vector<int> mChildrenIDs; /// Uniqe IDs of children particles
-  ETrackSource mSource;       /// data source of the track (debug)
-
+  ETrackSource mSource;          /// data source of the track (debug)
 
   /// Polylines -- array of points along the trajectory of the track
   std::vector<double> mPolyX;

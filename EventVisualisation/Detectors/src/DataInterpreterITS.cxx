@@ -50,12 +50,19 @@ DataInterpreterITS::DataInterpreterITS()
   gman->fillMatrixCache(o2::math_utils::bit2Mask(o2::math_utils::TransformType::T2GRot));
 }
 
-std::unique_ptr<VisualisationEvent> DataInterpreterITS::interpretDataForType(TObject* data, EVisualisationDataType type)
+VisualisationEvent DataInterpreterITS::interpretDataForType(TObject* data, EVisualisationDataType type)
 {
   TList* list = (TList*)data;
   Int_t event = ((TVector2*)list->At(2))->X();
 
-  auto ret_event = std::make_unique<VisualisationEvent>(0, 0, 0, 0, "", 0);
+  VisualisationEvent ret_event({
+                                 .eventNumber=0,
+                                 .runNumber=0,
+                                 .energy=0,
+                                 .multiplicity=0,
+                                 .collidingSystem="",
+                                 .timeStamp=0
+                               });
 
   if (type == Clusters) {
     its::GeometryTGeo* gman = its::GeometryTGeo::Instance();
@@ -82,7 +89,7 @@ std::unique_ptr<VisualisationEvent> DataInterpreterITS::interpretDataForType(TOb
     for (const auto& c : mClusters) {
       const auto& gloC = c.getXYZGloRot(*gman);
       double xyz[3] = {gloC.X(), gloC.Y(), gloC.Z()};
-      ret_event->addCluster(xyz);
+      ret_event.addCluster(xyz);
     }
   } else if (type == ESD) {
     TFile* trackFile = (TFile*)list->At(0);
@@ -135,22 +142,20 @@ std::unique_ptr<VisualisationEvent> DataInterpreterITS::interpretDataForType(TOb
 
       auto start = eve_track->GetLineStart();
       auto end = eve_track->GetLineEnd();
-      VisualisationTrack* track = ret_event->addTrack({
-                                                        .charge=rec.getSign(),
-                                                        .energy=0.0,
-                                                        .ID=0,
-                                                        .PID=0,
-                                                        .mass = 0.0,
-                                                        .signedPT = 0.0,
-                                                        .startXYZ = {start.fX, start.fY, start.fZ},
-                                                        .endXYZ = {end.fX, end.fY, end.fZ} ,
-                                                        .pxpypz = {p[0], p[1], p[2]},
-                                                        .parentID =0,
-                                                        .phi=0.0,
-                                                        .theta=0.0,
-                                                        .helixCurvature=0.0,
-                                                        .type=0
-                                                      });
+      VisualisationTrack* track = ret_event.addTrack({.charge = rec.getSign(),
+                                                       .energy = 0.0,
+                                                       .ID = 0,
+                                                       .PID = 0,
+                                                       .mass = 0.0,
+                                                       .signedPT = 0.0,
+                                                       .startXYZ = {start.fX, start.fY, start.fZ},
+                                                       .endXYZ = {end.fX, end.fY, end.fZ},
+                                                       .pxpypz = {p[0], p[1], p[2]},
+                                                       .parentID = 0,
+                                                       .phi = 0.0,
+                                                       .theta = 0.0,
+                                                       .helixCurvature = 0.0,
+                                                       .type = 0});
 
       for (Int_t i = 0; i < eve_track->GetN(); ++i) {
         Float_t x, y, z;
