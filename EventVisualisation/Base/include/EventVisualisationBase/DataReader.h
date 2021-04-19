@@ -27,11 +27,11 @@ namespace event_visualisation
 
 class DataReader
 {
-  DataInterpreter *mInterpreter;
-  virtual TObject* getEventData(int no) {};
+  DataInterpreter* mInterpreter;
+  virtual TObject* getEventData(int no){};
 
  public:
-  DataReader(DataInterpreter *interpreter);
+  DataReader(DataInterpreter* interpreter);
   virtual int GetEventCount() const = 0;
   virtual ~DataReader() = default;
   virtual void open() = 0;

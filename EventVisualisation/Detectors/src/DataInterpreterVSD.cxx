@@ -61,14 +61,12 @@ VisualisationEvent DataInterpreterVSD::interpretDataForType(TObject* data, EVisu
   std::string collidingSystem;
   time_t timeStamp;
 
-  VisualisationEvent ret_event({
-                                 .eventNumber=0,
-                                 .runNumber=0,
-                                 .energy=0,
-                                 .multiplicity=0,
-                                 .collidingSystem="",
-                                 .timeStamp=0
-                               });
+  VisualisationEvent ret_event({.eventNumber = 0,
+                                .runNumber = 0,
+                                .energy = 0,
+                                .multiplicity = 0,
+                                .collidingSystem = "",
+                                .timeStamp = 0});
 
   // Load event data into visualization structures.
 

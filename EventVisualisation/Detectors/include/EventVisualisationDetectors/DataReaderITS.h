@@ -31,7 +31,7 @@ class DataReaderITS : public DataReader
   TFile* mTracFile;
 
  public:
-  DataReaderITS(DataInterpreter *interpreter): DataReader(interpreter){}
+  DataReaderITS(DataInterpreter* interpreter) : DataReader(interpreter) {}
 
   void open() override;
   int GetEventCount() const override { return mMaxEv; }

@@ -29,7 +29,7 @@ namespace event_visualisation
 class DataSource
 {
  public:
-  virtual VisualisationEvent getEventData(int /*no*/, EVisualisationGroup /*purpose*/,EVisualisationDataType dataType) = 0;
+  virtual VisualisationEvent getEventData(int /*no*/, EVisualisationGroup /*purpose*/, EVisualisationDataType dataType) = 0;
   virtual int GetEventCount() { return 0; };
 
   DataSource() = default;

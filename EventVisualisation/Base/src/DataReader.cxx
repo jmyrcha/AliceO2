@@ -22,15 +22,16 @@ namespace o2
 namespace event_visualisation
 {
 
-DataReader::DataReader(DataInterpreter *interpreter):mInterpreter(interpreter){
+DataReader::DataReader(DataInterpreter* interpreter) : mInterpreter(interpreter)
+{
 }
 
-VisualisationEvent DataReader::getEvent(int no, EVisualisationDataType dataType) {
+VisualisationEvent DataReader::getEvent(int no, EVisualisationDataType dataType)
+{
   TObject* data = this->getEventData(no);
   VisualisationEvent event = mInterpreter->interpretDataForType(data, dataType);
   return event;
 }
-
 
 } // namespace event_visualisation
 } // namespace o2

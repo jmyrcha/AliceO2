@@ -78,7 +78,7 @@ const bool R2Visualisation[NvisualisationGroups] = {
   true,  //"TRD",
   true,  //"RND",
   true,  //"VSD"
-  true  //"JSON"
+  true   //"JSON"
 };
 
 const bool R3Visualisation[NvisualisationGroups] = {
@@ -97,7 +97,7 @@ const bool R3Visualisation[NvisualisationGroups] = {
   false, //"TRD",
   false, //"RND",
   false, //"VSD"
-  true  //"JSON"
+  true   //"JSON"
 };
 
 enum EVisualisationDataType {

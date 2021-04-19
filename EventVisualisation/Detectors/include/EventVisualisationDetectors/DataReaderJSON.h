@@ -27,10 +27,10 @@ class DataReaderJSON : public DataReader
 {
  private:
   Int_t mMaxEv;
-  std::string mFileName ;
+  std::string mFileName;
 
  public:
-  DataReaderJSON(DataInterpreter *interpreter): DataReader(interpreter){}
+  DataReaderJSON(DataInterpreter* interpreter) : DataReader(interpreter) {}
 
   void open() override;
   int GetEventCount() const override { return mMaxEv; }
