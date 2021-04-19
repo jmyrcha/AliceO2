@@ -13,9 +13,13 @@
 /// \author  Julian Myrcha
 
 #include "EventVisualisationView/Options.h"
+#include "rapidjson/document.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/prettywriter.h"
 #include "FairLogger.h"
 #include <unistd.h>
-#include <sstream>
+#include <iostream>
+
 
 using namespace std;
 
@@ -48,6 +52,10 @@ std::string Options::usage()
   ss << "\t\t"
      << "where <options> are any from the following:" << std::endl;
   ss << "\t\t"
+     << "-h             this help message" << std::endl;
+  ss << "\t\t"
+     << "-d name        name of the data folder" << std::endl;
+  ss << "\t\t"
      << "-f name        name of the data file" << std::endl;
   ss << "\t\t"
      << "-i             use itc reading from files as a source" << std::endl;
@@ -66,6 +74,7 @@ std::string Options::usage()
   ss << "\tdefault values are always taken from o2eve.json in current folder if present" << std::endl;
   return ss.str();
 }
+
 bool Options::processCommandLine(int argc, char* argv[])
 {
   int opt;
@@ -75,7 +84,7 @@ bool Options::processCommandLine(int argc, char* argv[])
   // put ':' in the starting of the
   // string so that program can
   //distinguish between '?' and ':'
-  while ((opt = getopt(argc, argv, ":f:ijo:rsvt")) != -1) {
+  while ((opt = getopt(argc, argv, ":d:f:hijo:rsvt")) != -1) {
     switch (opt) {
       case 'f':
         this->mFileName = optarg;
@@ -83,6 +92,9 @@ bool Options::processCommandLine(int argc, char* argv[])
       case 'i':
         this->mIts = true;
         break;
+      case 'h':
+        std::cout << usage() << std::endl;
+        return false;
       case 'j':
         this->mJSON = true;
         break;
@@ -120,7 +132,56 @@ bool Options::processCommandLine(int argc, char* argv[])
     return false;
   }
 
+  if(save) {
+    this->saveToJSON("o2eve.json");
+    return false;
+  }
+
   return true;
+}
+
+
+bool Options::saveToJSON(std::string filename)
+{
+  rapidjson::Value dataFolder;
+  rapidjson::Value fileName;
+  rapidjson::Value its(rapidjson::kNumberType);
+  rapidjson::Value json(rapidjson::kNumberType);
+  rapidjson::Value randomTracks(rapidjson::kNumberType);
+  rapidjson::Value tpc(rapidjson::kNumberType);
+  rapidjson::Value vsd(rapidjson::kNumberType);
+
+  dataFolder.SetString(rapidjson::StringRef(this->dataFolder().c_str()));
+  fileName.SetString(rapidjson::StringRef(this->fileName().c_str()));
+  its.SetBool(this->its());
+  json.SetBool(this->json());
+  randomTracks.SetBool(this->randomTracks());
+  tpc.SetBool(this->tpc());
+  vsd.SetBool(this->vsd());
+
+  rapidjson::Document tree(rapidjson::kObjectType);
+  rapidjson::Document::AllocatorType& allocator = tree.GetAllocator();
+  tree.AddMember("dataFolder", dataFolder, allocator);
+  tree.AddMember("fileName", fileName, allocator);
+  tree.AddMember("its", its, allocator);
+  tree.AddMember("json", json, allocator);
+  tree.AddMember("randomTracks", randomTracks, allocator);
+  tree.AddMember("tpc", tpc, allocator);
+  tree.AddMember("vsd", vsd, allocator);
+
+  rapidjson::StringBuffer buffer;
+  rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
+  tree.Accept(writer);
+
+  std::ofstream out(filename);
+  out << buffer.GetString();
+  out.close();
+  return true;
+}
+
+bool Options::readFromJSON(std::string filename)
+{
+  return false;
 }
 
 } // namespace event_visualisation
