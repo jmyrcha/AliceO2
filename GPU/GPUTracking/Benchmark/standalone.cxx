@@ -20,6 +20,7 @@
 #include "GPUQA.h"
 #include "GPUDisplayBackend.h"
 #include "genEvents.h"
+#include "GPUMemorySizeScalers.h"
 
 #include <iostream>
 #include <fstream>
@@ -178,6 +179,7 @@ int ReadConfiguration(int argc, char** argv)
 #ifndef GPUCA_TPC_GEOMETRY_O2
   configStandalone.rec.mergerReadFromTrackerDirectly = 0;
   configStandalone.proc.ompKernels = false;
+  configStandalone.proc.createO2Output = 0;
   if (configStandalone.rundEdx == -1) {
     configStandalone.rundEdx = 0;
   }
@@ -482,6 +484,7 @@ int SetupReconstruction()
   if (configStandalone.proc.debugLevel >= 4) {
     rec->PrintKernelOccupancies();
   }
+  rec->MemoryScalers()->factor *= configStandalone.memoryBufferScaleFactor;
   return (0);
 }
 
