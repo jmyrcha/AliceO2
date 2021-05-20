@@ -27,7 +27,7 @@ class FileProducer
   std::string mName;
 
  public:
-  explicit FileProducer(const std::string& path, const std::string& name = "tracks{}.json", int filesInFolder = 10);
+  explicit FileProducer(const std::string& path, const std::string& name = "tracks{}.json", int filesInFolder = 300);
   [[nodiscard]] std::string newFileName() const;
 };
 

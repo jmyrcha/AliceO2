@@ -32,6 +32,9 @@
 #include "GPUWorkflowHelper/GPUWorkflowHelper.h"
 #include "DataFormatsITSMFT/TopologyDictionary.h"
 
+#include <chrono>
+#include <thread>
+
 using namespace o2::framework;
 using namespace o2::dataformats;
 using namespace o2::globaltracking;
@@ -141,20 +144,33 @@ void O2GPUDPLDisplaySpec::run(ProcessingContext& pc)
   std::cout << cnt->globalTracks.size() << std::endl;
   o2::event_visualisation::VisualisationEvent vEvent;
 
+
+  int split_counter = 100;  // split to separate events to be fixed
+
   for (int i = 0; i < cnt->globalTracks.size(); i++) {
+    if(split_counter-- <=0) {
+      split_counter = 100;
+      FileProducer producer("./jsons");
+      vEvent.toFile(producer.newFileName());
+      vEvent = o2::event_visualisation::VisualisationEvent();
+      std::chrono::milliseconds timespan(1000);
+      std::this_thread::sleep_for(timespan);    // give a chance o2-eve to see it if one chunk
+    }
+
     auto tr = cnt->globalTracks[i];
     std::cout << tr->getX() << std::endl;
+
     float rMax = 385;
     float rMin = std::sqrt(tr->getX() * tr->getX() + tr->getY() * tr->getY());
     auto pnts = getTrackPoints(*tr, rMin, rMax, 4.0);
 
-    o2::event_visualisation::VisualisationTrack* vTrack = vEvent.addTrack({.charge = 0,
+    o2::event_visualisation::VisualisationTrack* vTrack = vEvent.addTrack({.charge = tr->getCharge(),
                                                                            .energy = 0.0,
                                                                            .ID = 0,
-                                                                           .PID = 0,
+                                                                           .PID = tr->getPID(),
                                                                            .mass = 0.0,
-                                                                           .signedPT = 0.0,
-                                                                           .startXYZ = {0, 0, 0},
+                                                                           .signedPT = tr->getPt(),
+                                                                           .startXYZ = {tr->getX(), tr->getY(), tr->getZ()},
                                                                            .endXYZ = {0, 0, 0},
                                                                            .pxpypz = {0, 0, 0},
                                                                            .parentID = 0,
