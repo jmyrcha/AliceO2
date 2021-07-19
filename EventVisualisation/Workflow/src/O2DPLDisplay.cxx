@@ -199,7 +199,7 @@ WorkflowSpec defineDataProcessing(ConfigContext const& cfgc)
   }
 
   specs.emplace_back(DataProcessorSpec{
-    "o2-gpu-display",
+    "o2-eve-display",
     dataRequest->inputs,
     {},
     AlgorithmSpec{adaptFromTask<O2GPUDPLDisplaySpec>(useMC, srcTrk, srcCl, dataRequest)}});
